@@ -31,7 +31,7 @@ SHPP_REV=30
 ################################################################
 
 . "${libdir:-/usr/lib}/libsh"
-if [  $0 = */* ] ; then
+if [  "$0" = */* ] ; then
   shpp=$0
 else
   shpp=$(which shpp) || shpp=$0 
@@ -319,7 +319,36 @@ define() {
 }
 
 
-
+include_includes() { 
+  cp "$tmp_dir/pc_file.stage2" "$tmp_dir/backups/pre_include" # make backups before do include
+  find_var -n $1 \#\\\\\\\\include 
+  for _include in $( find_var $1 \#\\\\\\\\include |  sed 's/^ //'  ) ; do
+    old_ifs=$IFS
+    IFS=' '
+    for include_argument in $_include ; do
+      case $include_argument in 
+      # include) : ;; 
+        noparse) : ;;
+        *) _include=$include_argument ;;
+      esac
+    done
+    old_ifs=$IFS
+    _find_include_count=$(( $_find_include_count + 1 ))
+    current_line=$( read_farray $var_number $_find_include_count )
+    tmp_include=$( read_farray $includes ${current_include_no:-1}  )
+    if [ $(basename $_include) = $tmp_include ] ; then
+       sed "$current_line,$ d" $1 > "$tmp_dir/including/cut_source"
+      sed "1,$current_line d" $1 > "$tmp_dir/including/cut_source_end"
+      cat "$tmp_dir/including/$tmp_include" >> "$tmp_dir/including/cut_source"
+      cat "$tmp_dir/including/cut_source_end" >> "$tmp_dir/including/cut_source"
+      cp "$tmp_dir/including/cut_source" "$tmp_dir/pc_file.stage2"
+      current_include_no=$(( ${current_include_no:-1}  + 1 ))
+      continue
+    fi
+    current_include_no=$(( ${current_include_no:-1}  + 1 ))
+  done
+  unset _include
+}
 replace_vars() {
   replace_file=$2 
   for replace_var in $( read_farray $1 0 ) ; do
