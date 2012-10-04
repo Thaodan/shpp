@@ -24,7 +24,7 @@ SHPP_REV=30
 #####################################
 # base config 
 
-
+registed_commands=stub
 
 
 
@@ -253,7 +253,28 @@ find_commands() {
 
 
 ### commands ### 
+register_command() {
+  while [ ! $# = 0 ] ; do
+   registed_commands=$register_commands:$1
+   shift
+  done
+}
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+#### built im commands ###
 #!\\ifdev
 ifdef() {
   cleared_if="$( echo "$1" |  sed "s/ifdev//" )" # fist input with ifdef
