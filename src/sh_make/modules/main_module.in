@@ -1,0 +1,26 @@
+#!/bin/sh
+loaded_modules=main_module
+run_entry_point() {
+  $1
+}
+
+load_module(){
+  if echo $loaded_modules | grep -v $( basename $1 ) ; then
+    case "$1" in
+    */*)
+      . "$1"
+      ;;
+    *)
+      if [ -e $MODULE_PATH/$1 ] ; then
+	  . $MODULE_PATH/$1
+      else
+	return 1
+      fi
+      ;;
+    esac 
+    loaded_modules=$loaded_modules:$( basename $1 )
+  else
+    return 1
+  fi
+
+}

@@ -1,0 +1,20 @@
+pkgname=sh-make-tools
+pkgver=0.1
+pkgrel=1
+pkgdesc="make replacement written for POSIX compilant shells like dash or bash and some tools around i like shpp(shell preprocessor)"
+arch=('any')
+#url="http://nadvsh.sourceforge.net/"
+license=('GPL2')
+depends=('sh' 'coreutils' 'sed' 'libsh')
+source=("${pkgname}-${pkgver}.tar.gz")
+md5sums=('15fd213f592e5ba586de3569ac328584')
+
+
+
+
+
+package() {
+  cd $srcdir/$pkgname-$pkgver
+  sh dist/build_app
+  mv pkg/* $pkgdir/.
+}

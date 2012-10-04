@@ -1,0 +1,167 @@
+#!/bin/sh
+# syntax: $0 [ --debug ] version:rev target 
+# sh_make configure replacment with make functions
+# Copyright (C) 2012  Björn Bidar
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License along
+# with this program; if not, write to the Free Software Foundation, Inc.,
+# 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+
+####################################
+SH_MAKE_VER=2.0
+SH_MAKE_REV=30
+#####################################
+readonly SH_MAKE_REV SH_MAKE_VER
+#####################################
+
+. "@prefix@/lib/sh_make/libsh_make"
+
+err_input_messages='No input given or no sh_makefile found!:To little input given!' # err message for test_input
+
+####################################
+cleanup() {
+  if [ ! $keep ] ; then
+    old_ifs=$IFS
+    export IFS=:;rm -rf $file_to_remove; 
+  
+    export IFS=$old_ifs
+  fi
+}
+
+cleanup_die() {
+  cleanup
+}
+call_handler() {
+  case $1 in
+    error*) error "$@"; die=1 ;;
+    warning*) test ! -z  $WARNING_IS_ERROR = true && die=1; warning "$@";; 
+  esac
+  if [ $die ]  ; then
+    verbose 'got signal to die, dieing'
+    cleanup_die
+    exit ${assumed_err_status:-13}
+  fi
+}
+
+
+
+
+main() {
+  if [ -z $used_shell ] ; then used_shell=/bin/sh ; fi
+  "${used_shell:-/bin/sh}" -n "$sh_makefile"  || call_handler error:syntax "$used_shell exited with $? syntax check for $sh_makefile"
+
+  if [ -z $tmp_dir ] ; then
+      tmp_dir=tmp
+      mkdir -p $tmp_dir
+  else
+      mkdir -p $tmp_dir
+     if  [ ! -z $(ls $tmp_dir )  ] ; then
+	call_handler warning:dir "$tmp_dir already exits, hmm"
+      fi
+  fi
+
+# here will be some generating that generates the envoriment based functions 
+cat > "$tmp_dir/env" <<_ENV
+
+used_shell=$used_shell
+MODULE_PATH=@prefix@/lib/sh_make/modules
+chained_vars=$chained_vars
+$( for chain in $chained_vars ; do \
+echo "$chain=$( eval echo \$my_$chain)"; done)
+old_ifs=\$IFS
+IFS=:
+for chain in \$chained_vars ; do
+  eval \$chain=\$( eval echo \\\$\$chain )
+done
+
+_ENV
+
+#
+  export USE_COLOR
+  # run used shell give it our main functions that we have, load the generated env file, load the main_module while inits module handling and such and than load the sh_makefile so that it can run with the given functions
+  "$used_shell"  -c$debug ". @prefix@/lib/sh_make/libsh_make; . @prefix@/lib/sh_make/modules/main_module; . $sh_makefile;. $PWD/$tmp_dir/env; test ! -z $temp_sh_makefile_dir &&  cd $temp_sh_makefile_dir; run_entry_point $entry_point" || call_handler error:exit "got error $? while running $sh_makefile"  
+
+
+  file_to_remove=$tmp_dir
+
+
+  cleanup
+
+
+}
+
+print_help() {
+  stub
+}
+
+case $1 in 
+  --help|-H|-h)	print_help ;; 
+  --revision) 	echo $SH_MAKE_REV ;;
+  --version)	echo $SH_MAKE_VER:$SH_MAKE_REV  ;;
+#   #-*)		echo `read_farray "$err_input_messages" 1`;;
+  --*|*)
+    optspec=s:f: # b:dp #-: # short options
+    optspec_long=shell:,make:,keep,debug,verbose #,binpath:,desktop,prefix # long options
+    PROCESSED_OPTSPEC=`getopt -q --options $optspec --long $optspec_long \
+    -n $appname --  "$@"` ||  error  "$( read_farray "$err_input_messages" 2 )" || exit 1 # parsed optspec
+    eval set -- "$PROCESSED_OPTSPEC"
+    while [ $? = 0 ] ; do
+      case $1 in 
+	-s|-shell) used_shell="$2"; readonly used_shell ; shift 2;;
+	--debug) debug=xv ; USE_COLOR=;  shift ;;
+	--verbose) debug=v ;USE_COLOR=;  shift ;;
+	-f|--make) sh_makefile="$2" ; shift 2 ;;
+	--keep) keep=true; shift ;;
+	--) shift ; break
+      esac
+    done
+  	  for var in $1 ; do
+	    case $1 in
+	      	      *=*)
+		eval my_$1
+		if [ -z $chained_vars ] ; then
+		  chained_vars=$( echo $1 | cut -d '=' -f1 )
+		else
+		  chained_vars=$( echo $1 | cut -d '=' -f1 )
+		fi
+		shift
+		;;
+	    esac
+	  done
+    
+    if [ ! -z "$sh_makefile" ]  ; then
+      temp_sh_makefile_dir=$( dirname $sh_makefile )
+      if [  $temp_sh_makefile_dir = . ] ; then
+	 sh_makefile=$PWD/$sh_makefile
+      fi
+
+     # sh_makefile=${temp_sh_makefile_dir}$sh_makefile
+     
+  
+    elif [ -e "$PWD/sh_makefile" ] ; then # if input is less $1  input given and sh_makefile exists in $PWD use it 
+      sh_makefile=$PWD/sh_makefile
+#       [ ! -z "$1" ]  && entry_point="$1" || true
+#     elif [ "$1" = --make ] || [ "$1" = -f ] ; then # if input has option to use another sh_makefile use it 
+#       sh_makefile="$2"
+#       shift 2
+    else
+      echo "No input given or sh_makefile found"
+      false 
+    fi && \
+    entry_point="${1:-default}" && \
+    main
+  ;;
+esac 
+
+
+

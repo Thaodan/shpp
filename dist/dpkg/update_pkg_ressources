@@ -1,0 +1,6 @@
+#!/bin/sh
+
+. ../../dist_system/lib/update_source
+. ../../src/sh_makefile
+rm sh-make-tools_$VER.orig.tar.gz
+ln -s $( readlink $SOURCE_FILE ) sh-make-tools_$VER.orig.tar.gz

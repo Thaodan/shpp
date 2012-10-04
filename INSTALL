@@ -1,0 +1,23 @@
+ 
+
+### BUILDING ###
+
+0 . cd $extract_root
+1 . cd src
+2 . cd sh_make 
+3 . /bin/sh tools/simple_shmake -f sh_makefile 
+4 . /bin/sh tools/simple_shmake -f sh_makefile install
+5.  cd ..
+6.  /bin/sh sh_make/tools/simple_shmake -f sh_makefile 
+7. /bin/sh sh_make/tools/simple_shmake -f sh_makefile installer (optional)
+
+
+### INSTALLING ###
+
+1 . if buildd installer: 
+  1. cd ..
+  2. /bin/sh install.sh  --prefix <prefix> # replace prefix with your install prefix
+
+2. if not 
+  1. cd ..
+  2. cp -a pkg <prefix> # replace prefix with your install prefix

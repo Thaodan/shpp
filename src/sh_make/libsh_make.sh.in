@@ -1,0 +1,26 @@
+#!/bin/sh 
+USE_COLOR=true
+
+. "${libdir:-@prefix@/lib}/libsh"
+
+
+
+#\\include ../share/tools.sh.in
+
+#########################################################################
+
+stub() {
+  echo stub
+}
+
+pass_chained_vars() {
+  if [ -z $( eval echo $target_var ) ] ; then 
+    $target_vars=$( echo $1 | cut -d '=' -f1 )
+  else
+   $target_vars=\$$target_vars:$( echo $1 | cut -d '=' -f1 )
+  fi
+  unset target_var
+}
+
+
+init_stats

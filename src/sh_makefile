@@ -1,0 +1,47 @@
+DESTDIR=../pkg
+PREFIX=usr
+APPNAME=sh_make_tools
+VER=0.1
+shpp=shpp/shpp
+install_prefix=/usr
+sh_make=./sh_make_pkg
+default() {
+	sh_make_tools
+}
+
+prepare() {
+ mkdir -p $DESTDIR/$PREFIX	
+ chmod +x $shpp
+ $shpp prefix=sh_make/pkg/$PREFIX sh_make/sh_make.sh.in -o sh_make_pkg
+ chmod +x $sh_make
+}
+
+sh_make_tools() {
+  prepare
+  sh_make 
+  shpp
+}
+
+
+shpp() {
+	$sh_make -f shpp/sh_makefile DESTDIR=../$DESTDIR
+	$sh_make -f shpp/sh_makefile DESTDIR=../$DESTDIR install
+}
+
+sh_make() {
+	$sh_make -f sh_make/sh_makefile DESTDIR=../$DESTDIR
+	$sh_make -f sh_make/sh_makefile DESTDIR=../$DESTDIR install
+}
+
+clean()  {
+  sh  -c 'cd sh_make; . $PWD/sh_makefile; clean'
+  rm -f sh_make_pkg
+  rm -rf pkg
+  rm -f ../install.sh
+  
+}
+installer() {
+  load_module configure
+  load_module make_installer
+  gen_installer > ../install.sh
+}

@@ -1,0 +1,83 @@
+.TH shpp 1 13.09.2012 GNU
+
+.SH Name
+shpp \- shell script preprocessor
+
+.SH SYNOPSIS
+shpp [options] 
+.I File
+passed variables
+
+.SH Discription
+
+shpp is a preprocessor for shell script written for POSIX shells (/bin/sh), but may used for other files too.
+It used as #\\\\ as indicator for preprocessor commands. Currently it supports
+.I define
+<var> <content> (adding content nyi),
+.I ifdef 
+<var>,
+.I endif
+, 
+.I include 
+<file>.
+.I rem 
+<comment>,
+.I break
+.
+.SS define
+Defines a variable and adds content to it
+
+.SS ifdef 
+Tests if var is defined if not all content till endif will be removed.
+(else currently not supported).
+
+.SS endif
+Says shpp to stop after
+.I ifdef
+was found before, if no ifdef was found before shpp will send an error.
+.SS include
+Includes 
+.I File
+but preprocess it if 
+.I noparse 
+was not found before.
+
+.SS rem
+Inits a comment line that will be only the seen before that preprocessor was runned.
+.SS break
+Tells shpp to stop parsing the file.
+
+.SH Options
+.TP 
+.B\-\-help, \-H 
+print this help
+.TP 
+.BR \-\-version
+print version
+.TP
+.BR \-o \ <file>
+Place output in file \fIfile\fR.
+.TP
+.BR \-\-stdout
+All output goes to stdout.
+.TP
+.BR \-\-critical\-warning
+ Warnings are threated as errors.
+.TP
+.BR\-\-tmp=<dir>           
+Set temp directory.
+.TP
+.BR \-\-keep 
+Don't delete tmp files after running.
+.BR \-\-stderr=file   
+stderr goes to file
+.TP
+.BR \-\-defined\-flags
+Give shpp flags to define that are not defined in file, seperated with \:.
+.TP
+.BR \-\-enabled\-flags
+ Give shpp flags to enable, same seperator \:.
+.TP
+.BR \-\-legacy
+Enable legacy mode (sh_make 1.x) (nyi)
+.TP

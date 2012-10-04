@@ -1,0 +1,48 @@
+#!/bin/sh
+
+gen_installer() {
+add_input_action '--info:display_info:display info about installed application'
+ add_input_action '--prefix:prefix=$2;shift:set install prefix'
+ add_input_action '--config-prefix:config_prefix=$2:set config prefix'
+add_input_action '--list-files:list_files:list applications files'
+input_parser=true
+input_not_required=true
+  cat <<_MY_INSTALLER
+#!/bin/sh
+$(add_std_license_header)
+install_sh_ver=1.03
+build_sh_make_ver=$SH_MAKE_VER:$SH_MAKE_REV
+INSTALL_APPNAME="$APPNAME"
+INSTALL_APPNAME_VER=$VER
+prefix=${install_prefix:-/usr/local}
+config_prefix=${install_config_prefix:-/etc} # to add computability for unixes like OS X with /Library
+INSTALL_FILES=${INSTALL_FILES:-pkg}
+
+install_sh() {
+  cp -a \${INSTALL_FILES}/usr/* \$prefix
+  cp -a \${INSTALL_FILES}/etc/* \$config_prefix
+  $(add_custom_install)
+}
+
+display_info() {
+  cat << INFO_MSG
+
+appname: \$INSTALL_APPNAME
+version: \$INSTALL_APPNAME_VER
+sh_make version: \$build_sh_make_ver
+
+enabled flags: $flags
+INFO_MSG
+}
+
+list_files() {
+  ls -RU -1 \$INSTALL_FILES | sed 's/://' | sed '/^$/d'
+}
+
+
+
+$(after_parse)
+install_sh
+_MY_INSTALLER
+
+}

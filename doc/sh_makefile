@@ -1,0 +1,25 @@
+INSTALL=/usr/bin/install
+DESTDIR=../pkg
+PREFIX=/usr
+
+mandir=share/man
+man_sections=1
+
+
+
+default() {
+	:
+}
+
+prepare() {
+	mkdir -p $DESTDIR/$PREFIX/$mandir
+	mkdir -p $DESTDIR/$PREFIX/man{$man_sections}
+}
+install() {
+	prepare
+	install_doc
+}
+
+install_doc() {
+	$INSTALL -g 0 -o 0 -m 0644 shpp.1.gz $DESTDIR/$PREFIX/$mandir/man1/shpp.1.gz
+}

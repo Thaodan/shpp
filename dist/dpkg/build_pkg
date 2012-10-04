@@ -1,0 +1,6 @@
+#!/bin/sh
+. ../../src/sh_makefile
+tar -xaf sh-make-tools_$VER.orig.tar.gz
+cd sh-make-tools-$VER
+tar -xaf ../sh-make-tools_$VER-1.debian
+dpkg-buildpackage -d

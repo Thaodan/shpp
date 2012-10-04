@@ -1,0 +1,4 @@
+sh-make-tools-*/
+*.deb
+*.dsc
+*.changes

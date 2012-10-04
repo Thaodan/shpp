@@ -1,0 +1,22 @@
+### INTRO ###
+
+This is a preprocessor for shell scripts (or other text files) and a make replacement  written for posix shells.
+The make replacement is simple written and most parts can used withozut it, in any posix compilant shell (see sh_make/tools/simple_sh_make as example).
+
+
+## DEPENCIES ##
+
+ - posix compilant /bin/sh
+ - posix compilant: sed, grep, sort, cat, basename, dirname and cut
+
+## BUILD AND INSTALL ## 
+
+See INSTALL.
+
+
+## NOT WORKING/ NOT FULLY WORKING ##
+
+Legacy mode for for files with sh_make 1.x syntax in shpp 	(not tested)
+
+
+
