@@ -241,17 +241,6 @@ find_commands() {
 
 
 
-clear_flags() { # cleas #\\ flags in 
-  sed -ie '/^#\\\\*/d' $1
-}
-
-replace_vars() {
-  replace_file=$2 
-  for replace_var in $( read_farray $1 0 ) ; do
-    verbose "replacing @$replace_var@ with $( eval echo \$$replace_var ) in $2"
-   sed -ie "s|@$replace_var@|$( eval echo  \$$replace_var)|g"  $2 || call_handler error:exit_stat "replace_var: sed quit with $?"
-  done 
-}
 
 
 
@@ -321,39 +310,23 @@ define() {
  # unset _defined
 }
 
+
+
+replace_vars() {
+  replace_file=$2 
+  for replace_var in $( read_farray $1 0 ) ; do
+    verbose "replacing @$replace_var@ with $( eval echo \$$replace_var ) in $2"
+   sed -ie "s|@$replace_var@|$( eval echo  \$$replace_var)|g"  $2 || call_handler error:exit_stat "replace_var: sed quit with $?"
+  done 
+}
+
+clear_flags() { # cleas #\\ flags in 
+  sed -ie '/^#\\\\*/d' $1
+}
+
 ### commands end ###
 
 
-include_includes() { 
-  cp "$tmp_dir/pc_file.stage2" "$tmp_dir/backups/pre_include" # make backups before do include
-  find_var -n $1 \#\\\\\\\\include 
-  for _include in $( find_var $1 \#\\\\\\\\include |  sed 's/^ //'  ) ; do
-    old_ifs=$IFS
-    IFS=' '
-    for include_argument in $_include ; do
-      case $include_argument in 
-      # include) : ;; 
-	noparse) : ;;
-	*) _include=$include_argument ;;
-      esac
-    done
-    old_ifs=$IFS
-    _find_include_count=$(( $_find_include_count + 1 ))
-    current_line=$( read_farray $var_number $_find_include_count )
-    tmp_include=$( read_farray $includes ${current_include_no:-1}  )
-    if [ $(basename $_include) = $tmp_include ] ; then
-       sed "$current_line,$ d" $1 > "$tmp_dir/including/cut_source"
-      sed "1,$current_line d" $1 > "$tmp_dir/including/cut_source_end"
-      cat "$tmp_dir/including/$tmp_include" >> "$tmp_dir/including/cut_source"
-      cat "$tmp_dir/including/cut_source_end" >> "$tmp_dir/including/cut_source"
-      cp "$tmp_dir/including/cut_source" "$tmp_dir/pc_file.stage2"
-      current_include_no=$(( ${current_include_no:-1}  + 1 ))
-      continue
-    fi
-    current_include_no=$(( ${current_include_no:-1}  + 1 ))
-  done
-  unset _include
-}
 
 ### main function ###
 
