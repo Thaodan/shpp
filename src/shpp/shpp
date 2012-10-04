@@ -16,11 +16,19 @@
 # with this program; if not, write to the Free Software Foundation, Inc.,
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
-
+# config vars ### 
 ####################################
+# version, rev config
 SHPP_VER=0.1
 SHPP_REV=30
 #####################################
+# base config 
+
+
+
+
+
+################################################################
 
 . "${libdir:-/usr/lib}/libsh"
 if [  $0 = */* ] ; then
@@ -28,8 +36,8 @@ if [  $0 = */* ] ; then
 else
   shpp=$(which shpp) || shpp=$0 
 fi
-# echo "nyi"
-# exit 1
+
+
 
 stub() {
   echo stub
