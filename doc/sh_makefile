@@ -20,6 +20,10 @@ install() {
 	install_doc
 }
 
+gen_doc() {
+	cat shpp.1 | gzip  -c > shpp.1.gz
+}
+
 install_doc() {
 	$INSTALL -g 0 -o 0 -m 0644 shpp.1.gz $DESTDIR/$PREFIX/$mandir/man1/shpp.1.gz
 }
