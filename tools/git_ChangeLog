@@ -1,6 +1,6 @@
 #!/bin/sh
 
-if test -d "$1:-.}{/.git"; then
+if test -d "${1:-.}/.git"; then
     git log --date-order --date=short | \
     sed -e '/^commit.*$/d' | \
     awk '/^Author/ {sub(/\\$/,""); getline t; print $0 t; next}; 1' | \
