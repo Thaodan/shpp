@@ -176,7 +176,7 @@ parse_chaines() {
     [ $WARNING_IS_ERROR = true ] && pass_chain -g WARNING_IS_ERROR=true 
     [ $keep ] && pass_chain -g keep=true
   fi
-  
+  slaveconfig_file="$tmp_dir/slaveconfig"
 }
 
 
@@ -297,17 +297,20 @@ include() {
   for var in $1 ; do
     case $var in 
       include) : ;; 
-      noparse) noparse=true ;;
+      noparse)  parser=no_parse ; call_handler warning:deprected 'no_parse is deprected now, use with care' ;;
+      parser=*) parser=$( echo $1 | sed 's|parser=||' ) ;; # set parser to use another parser than shpp 
+      parser_args=*) parser_args=$( echo $1 | sed 's|parser_args=||' ) ;; 
+      
       *) cleaned_include="$var" ;;
     esac
   done
   base_include=$( basename "$cleaned_include" )
  # echo "$base_include"
-  if [ ! $noparse ] ; then 
-    $shpp  $chained_options --config $tmp_dir/slaveconfig --defined-flags $defined_flags --enabled-flags $enabled_flags --tmp $tmp_dir/slaves --slave --stdout --stderr $tmp_dir/log/errors_$base_include.log "$cleaned_include"> $tmp_dir/including/$base_include  || call_handler error:exit_stat "spawned copy of ourself: $appname returned $$, quiting"
-  else
-    cp $cleaned_include $tmp_dir/including/$base_include
-  fi
+  case ${parser:-shpp} in 
+    shpp)  $shpp  $chained_options $parser_args --config $slaveconfig_file --defined-flags $defined_flags --enabled-flags $enabled_flags --tmp $tmp_dir/slaves --slave --stdout --stderr $tmp_dir/log/errors_$base_include.log "$cleaned_include"> $tmp_dir/including/$base_include  || call_handler error:exit_stat "spawned copy of ourself: $appname returned $$, quiting" ;; 
+    no_parse)  cp $cleaned_include $tmp_dir/including/$base_include ;; # no $parser is used
+    *) $parser $parser_args ;; # use $parser with $parser_args 
+  esac
 
    if [ -z "$includes" ] ; then
     includes="$base_include"
@@ -404,7 +407,6 @@ main() {
   mkdir -p "$tmp_dir/backups"
   mkdir -p "$tmp_dir/logs"
   mkdir -p "$tmp_dir/slaves"
-  parse_chaines
   if [ $slave ] ; then
     ln -s "../.."	"$tmp_dir/master"
     files_to_remove=$tmp_dir
@@ -416,6 +418,7 @@ main() {
     ln -s "$basename_temp/logs"		"$dirname_temp/logs"
     ln -s "$$" 		        "$dirname_temp/master"
     files_to_remove=$tmp_dir:$dirname_temp
+    parse_chaines
   fi
 
 #   if [ ! $slave ] ; then
@@ -514,7 +517,7 @@ if [ ! $# = 0 ] ; then
 		esac
 		shift 2 
 		;;
-	      -C|--config) . "$2" ; shift 2;;
+	      -C|--config) . "$2" ; slaveconfig_file="$2" ;shift 2;;
 	      --pass-all-to-slaves) give_them_all=true; shift ;; # pass all option to slaves
 	      --legacy) legacy_mode=true ; shift ;;
 	      --stdout) target_name="stdout" ; shift ;;
