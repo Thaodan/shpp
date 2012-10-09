@@ -316,6 +316,7 @@ define() {
  # unset _defined
 }
 
+### commands end ### 
 
 include_includes() { 
   cp "$tmp_dir/pc_file.stage2" "$tmp_dir/backups/pre_include" # make backups before do include
@@ -359,7 +360,7 @@ clear_flags() { # cleas #\\ flags in
   sed -ie '/^#\\\\*/d' $1
 }
 
-### commands end ###
+
 
 
 
