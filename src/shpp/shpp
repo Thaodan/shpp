@@ -350,7 +350,7 @@ include_includes() {
     for include_argument in $_include ; do
       case $include_argument in 
       # include) : ;; 
-        noparse) : ;;
+        noparse|parser=*|parser_args=*) : ;; # stub arguments that are only used by #\\include
         *) _include=$include_argument ;;
       esac
     done
