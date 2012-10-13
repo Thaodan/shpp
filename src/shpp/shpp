@@ -283,7 +283,7 @@ include() {
   base_include=$( basename "$cleaned_include" )
  # echo "$base_include"
   if [ ! $noparse ] ; then 
-    shpp --defined-flags $defined_flags --enabled-flags $enabled_flags --tmp $tmp_dir/slaves --slave --stdout --stder $tmp_dir/log/errors_$base_include.log "$cleaned_include"> $tmp_dir/including/$base_include  || call_handler error:exit_stat "spawned copy of ourself: $appname returned $$, quiting"
+    shpp --defined-flags $defined_flags --enabled-flags $enabled_flags --tmp $tmp_dir/slaves --slave --stdout --stderr $tmp_dir/log/errors_$base_include.log "$cleaned_include"> $tmp_dir/including/$base_include  || call_handler error:exit_stat "spawned copy of ourself: $appname returned $$, quiting"
   else
     cp $cleaned_include $tmp_dir/including/$base_include
   fi
