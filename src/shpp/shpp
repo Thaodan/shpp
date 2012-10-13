@@ -465,7 +465,7 @@ if [ ! $# = 0 ] ; then
     #   #-*)		echo `read_farray "$err_input_messages" 1`;;
       --*|*)
 	      optspec=o: # b:dp #-: # short options
-    optspec_long=defined_flags:,enabled_flags:,legacy,stdout,critical-warning,tmp:,stder:,keep,slave,\*=\* #,binpath:,desktop,prefix # long options
+    optspec_long=defined_flags:,enabled_flags:,legacy,stdout,critical-warning,tmp:,stderr:,keep,slave,\*=\* #,binpath:,desktop,prefix # long options
     PROCESSED_OPTSPEC=`getopt -qo $optspec --long $optspec_long \
     -n $appname -- "$@"` 
     eval set -- "$PROCESSED_OPTSPEC"
