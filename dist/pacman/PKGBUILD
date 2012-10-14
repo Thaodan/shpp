@@ -7,11 +7,8 @@ arch=('any')
 license=('GPL2')
 depends=('sh' 'coreutils' 'sed' 'libsh')
 source=("${pkgname}-${pkgver}.tar.gz")
-<<<<<<< HEAD
-md5sums=('15fd213f592e5ba586de3569ac328584')
-=======
 md5sums=('b6a8dea99c6aeaa18586326407ef18ab')
->>>>>>> d2863e1... clean up (deleting files that where genered while building)
+
 
 
 
