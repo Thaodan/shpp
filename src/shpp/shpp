@@ -31,11 +31,7 @@ registed_commands=stub
 ################################################################
 
 . "${libdir:-/usr/lib}/libsh"
-<<<<<<< HEAD
 
-
-=======
->>>>>>> master
 if [ $( dirname $0 ) = . ] ; then
    shpp=$(which $0) || shpp=$( dirname $0 )/shpp
 else
@@ -162,7 +158,7 @@ cleanup_die() {
  
   export IFS=$old_ifs
 
-}
+} 
 
 pass_chain() {
   case $1 in 
@@ -332,19 +328,12 @@ include() {
   done
   base_include=$( basename "$cleaned_include" )
  # echo "$base_include"
-<<<<<<< HEAD
-  if [ ! $noparse ] ; then 
-    $shpp  $chained_options --config $tmp_dir/slaveconfig --defined-flags $defined_flags --enabled-flags $enabled_flags --tmp $tmp_dir/slaves --slave --stdout --stderr $tmp_dir/log/errors_$base_include.log "$cleaned_include"> $tmp_dir/including/$base_include  || call_handler error:exit_stat "spawned copy of ourself: $appname returned $$, quiting"
-  else
-    cp $cleaned_include $tmp_dir/including/$base_include
-  fi
-=======
   case ${parser:-shpp} in 
     shpp)  $shpp  $chained_options $parser_args --config $slaveconfig_file --defined-flags $defined_flags --enabled-flags $enabled_flags --tmp $tmp_dir/slaves --slave --stdout --stderr $tmp_dir/log/errors_$base_include.log "$cleaned_include"> $tmp_dir/including/$base_include  || call_handler error:exit_stat "spawned copy of ourself: $appname returned $$, quiting" ;; 
     no_parse)  cp $cleaned_include $tmp_dir/including/$base_include ;; # no $parser is used
     *) $parser $parser_args ;; # use $parser with $parser_args 
   esac
->>>>>>> master
+
 
    if [ -z "$includes" ] ; then
     includes="$base_include"
