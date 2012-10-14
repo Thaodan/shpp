@@ -259,7 +259,8 @@ find_commands() {
 	endif)   endif ;; # just a stub call for syntax error cause endif was used before if/ifdef#
 	rem\ * )   : ;; # ignore just a comment
 	break\ *)   verbose 'found break abort parsing'; break ;;
-	*) stub ;;
+	macro\ *) load_macro "$_command" ;;  
+	*)  ( echo $_command | grep $registed_commands ) && run_external_command;;
       esac
    fi
    IFS=:
@@ -273,18 +274,38 @@ find_commands() {
 
 
 ### commands ### 
-register_command() {
+register_command() { # register commmand in macro file
   while [ ! $# = 0 ] ; do
    registed_commands=$register_commands:$1
    shift
-  done
+  do
 }
 
 
-
-
-
-
+run_external_command() { # check if there's $1 in $registed_commands and run it
+  for command in $( read_farray $registed_commands 0 ) ; do
+    if [ $1 = $command* ] ; then
+      verbose "found $command running it"
+      $command $1
+      true # only for diagnostic purpose to check if no external command was found for this
+      break
+    else
+      false
+    fi
+    done || ( verbose "$current_line: no external command found" ; call_handler warning:macro "external command $1 not found" )
+  
+}
+#\\macro
+load_macro() {
+  cleaned_macro=$( echo "$1" |  sed "s/macro//" )
+  verbose "found macro: $cleaned_macro, doing syntax check"
+  if sh -n $cleaned_macro ; then
+      . $cleaned_macro
+  else
+    call_handler error:syntax "$cleaned_macro don't passed syntax check, quiting"
+  fi
+  
+}
 
 
 
