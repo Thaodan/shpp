@@ -256,7 +256,7 @@ find_commands() {
 	define\ *) 	define "$_command" ;;
 	include\ *) 	include "$_command" ;;
 	ifdef\ *)	ifdef "$_command" ;;
-	else\ *)	Else "$_command"  ;;
+	else)	Else "$_command"  ;;
 	endif)		endif ;; # just a stub call for syntax error cause endif was used before if/ifdef#
 	rem\ * )   	: ;; # ignore just a comment
 	break\ *)   	verbose 'found break abort parsing'; break ;;
@@ -279,8 +279,12 @@ find_commands() {
 ifdef() {
   cleared_if="$( echo "$1" |  sed -e "s/ifdef//" )" # fist input with ifdef
   unsuccesfull=true
-  for _defined in $( read_farray $defined_vars 0 ) ; do # look if var is defined:
-    test "$_defined" = "$cleared_if"  &&  unsuccesfull=false && break  # if $_cleadif machtes with one of $defined_vars clear unsuccesfull and break
+  old_ifs=$IFS
+  IFS=:
+  for _defined in $defined_vars $input_defined_flags ; do # look if var is defined:
+    IFS=$old_ifs
+    test "$_defined" = $cleared_if  &&  unsuccesfull=false && break  # if $_cleadif machtes with one of $defined_vars clear unsuccesfull and break
+    IFS=:
   done 
   if [ "$unsuccesfull" = true ] ; then
      verbose 'tested var was not defined, remove content till endif, erase_till_endif ist set to true'
@@ -299,7 +303,7 @@ endif() { # just a stub that calls call_handler with error to handle if endif is
 #\\else
 Else() {
   if [ "$unsuccesfull" = false ] ; then
-    verbose 'tested var was not defined, remove content till endif, erase_till_endif ist set to true'
+    verbose 'last if was succesfull, removing content till endif'
     if_line=$current_line # save $current_line for find_commands 
     erase_till_endif=true # say find_commands it has to erase fill from $if_line till next found endif
   else
@@ -514,7 +518,7 @@ if [ ! $# = 0 ] ; then
     #   #-*)		echo `read_farray "$err_input_messages" 1`;;
       --*|*)
     optspec=o:O:C: # b:dp #-: # short options
-    optspec_long=defined_flags:,enabled_flags:,output:,option:,Ow:,option-global:,config:,pass-all-to-slaves,legacy,stdout,critical-warning,tmp:,stderr:,keep,slave,\*=\* #,binpath:,desktop,prefix # long options
+    optspec_long=defined-flags:,enabled-flags:,output:,option:,Ow:,option-global:,config:,pass-all-to-slaves,legacy,stdout,critical-warning,tmp:,stderr:,keep,slave,\*=\* #,binpath:,desktop,prefix # long options
     PROCESSED_OPTSPEC=`getopt -qo $optspec --long $optspec_long \
     -n $appname -- "$@"` 
     eval set -- "$PROCESSED_OPTSPEC"
