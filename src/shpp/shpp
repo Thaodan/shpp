@@ -243,21 +243,23 @@ find_commands() {
     _find_command_count=$(( $_find_command_count + 1 ))
     current_line=$( read_farray $var_number $_find_command_count )
     if [ $erase_till_endif = true ] ; then
-      if [ "$_command" = endif ] ; then
+      if [ $_command = endif ] || [ $_command = else ]  ; then
 	sed -ie  "$if_line,$current_line d" "$1"
 	erase_till_endif=false
+	[ $_command = else ] && found_else=true
       elif [ ! $endif_notfound = false ] ; then
 	false
       fi
    else
       verbose "found $_command calling corresponding command"
       case "$_command" in
-	define\ *) define "$_command" ;;
-	include\ *) include "$_command" ;;
-	ifdef\ *)   ifdef "$_command" ;;
-	endif)   endif ;; # just a stub call for syntax error cause endif was used before if/ifdef#
-	rem\ * )   : ;; # ignore just a comment
-	break\ *)   verbose 'found break abort parsing'; break ;;
+	define\ *) 	define "$_command" ;;
+	include\ *) 	include "$_command" ;;
+	ifdef\ *)	ifdef "$_command" ;;
+	else\ *)	Else "$_command"  ;;
+	endif)		endif ;; # just a stub call for syntax error cause endif was used before if/ifdef#
+	rem\ * )   	: ;; # ignore just a comment
+	break\ *)   	verbose 'found break abort parsing'; break ;;
 	*) stub ;;
       esac
    fi
@@ -275,22 +277,38 @@ find_commands() {
 
 #!\\ifdev
 ifdef() {
-  cleared_if="$( echo "$1" |  sed "s/ifdev//" )" # fist input with ifdef
+  cleared_if="$( echo "$1" |  sed -e "s/ifdef//" )" # fist input with ifdef
   unsuccesfull=true
   for _defined in $( read_farray $defined_vars 0 ) ; do # look if var is defined:
-    test "$_defined" = "$cleared_if"  &&  unsuccesfull= && break  # if $_cleadif machtes with one of $defined_vars clear unsuccesfull and break
+    test "$_defined" = "$cleared_if"  &&  unsuccesfull=false && break  # if $_cleadif machtes with one of $defined_vars clear unsuccesfull and break
   done 
-  if [ ! -z $unsuccesfull ] ; then
+  if [ "$unsuccesfull" = true ] ; then
      verbose 'tested var was not defined, remove content till endif, erase_till_endif ist set to true'
      if_line=$current_line # save $current_line for find_commands 
      erase_till_endif=true # say find_commands it has to erase fill from $if_line till next found endif
   fi
 }
 
+#\\endif
 endif() { # just a stub that calls call_handler with error to handle if endif is before if/ifdef
-  verbose 'found endif before if, calling for error'
-  call_handler  error:syntax 'no if before endif'
+ [ $found_else ] ||  ( verbose 'found endif before if, calling for error'
+  call_handler  error:syntax 'no if before endif' )
+  unset found_else
 }
+
+#\\else
+Else() {
+  if [ "$unsuccesfull" = false ] ; then
+    verbose 'tested var was not defined, remove content till endif, erase_till_endif ist set to true'
+    if_line=$current_line # save $current_line for find_commands 
+    erase_till_endif=true # say find_commands it has to erase fill from $if_line till next found endif
+  else
+    verbose 'found else before if, calling for error'
+    call_handler  error:syntax 'no if before else'
+  fi
+}
+
+#\\include
 include() {
   verbose "opened $1 to parse, call ourself to process file" 
 #  cleaned_include="$( echo "$1" |  sed "s/include//" | sed 's/ //g')" # fist input with ifdef
@@ -325,6 +343,8 @@ include() {
 # copy content past #\\include to new file 
  unset noparse
 }
+
+#\\define
 define() {
   #for _defined $( find_var $1 \#\\\\define ) ; do
     cleaned_define="$( echo "$1" |  sed "s/define//" )"
