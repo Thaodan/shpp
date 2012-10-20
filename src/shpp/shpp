@@ -555,14 +555,14 @@ if [ ! $# = 0 ] ; then
 	    esac
 	  done 
 	  
-	  for var in $1 ; do
+	  for var in $@ ; do
 	    case $1 in
 	      	      *=*)
 		eval $1;
 		if [ -z $replace_vars ] ; then
 		  replace_vars=$( echo $1 | cut -d '=' -f1 )
 		else
-		  replace_vars=$( echo $1 | cut -d '=' -f1 )
+		  replace_vars=$( echo $1 | cut -d '=' -f1 ):$replace_vars
 		fi
 		shift
 		;;

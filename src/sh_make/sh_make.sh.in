@@ -19,7 +19,7 @@
 
 ####################################
 SH_MAKE_VER=2.0
-SH_MAKE_REV=30
+SH_MAKE_REV=@git_rev@
 #####################################
 readonly SH_MAKE_REV SH_MAKE_VER
 #####################################
@@ -89,7 +89,7 @@ _ENV
 #
   export USE_COLOR
   # run used shell give it our main functions that we have, load the generated env file, load the main_module while inits module handling and such and than load the sh_makefile so that it can run with the given functions
-  "$used_shell"  -c$debug ". @prefix@/lib/sh_make/libsh_make; . @prefix@/lib/sh_make/modules/main_module; . $sh_makefile;. $PWD/$tmp_dir/env; test ! -z $temp_sh_makefile_dir &&  cd $temp_sh_makefile_dir; run_entry_point $entry_point" || call_handler error:exit "got error $? while running $sh_makefile"  
+  "$used_shell"  -c$debug ". @prefix@/lib/sh_make/libsh_make; . @prefix@/lib/sh_make/modules/main_module; test ! -z $temp_sh_makefile_dir &&  cd $temp_sh_makefile_dir; . $sh_makefile;. $PWD/$tmp_dir/env; run_entry_point $entry_point" || call_handler error:exit "got error $? while running $sh_makefile"  
 
 
   file_to_remove=$tmp_dir
@@ -141,9 +141,8 @@ case $1 in
     
     if [ ! -z "$sh_makefile" ]  ; then
       temp_sh_makefile_dir=$( dirname $sh_makefile )
-      if [  $temp_sh_makefile_dir = . ] ; then
-	 sh_makefile=$PWD/$sh_makefile
-      fi
+      sh_makefile=$PWD/$sh_makefile
+      
 
      # sh_makefile=${temp_sh_makefile_dir}$sh_makefile
      

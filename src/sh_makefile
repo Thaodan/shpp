@@ -1,7 +1,7 @@
 DESTDIR=../pkg
 PREFIX=usr
 APPNAME=sh_make_tools
-VER=0.1
+VER=2.0
 shpp=shpp/shpp
 install_prefix=/usr
 sh_make=./sh_make_pkg
