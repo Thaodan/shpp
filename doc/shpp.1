@@ -16,25 +16,32 @@ It used as #\\\\ as indicator for preprocessor commands. Currently it supports
 <var> <content> (adding content nyi),
 .I ifdef 
 <var>,
+.I else\,
 .I endif
-, 
+,
 .I include 
-<file>.
+<file>,
 .I rem 
 <comment>,
 .I break
-.
+\.
 .SS define
 Defines a variable and adds content to it
 
 .SS ifdef 
 Tests if var is defined if not all content till endif will be removed.
-(else currently not supported).
-
+.SS else
+Else statement if if(def) was unsuccesfull, will sent an error if no if(def) was found before or removes content till
+.I endif 
+if 
+.I ifdef
+was succesfull.
 .SS endif
 Says shpp to stop after
 .I ifdef
-was found before, if no ifdef was found before shpp will send an error.
+or
+.I else
+was found before, if no ifdef or else was found before shpp will send an error.
 .SS include
 Includes 
 .I File
@@ -55,14 +62,23 @@ print this help
 .BR \-\-version
 print version
 .TP
-.BR \-o \ <file>
+.BR \-o\ \-\-output  \ <file>
 Place output in file \fIfile\fR.
+.TP
+.BR \-O\ \-\-option	\ <option>
+Give shpp option.
+.TP
+.BR \-\-Ow\ \-\-global\-option	\ <option>
+Same but instead give options only to master give them to slaves too.
+.TP
+.BR \-\-pass\-all\-to\-slaves
+Give all options given by -O or normal to the master to the slaves too
 .TP
 .BR \-\-stdout
 All output goes to stdout.
 .TP
 .BR \-\-critical\-warning
- Warnings are threated as errors.
+Warnings are threated as errors.
 .TP
 .BR\-\-tmp=<dir>           
 Set temp directory.
@@ -76,8 +92,9 @@ stderr goes to file
 Give shpp flags to define that are not defined in file, seperated with \:.
 .TP
 .BR \-\-enabled\-flags
- Give shpp flags to enable, same seperator \:.
+Give shpp flags to enable, same seperator \:.
 .TP
 .BR \-\-legacy
 Enable legacy mode (sh_make 1.x) (nyi)
 .TP
+

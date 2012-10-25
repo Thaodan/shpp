@@ -1,5 +1,5 @@
 pkgname=sh-make-tools
-pkgver=0.1
+pkgver=2.0
 pkgrel=1
 pkgdesc="make replacement written for POSIX compilant shells like dash or bash and some tools around i like shpp(shell preprocessor)"
 arch=('any')
@@ -7,7 +7,8 @@ arch=('any')
 license=('GPL2')
 depends=('sh' 'coreutils' 'sed' 'libsh')
 source=("${pkgname}-${pkgver}.tar.gz")
-md5sums=('227c8d948514971fcb59435d838c7037')
+md5sums=('6bb69316b8c2c24528206828b39c2244')
+
 
 
 
