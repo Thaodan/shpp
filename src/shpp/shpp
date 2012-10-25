@@ -446,9 +446,7 @@ main() {
     parse_chaines
   fi
 
-#   if [ ! $slave ] ; then
-#     mkdir "$tmp_dir/slaves"
-#     slave_dir=$tmp
+
   unset basename_temp
   cp $source_file $tmp_dir/pc_file.stage1
   if [ ! -z "$replace_vars" ] ; then 
