@@ -4,7 +4,6 @@ Priority: extra
 Maintainer: Bjoern Bidar <theodorstormgrade@gmail.com>
 Build-Depends: debhelper, sh, coreutils, sed, libsh
 Standards-Version: 3.9.3
-Conflicts:
 Homepage: <insert the upstream URL, if relevant>
 #Vcs-Git: git://git.debian.org/collab-maint/sh-make-tools.git
 #Vcs-Browser: http://git.debian.org/?p=collab-maint/sh-make-tools.git;a=summary
