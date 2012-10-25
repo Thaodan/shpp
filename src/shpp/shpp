@@ -396,9 +396,7 @@ main() {
     files_to_remove=$tmp_dir:$dirname_temp
   fi
 
-#   if [ ! $slave ] ; then
-#     mkdir "$tmp_dir/slaves"
-#     slave_dir=$tmp
+
   unset basename_temp
   cp $source_file $tmp_dir/pc_file.stage1
   if [ ! -z "$replace_vars" ] ; then 
@@ -485,7 +483,7 @@ if [ ! $# = 0 ] ; then
 	    esac
 	  done 
 	  
-	  for var in $1 ; do
+	  for var in $@ ; do
 	    case $1 in
 	      	      *=*)
 		eval $1;
