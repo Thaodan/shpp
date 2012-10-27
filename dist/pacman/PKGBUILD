@@ -7,11 +7,8 @@ arch=('any')
 license=('GPL2')
 depends=('sh' 'coreutils' 'sed' 'libsh')
 source=("${pkgname}-${pkgver}.tar.gz")
-<<<<<<< HEAD
-md5sums=('453e77b33902d245b4ed9837a82dddbd')
-=======
+
 md5sums=('a64858ae1832aad5586419d5521256fc')
->>>>>>> 8728fcf... modified:   src/shpp/shpp
 
 
 
