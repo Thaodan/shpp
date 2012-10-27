@@ -97,7 +97,7 @@ msg2() {
 warning() {
 	first="$1"
 	shift
-	echo "${YELLOW}==${ALL_OFF}${BOLD} $first:${ALL_OFF} "$@"" >&2
+	echo "${YELLOW}==>${ALL_OFF}${BOLD} $first:${ALL_OFF} "$@"" >&2
 # 	unset first
 }
 
@@ -522,8 +522,8 @@ if [ ! $# = 0 ] ; then
       -V|--version)	echo $SHPP_VER:$SHPP_REV  ; shift ;;
     #   #-*)		echo `read_farray "$err_input_messages" 1`;;
       --*|*)
-    optspec=o:O:C: # b:dp #-: # short options
-    optspec_long=defined-flags:,enabled-flags:,output:,option:,Ow:,option-global:,config:,pass-all-to-slaves,legacy,stdout,critical-warning,tmp:,stderr:,keep,slave,\*=\* #,binpath:,desktop,prefix # long options
+    optspec=o:O:C:c # b:dp #-: # short options
+    optspec_long=defined-flags:,enabled-flags:,output:,option:,Ow:,option-global:,config:,color,pass-all-to-slaves,legacy,stdout,critical-warning,tmp:,stderr:,keep,slave,\*=\* #,binpath:,desktop,prefix # long options
     PROCESSED_OPTSPEC=`getopt -qo $optspec --long $optspec_long \
     -n $appname -- "$@"` 
     eval set -- "$PROCESSED_OPTSPEC"
@@ -547,6 +547,7 @@ if [ ! $# = 0 ] ; then
 		esac
 		shift 2 
 		;;
+	      -c|--color) USE_COLOR=true ; shift 1 ;;
 	      -C|--config) . "$2" ; slaveconfig_file="$2" ;shift 2;;
 	      --pass-all-to-slaves) give_them_all=true; shift ;; # pass all option to slaves
 	      --legacy) legacy_mode=true ; shift ;;
