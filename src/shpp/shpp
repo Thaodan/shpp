@@ -422,7 +422,7 @@ clear_flags() { # cleas #\\ flags in
 ### main function ###
 
 main() {
-
+  init_stats
 
   if [ -z $tmp_dir ] ; then
       tmp_dir=tmp
@@ -512,7 +512,7 @@ HELP
 
 }
 
-init_stats
+
 if [ ! $# = 0 ] ; then 
   while [ ! $# = 0 ] ; do
     case $1 in 
