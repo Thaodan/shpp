@@ -261,6 +261,7 @@ find_commands() {
 	rem\ * )   	: ;; # ignore just a comment
 	break\ *)   	verbose 'found break abort parsing'; break ;;
 	error\ *)	error "$_command" ;;
+	warning\ *)	warning "$_command" ;;
 	*) stub ;;
       esac
    fi
@@ -367,10 +368,15 @@ define() {
 
 #\\error
 error() {  
-  error "$( echo "$1" |  sed "s/error//" )"
-  call_handler error:called 'Got called error from #\\error'
+  verbose 'Got error from #\\error'
+  call_handler error:called "$( echo "$1" |  sed "s/error//" )"
 }
 
+#\\warning
+warning() {
+  verbose 'Got warning from #\\warning'
+  call_handler warning "$( echo "$1" |  sed "s/warning//" )"
+}
 ### commands end ### 
 
 include_includes() { 
