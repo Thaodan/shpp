@@ -1,0 +1,14 @@
+Source: sh-make-tools
+Section: devel
+Priority: extra
+Maintainer: Bjoern Bidar <theodorstormgrade@gmail.com>
+Build-Depends: debhelper, sh, coreutils, sed, libsh
+Standards-Version: 3.9.3
+Homepage: <insert the upstream URL, if relevant>
+#Vcs-Git: git://git.debian.org/collab-maint/sh-make-tools.git
+#Vcs-Browser: http://git.debian.org/?p=collab-maint/sh-make-tools.git;a=summary
+
+Package: sh-make-tools
+Architecture: all
+Depends: sh, sed, coreutils, libsh
+Description: make replacement written for POSIX compilant shells like dash or bash

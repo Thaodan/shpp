@@ -98,7 +98,7 @@ msg2() {
 warning() {
 	first="$1"
 	shift
-	echo "${YELLOW}==${ALL_OFF}${BOLD} $first:${ALL_OFF} "$@"" >&2
+	echo "${YELLOW}==>${ALL_OFF}${BOLD} $first:${ALL_OFF} "$@"" >&2
 # 	unset first
 }
 
@@ -244,21 +244,24 @@ find_commands() {
     _find_command_count=$(( $_find_command_count + 1 ))
     current_line=$( read_farray $var_number $_find_command_count )
     if [ $erase_till_endif = true ] ; then
-      if [ "$_command" = endif ] ; then
+      if [ $_command = endif ] || [ $_command = else ]  ; then
 	sed -ie  "$if_line,$current_line d" "$1"
 	erase_till_endif=false
+	[ $_command = else ] && found_else=true
       elif [ ! $endif_notfound = false ] ; then
 	false
       fi
    else
       verbose "found $_command calling corresponding command"
       case "$_command" in
-	define\ *) define "$_command" ;;
-	include\ *) include "$_command" ;;
-	ifdef\ *)   ifdef "$_command" ;;
-	endif)   endif ;; # just a stub call for syntax error cause endif was used before if/ifdef#
-	rem\ * )   : ;; # ignore just a comment
-	break\ *)   verbose 'found break abort parsing'; break ;;
+	define\ *) 	define "$_command" ;;
+	include\ *) 	include "$_command" ;;
+	ifdef\ *)	ifdef "$_command" ;;
+	else)	Else "$_command"  ;;
+	endif)		endif ;; # just a stub call for syntax error cause endif was used before if/ifdef#
+	rem\ * )   	: ;; # ignore just a comment
+	break\ *)   	verbose 'found break abort parsing'; break ;;
+	error\ *)	error "$_command" ;;
 	macro\ *) load_macro "$_command" ;;  
 	*)  ( echo $_command | grep $registed_commands ) && run_external_command;;
       esac
@@ -318,22 +321,42 @@ load_macro() {
 #### built im commands ###
 #!\\ifdev
 ifdef() {
-  cleared_if="$( echo "$1" |  sed "s/ifdev//" )" # fist input with ifdef
+  cleared_if="$( echo "$1" |  sed -e "s/ifdef//" )" # fist input with ifdef
   unsuccesfull=true
-  for _defined in $( read_farray $defined_vars 0 ) ; do # look if var is defined:
-    test "$_defined" = "$cleared_if"  &&  unsuccesfull= && break  # if $_cleadif machtes with one of $defined_vars clear unsuccesfull and break
+  old_ifs=$IFS
+  IFS=:
+  for _defined in $defined_vars $input_defined_flags ; do # look if var is defined:
+    IFS=$old_ifs
+    test "$_defined" = $cleared_if  &&  unsuccesfull=false && break  # if $_cleadif machtes with one of $defined_vars clear unsuccesfull and break
+    IFS=:
   done 
-  if [ ! -z $unsuccesfull ] ; then
+  if [ "$unsuccesfull" = true ] ; then
      verbose 'tested var was not defined, remove content till endif, erase_till_endif ist set to true'
      if_line=$current_line # save $current_line for find_commands 
      erase_till_endif=true # say find_commands it has to erase fill from $if_line till next found endif
   fi
 }
 
+#\\endif
 endif() { # just a stub that calls call_handler with error to handle if endif is before if/ifdef
-  verbose 'found endif before if, calling for error'
-  call_handler  error:syntax 'no if before endif'
+ [ $found_else ] ||  ( verbose 'found endif before if, calling for error'
+  call_handler  error:syntax 'no if before endif' )
+  unset found_else
 }
+
+#\\else
+Else() {
+  if [ "$unsuccesfull" = false ] ; then
+    verbose 'last if was succesfull, removing content till endif'
+    if_line=$current_line # save $current_line for find_commands 
+    erase_till_endif=true # say find_commands it has to erase fill from $if_line till next found endif
+  else
+    verbose 'found else before if, calling for error'
+    call_handler  error:syntax 'no if before else'
+  fi
+}
+
+#\\include
 include() {
   verbose "opened $1 to parse, call ourself to process file" 
 #  cleaned_include="$( echo "$1" |  sed "s/include//" | sed 's/ //g')" # fist input with ifdef
@@ -369,6 +392,8 @@ include() {
 # copy content past #\\include to new file 
  unset noparse
 }
+
+#\\define
 define() {
   #for _defined $( find_var $1 \#\\\\define ) ; do
     cleaned_define="$( echo "$1" |  sed "s/define//" )"
@@ -382,6 +407,12 @@ define() {
       
  # done
  # unset _defined
+}
+
+#\\error
+error() {  
+  error "$( echo "$1" |  sed "s/error//" )"
+  call_handler error:called 'Got called error from #\\error'
 }
 
 ### commands end ### 
@@ -435,7 +466,7 @@ clear_flags() { # cleas #\\ flags in
 ### main function ###
 
 main() {
-
+  init_stats
 
   if [ -z $tmp_dir ] ; then
       tmp_dir=tmp
@@ -466,9 +497,7 @@ main() {
     parse_chaines
   fi
 
-#   if [ ! $slave ] ; then
-#     mkdir "$tmp_dir/slaves"
-#     slave_dir=$tmp
+
   unset basename_temp
   cp $source_file $tmp_dir/pc_file.stage1
   if [ ! -z "$replace_vars" ] ; then 
@@ -527,7 +556,7 @@ HELP
 
 }
 
-init_stats
+
 if [ ! $# = 0 ] ; then 
   while [ ! $# = 0 ] ; do
     case $1 in 
@@ -537,8 +566,8 @@ if [ ! $# = 0 ] ; then
       -V|--version)	echo $SHPP_VER:$SHPP_REV  ; shift ;;
     #   #-*)		echo `read_farray "$err_input_messages" 1`;;
       --*|*)
-    optspec=o:O:C: # b:dp #-: # short options
-    optspec_long=defined_flags:,enabled_flags:,output:,option:,Ow:,option-global:,config:,pass-all-to-slaves,legacy,stdout,critical-warning,tmp:,stderr:,keep,slave,\*=\* #,binpath:,desktop,prefix # long options
+    optspec=o:O:C:c # b:dp #-: # short options
+    optspec_long=defined-flags:,enabled-flags:,output:,option:,Ow:,option-global:,config:,color,pass-all-to-slaves,legacy,stdout,critical-warning,tmp:,stderr:,keep,slave,\*=\* #,binpath:,desktop,prefix # long options
     PROCESSED_OPTSPEC=`getopt -qo $optspec --long $optspec_long \
     -n $appname -- "$@"` 
     eval set -- "$PROCESSED_OPTSPEC"
@@ -562,6 +591,7 @@ if [ ! $# = 0 ] ; then
 		esac
 		shift 2 
 		;;
+	      -c|--color) USE_COLOR=true ; shift 1 ;;
 	      -C|--config) . "$2" ; slaveconfig_file="$2" ;shift 2;;
 	      --pass-all-to-slaves) give_them_all=true; shift ;; # pass all option to slaves
 	      --legacy) legacy_mode=true ; shift ;;
@@ -575,14 +605,14 @@ if [ ! $# = 0 ] ; then
 	    esac
 	  done 
 	  
-	  for var in $1 ; do
+	  for var in $@ ; do
 	    case $1 in
 	      	      *=*)
 		eval $1;
 		if [ -z $replace_vars ] ; then
 		  replace_vars=$( echo $1 | cut -d '=' -f1 )
 		else
-		  replace_vars=$( echo $1 | cut -d '=' -f1 )
+		  replace_vars=$( echo $1 | cut -d '=' -f1 ):$replace_vars
 		fi
 		shift
 		;;

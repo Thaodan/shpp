@@ -16,25 +16,32 @@ It used as #\\\\ as indicator for preprocessor commands. Currently it supports
 <var> <content> (adding content nyi),
 .I ifdef 
 <var>,
+.I else\,
 .I endif
-, 
+,
 .I include 
-<file>.
+<file>,
 .I rem 
 <comment>,
 .I break
-.
+\.
 .SS define
 Defines a variable and adds content to it
 
 .SS ifdef 
 Tests if var is defined if not all content till endif will be removed.
-(else currently not supported).
-
+.SS else
+Else statement if if(def) was unsuccesfull, will sent an error if no if(def) was found before or removes content till
+.I endif 
+if 
+.I ifdef
+was succesfull.
 .SS endif
 Says shpp to stop after
 .I ifdef
-was found before, if no ifdef was found before shpp will send an error.
+or
+.I else
+was found before, if no ifdef or else was found before shpp will send an error.
 .SS include
 Includes 
 .I File

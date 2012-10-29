@@ -1,0 +1,8 @@
+pkg/usr/bin/sh_make	usr/bin
+pkg/usr/bin/shpp	usr/bin
+pkg/usr/lib		usr
+pkg/usr/lib/sh_make	usr/lib
+pkg/usr/lib/sh_make/modules/configure usr/lib/sh_make/modules
+pkg/usr/lib/sh_make/modules/main_module usr/lib/sh_make/modules
+pkg/usr/lib/sh_make/modules/make_installer usr/lib/sh_make/modules
+pkg/usr/lib/sh_make/libsh_make	usr/lib/sh_make

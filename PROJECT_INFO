@@ -1,4 +1,4 @@
-# for info see dist-system/doc/README
+# for info see dist_system/doc/README
 
 PROJECT_NAME=sh-make-tools
 SOURCE_DIST=dist/source
@@ -6,4 +6,5 @@ SOURCE_DIR=src
 DIST_DIR=dist
 BUILD_FOLDER=sh-make-tools-$VER
 ARCHIVE_ENDING=.tar.gz
-DIST_FILES="dist dist_system src README INSTALL build_src.sh PROJECT_INFO"
+DIST_FILES="dist dist_system src tools README INSTALL build_src.sh PROJECT_INFO"
+PROJECT_VER=2.0
