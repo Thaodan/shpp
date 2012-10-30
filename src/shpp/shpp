@@ -19,7 +19,7 @@
 # config vars ### 
 ####################################
 # version, rev config
-SHPP_VER=0.5
+SHPP_VER=1.0.1
 SHPP_REV=60
 #####################################
 # base config 
