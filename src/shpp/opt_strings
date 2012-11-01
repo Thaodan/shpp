@@ -6,3 +6,4 @@ WARNING_IS_ERROR 	# if set all warnings are threated as error
 give_them_all=true 	# true or false, pass all options to slaves  
 stdout			# if output goes to stdout
 keep			# if set shpp don't deletes $tmp_dir
+USE_COLOR		# enable colored output
