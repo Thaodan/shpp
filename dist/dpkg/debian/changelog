@@ -1,4 +1,4 @@
-sh-make-tools (2.0-1) stable; urgency=low
+sh-make-tools (2.0.1-1) stable; urgency=low
 
   * Initial release (Closes: #nnnn)  <nnnn is the bug number of your ITP>
 
