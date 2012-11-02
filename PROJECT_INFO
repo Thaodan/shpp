@@ -7,4 +7,4 @@ DIST_DIR=dist
 BUILD_FOLDER=sh-make-tools-$VER
 ARCHIVE_ENDING=.tar.gz
 DIST_FILES="dist dist_system src tools README INSTALL build_src.sh PROJECT_INFO"
-PROJECT_VER=2.0
+PROJECT_VER=2.0.2
