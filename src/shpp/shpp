@@ -356,7 +356,7 @@ define() {
     cleaned_define="$( echo "$1" |  sed "s/define//" )"
     if [ ! -z ${cleaned_define#\ *} ] ; then
       verbose "found content in $1 saving it in \$_my_$2"
-      my_$2=${1#\ *} #define our private var of $_defined to prevent variable nameing issues 
+      my_$2=${1#*\ } #define our private var of $_defined to prevent variable nameing issues 
     fi
     if echo $defined_vars | grep -qv  ${cleaned_define%\ *} ; then
       write_farray $defined_vars $(( $( get_farray_lenght $defined_vars ) + 1 )) ${cleaned_define%\ *}
