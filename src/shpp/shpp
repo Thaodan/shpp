@@ -19,7 +19,7 @@
 # config vars ### 
 ####################################
 # version, rev config
-SHPP_VER=0.5
+SHPP_VER=1.1
 SHPP_REV=60
 #####################################
 # base config 
@@ -95,14 +95,14 @@ msg2() {
 	unset first
 }
 
-warning() {
+warning_msg() {
 	first="$1"
 	shift
 	echo "${YELLOW}==>${ALL_OFF}${BOLD} $first:${ALL_OFF} "$@"" >&2
 # 	unset first
 }
 
-error() {
+error_msg() {
 	first="$1"
 	shift
 	echo "${RED}==>${ALL_OFF}${BOLD} $first:${ALL_OFF} "$@"" >&2
@@ -112,15 +112,15 @@ error() {
 
 verbose() {
   if [ $verbose_output ] ; then
-    warning $@
+    warning_msg $@
   fi
 }
 
 
 call_handler() {
   case $1 in
-    error*) error "$@"; die=1 ;;
-    warning*) test "$WARNING_IS_ERROR" = true && die=1; warning "$@";; 
+    error*) error_msg "$@"; die=1 ;;
+    warning*) test "$WARNING_IS_ERROR" = true && die=1; warning_msg "$@";; 
   esac
   if [ $die ]  ; then
     verbose 'got signal to die, dieing'
