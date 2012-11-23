@@ -252,16 +252,19 @@ find_commands() {
       fi
    else
       verbose "found $_command calling corresponding command"
-      case "$_command" in
-	define\ *) 	define "$_command" ;;
-	include\ *) 	include "$_command" ;;
-	ifdef\ *)	ifdef "$_command" ;;
-	else)	Else "$_command"  ;;
+      current_cleared_command=$( echo $_command | sed "s|${_command%\ *}||" # give still the ability to know who they are
+      current_command="$_command"					    # if command wants the raw $_command it can use it
+      _command=$( echo $_command | sed "s|${_command#*\ }||")		    # we clear $0 from $_command now the commands don't need to do it
+      case "$current_cleared_command" in
+	define) 	define "$_command" ;;
+	include) 	include "$_command" ;;
+	ifdef)		ifdef "$_command" ;;
+	else)		Else "$_command"  ;;
 	endif)		endif ;; # just a stub call for syntax error cause endif was used before if/ifdef#
-	rem\ * )   	: ;; # ignore just a comment
-	break\ *)   	verbose 'found break abort parsing'; break ;;
-	error\ *)	error "$_command" ;;
-	warning\ *)	warning "$_command" ;;
+	rem)   		: ;; # ignore just a comment
+	break)   	verbose 'found break abort parsing'; break ;;
+	error)		error "$_command" ;;
+	warning)	warning "$_command" ;;
 	*) stub ;;
       esac
    fi
@@ -279,13 +282,13 @@ find_commands() {
 
 #!\\ifdev
 ifdef() {
-  cleared_if="$( echo "$1" |  sed -e "s/ifdef//" )" # fist input with ifdef
+  #cleared_if="$( echo "$1" |  sed -e "s/ifdef//" )" # fist input with ifdef
   unsuccesfull=true
   old_ifs=$IFS
   IFS=:
   for _defined in $defined_vars $input_defined_flags ; do # look if var is defined:
     IFS=$old_ifs
-    test "$_defined" = $cleared_if  &&  unsuccesfull=false && break  # if $_cleadif machtes with one of $defined_vars clear unsuccesfull and break
+    test "$_defined" = "$1"  &&  unsuccesfull=false && break  # if $_cleadif machtes with one of $defined_vars clear unsuccesfull and break
     IFS=:
   done 
   if [ "$unsuccesfull" = true ] ; then
@@ -320,7 +323,7 @@ include() {
 #  cleaned_include="$( echo "$1" |  sed "s/include//" | sed 's/ //g')" # fist input with ifdef
   for var in $1 ; do
     case $var in 
-      include) : ;; 
+   #   include) : ;; 
       noparse)  parser=no_parse ; call_handler warning:deprected 'no_parse is deprected now, use with care' ;;
       parser=*) parser=$( echo $1 | sed 's|parser=||' ) ;; # set parser to use another parser than shpp 
       parser_args=*) parser_args=$( echo $1 | sed 's|parser_args=||' ) ;; 
@@ -353,13 +356,13 @@ include() {
 #\\define
 define() {
   #for _defined $( find_var $1 \#\\\\define ) ; do
-    cleaned_define="$( echo "$1" |  sed "s/define//" )"
-    if [ ! -z ${cleaned_define#\ *} ] ; then
+   #cleaned_define="$( echo "$1" |  sed "s/define//" )"
+    if [ ! -z ${1#\ *} ] ; then
       verbose "found content in $1 saving it in \$_my_$2"
       my_$2=${1#*\ } #define our private var of $_defined to prevent variable nameing issues 
     fi
-    if echo $defined_vars | grep -qv  ${cleaned_define%\ *} ; then
-      write_farray $defined_vars $(( $( get_farray_lenght $defined_vars ) + 1 )) ${cleaned_define%\ *}
+    if echo $defined_vars | grep -qv  ${1%\ *} ; then
+      write_farray $defined_vars $(( $( get_farray_lenght $defined_vars ) + 1 )) ${1%\ *}
     fi
       
  # done
@@ -369,13 +372,13 @@ define() {
 #\\error
 error() {  
   verbose 'Got error from #\\error'
-  call_handler error:called "$( echo "$1" |  sed "s/error//" )"
+  call_handler error:called "$1"
 }
 
 #\\warning
 warning() {
   verbose 'Got warning from #\\warning'
-  call_handler warning "$( echo "$1" |  sed "s/warning//" )"
+  call_handler warning "$1"
 }
 ### commands end ### 
 
