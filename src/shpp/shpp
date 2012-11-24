@@ -252,9 +252,9 @@ find_commands() {
       fi
    else
       verbose "found $_command calling corresponding command"
-      current_cleared_command=$( echo $_command | sed "s|${_command%\ *}||" ) # give still the ability to know who they are
+      current_cleared_command=$( echo $_command | sed -e "s|${_command#*\ }||" -e  "s|\ ||" ) # give still the ability to know who they are
       current_command="$_command"					      # if command wants the raw $_command it can use it
-      _command=$( echo $_command | sed "s|${_command#*\ }||")		      # we clear $0 from $_command now, the commands don't need to do it
+      _command=$( echo $_command | sed -e "s|${_command%\ *}||" -e  "s|^\ ||")		      # we clear $0 from $_command now, the commands don't need to do it
       case "$current_cleared_command" in
 	define) 	define "$_command" ;;
 	include) 	include "$_command" ;;
