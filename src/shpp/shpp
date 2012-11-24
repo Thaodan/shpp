@@ -252,7 +252,7 @@ find_commands() {
       fi
    else
       verbose "found $_command calling corresponding command"
-      if ! echo $_command | grep "\ " ; then
+      if echo $_command | grep -qv "\ " ; then
 	current_cleared_command=$_command							# if $_command has no space, we assume that $_command is already clear
       else
 	current_cleared_command=$( echo $_command | sed -e "s|${_command#*\ }||" -e  "s|\ ||" ) # else clear it and give the commands still the ability to know who they are
