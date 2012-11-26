@@ -179,31 +179,6 @@ parse_chaines() {
   slaveconfig_file="$tmp_dir/slaveconfig"
 }
 
-
-########################################################
-# 
-
-find_var() { # find var in $2 in $1, print only the result and save the locations of the results in var_number 
-  case $1 in 
-    -n)   
-    old_ifs=$IFS
-    IFS=:
-    var_number=$( grep -hn "$3" "$2"  | sed 's|:.*||' | tr '\n' ':') #do #| sort -n  sed 's/:.*//' 
-
-       IFS=$old_ifs
-    ;;
-
-  *)
-   old_ifs=$IFS
-   IFS=:
-   for var in $( grep "$2" "$1" | tr '\n' ':' ) ; do 
-    echo $var| sed -e "s/^$2//" -e 's/^[ \t]*//'
-   done
-   IFS=$old_ifs
- 
-  ;;
-  esac
-}
 ############################################################
 
 
@@ -233,15 +208,15 @@ write_flags() { # write #\\ flags to $3
 ############################
 
 find_commands() {
-  find_var -n "$1" \#\\\\\\\\
   erase_till_endif=false
-  endif_notfound=false
+  endif_notfound=false 
+  command_lines=$( grep -hn '#\\\\' "$1"  | sed 's|:.*||' | tr '\n' ':')
   old_ifs=$IFS
   IFS=:
-  for _command in $( find_var "$1" '#\\\\' | tr '\n' ':' ) ; do
+  for _command in $( grep  '#\\\\' "$1" | sed -e 's/^#\\\\//' -e 's/^[ \t]*//' | tr '\n' ':' ) ; do
     IFS=$old_ifs
     _find_command_count=$(( $_find_command_count + 1 ))
-    current_line=$( read_farray $var_number $_find_command_count )
+    current_line=$( read_farray $command_lines $_find_command_count )
     if [ $erase_till_endif = true ] ; then
       if [ $_command = endif ] || [ $_command = else ]  ; then
 	sed -ie  "$if_line,$current_line d" "$1"
@@ -388,13 +363,13 @@ warning() {
 
 include_includes() { 
   cp "$tmp_dir/pc_file.stage2" "$tmp_dir/backups/pre_include" # make backups before do include
-  find_var -n $1 \#\\\\\\\\include 
-  for _include in $( find_var $1 \#\\\\\\\\include |  sed 's/^ //'  ) ; do
+  includes_lines=$( grep -hn '#\\\\include' "$1"  | sed 's|:.*||' | tr '\n' ':')
+  for _include in $( grep  '#\\\\include' "$1" | sed -e 's/^#\\\\//' -e 's/^[ \t]*//' -e  's/^ //'  | tr '\n' ':'  ) ; do
     old_ifs=$IFS
     IFS=' '
     for include_argument in $_include ; do
       case $include_argument in 
-      # include) : ;; 
+	include) : ;; 
         noparse|parser=*|parser_args=*) : ;; # stub arguments that are only used by #\\include
         *) _include=$include_argument ;;
       esac
@@ -480,7 +455,7 @@ main() {
   else
     cp "$tmp_dir/pc_file.stage1" "$tmp_dir/pc_file.stage2"
     find_commands "$tmp_dir/pc_file.stage2"
-    include_includes "$tmp_dir/pc_file.stage2" # finaly include our $includes
+    test ! -z $includes && include_includes "$tmp_dir/pc_file.stage2" # finaly include our $includes if $includes is not empty
   fi
 
   clear_flags "$tmp_dir/pc_file.stage2"
