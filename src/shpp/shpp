@@ -210,10 +210,10 @@ write_flags() { # write #\\ flags to $3
 find_commands() {
   erase_till_endif=false
   endif_notfound=false 
-  command_lines=$( grep -hn '#\\\\' "$1"  | sed 's|:.*||' | tr '\n' ':')
+  command_lines=$( grep -hn \#\\\\\\\\ "$1"  | sed 's|:.*||' | tr '\n' ':')
   old_ifs=$IFS
   IFS=:
-  for _command in $( grep  '#\\\\' "$1" | sed -e 's/^#\\\\//' -e 's/^[ \t]*//' | tr '\n' ':' ) ; do
+  for _command in $( grep  \#\\\\\\\\ "$1" | sed -e 's/^#\\\\//' -e 's/^[ \t]*//' | tr '\n' ':' ) ; do
     IFS=$old_ifs
     _find_command_count=$(( $_find_command_count + 1 ))
     current_line=$( read_farray $command_lines $_find_command_count )
@@ -233,7 +233,9 @@ find_commands() {
 	current_cleared_command=$( echo $_command | sed -e "s|${_command#*\ }||" -e  "s|\ ||" ) # else clear it and give the commands still the ability to know who they are
       fi
       current_command="$_command"					      			# if command wants the raw $_command it can use it
+      echo "${_command%*\ }"
       _command=$( echo $_command | sed -e "s|${_command%\ *}||" -e  "s|^\ ||")		      	# we clear $0 from $_command now, the commands don't need to do it
+      echo $current_cleared_command
       case "$current_cleared_command" in
 	define) 	define "$_command" ;;
 	include) 	include "$_command" ;;
@@ -363,8 +365,8 @@ warning() {
 
 include_includes() { 
   cp "$tmp_dir/pc_file.stage2" "$tmp_dir/backups/pre_include" # make backups before do include
-  includes_lines=$( grep -hn '#\\\\include' "$1"  | sed 's|:.*||' | tr '\n' ':')
-  for _include in $( grep  '#\\\\include' "$1" | sed -e 's/^#\\\\//' -e 's/^[ \t]*//' -e  's/^ //'  | tr '\n' ':'  ) ; do
+  includes_lines=$( grep -hn \#\\\\\\\\include "$1"  | sed 's|:.*||' | tr '\n' ':')
+  for _include in $( grep  \#\\\\\\\\include "$1" | sed -e 's/^#\\\\//' -e 's/^[ \t]*//' -e  's/^ //'  | tr '\n' ':'  ) ; do
     old_ifs=$IFS
     IFS=' '
     for include_argument in $_include ; do
