@@ -233,9 +233,7 @@ find_commands() {
 	current_cleared_command=$( echo $_command | sed -e "s|${_command#*\ }||" -e  "s|\ ||" ) # else clear it and give the commands still the ability to know who they are
       fi
       current_command="$_command"					      			# if command wants the raw $_command it can use it
-      echo "${_command%*\ }"
       _command=$( echo $_command | sed -e "s|${_command%\ *}||" -e  "s|^\ ||")		      	# we clear $0 from $_command now, the commands don't need to do it
-      echo $current_cleared_command
       case "$current_cleared_command" in
 	define) 	define "$_command" ;;
 	include) 	include "$_command" ;;
