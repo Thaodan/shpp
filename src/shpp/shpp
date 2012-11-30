@@ -476,21 +476,22 @@ main() {
 print_help() {
 cat <<HELP
 $appname usage: 
-      $appname [source file] 
+      $appname [Options] File
     
-  options:
-    --help -H		print this help
-    --version		print version
+  Options:  
+  --help	-H -h			print this help
+  --version	-V			print version
+  --color	-c			enable colored output
 		
-  -o --output		<file>		places output in file
-  -O --option		<option>	give $appname <option>
-  --Ow --option-global	<option>  
+  --output	  -o	<file>		places output in file
+  --option	  -O	<option>	give $appname <option>
+  --option-global --Ow	<option>  	pass options to master and his slaves
   --pass-all-to-slaves			pass all options to slaves
   --stdout				all output goes to stdout
   --critical-warning    		warnings are threated as errors
-  --tmp=                		set temp directory
+  --tmp=<tmp_dir>			set temp directory
   --keep 				don't delete tmp files after running
-  --stderr=file   			stderr goes to file
+  --stderr=<file>   			stderr goes to file
 
   --defined-flags       give $appname flags to define that are not defined in file, seperated with :.
   --enabled-flags       give $appname flags to enable, same seperator :
