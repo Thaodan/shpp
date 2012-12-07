@@ -259,11 +259,30 @@ find_commands() {
 
 
 ### commands ### 
-register_command() { # register commmand in macro file
+# description:	this are commands that can be executed in $source_file (#\\*)
+# 		commands can be builtin or suplied by macro files
+# 		most commands exept if* do their write parts after find_commands()
+# 		external commands shoud do their write part with a runner that is executed after find_commands()
+
+register_external() { 
+# usage:  register externa
+# usage:  register externals in macro files
+# description: this command (#\\macro) register externals to shpp either commands (#\\*) or runners 
+  case $1 in  # set component to register
+    -c|--command) _mode=add_command;;
+    -R|--runner)  _mode=add_runner;;
+    *) return 1;;
+  esac
+  shift 
   while [ ! $# = 0 ] ; do
-   registed_commands=$register_commands:$1
-   shift
-  do
+    case $_mode in
+      add_command) registed_commands=$register_commands:$1 ;;
+      add_runner) registed_runners=$registed_runners:$1;;
+    esac
+    shift
+  do  
+ 
+  unset _mode
 }
 
 
@@ -498,6 +517,9 @@ main() {
   else
     cp "$tmp_dir/pc_file.stage1" "$tmp_dir/pc_file.stage2"
     find_commands "$tmp_dir/pc_file.stage2"
+    for runner in $registed_runners ; do # run registed runners from macros 
+      $runner
+    done 
     test ! -z $includes && include_includes "$tmp_dir/pc_file.stage2" # finaly include our $includes if $includes is not empty
   fi
 
