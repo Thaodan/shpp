@@ -32,7 +32,7 @@ SHPP_REV=60
 
 . "${libdir:-/usr/lib}/libsh"
 if [ $( dirname $0 ) = . ] ; then
-   shpp=$(which $0) || shpp=$( dirname $0 )/shpp
+  shpp=$(which $0 2>/dev/null ) || shpp=$( dirname $0 )/shpp
 else
   shpp=$( dirname $0 )/shpp
 fi
