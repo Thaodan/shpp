@@ -267,7 +267,7 @@ ifdef() {
   unsuccesfull=true
   old_ifs=$IFS
   IFS=:
-  for _defined in $defined_vars $input_defined_flags ; do # look if var is defined:
+  for _defined in $defined_vars $input_defined_vars ; do # look if var is defined:
     IFS=$old_ifs
     test "$_defined" = "$1"  &&  unsuccesfull=false && break  # if $_cleadif machtes with one of $defined_vars clear unsuccesfull and break
     IFS=:
@@ -452,11 +452,12 @@ main() {
     
   if [ $legacy_mode ] ; then
     verbose 'found $legacy_mode, entering legacy mode'
-    write_flags $input_enabled_flagst $defined_flags:$input_defined_flags "$tmp_dir/pc_file.stage1"  || call_handler error:exit_stat "write_flags or defined_flags quited with $?"
+    write_flags $input_enabled_flagst $defined_flags:$input_defined_vars "$tmp_dir/pc_file.stage1"  || call_handler error:exit_stat "write_flags or defined_flags quited with $?"
     mv "$tmp_dir/pcfile.stage1" $target_name || call_handler error:file "cant copy $tmp_dir/pcfile.stage to $target_name"
   else
     cp "$tmp_dir/pc_file.stage1" "$tmp_dir/pc_file.stage2"
     find_commands "$tmp_dir/pc_file.stage2"
+    write_flags '!*' "$defined_vars" 
     test ! -z $includes && include_includes "$tmp_dir/pc_file.stage2" # finaly include our $includes if $includes is not empty
   fi
 
@@ -514,13 +515,13 @@ if [ ! $# = 0 ] ; then
     #   #-*)		echo `read_farray "$err_input_messages" 1`;;
       --*|*)
     optspec=o:O:C:c # b:dp #-: # short options
-    optspec_long=defined-flags:,enabled-flags:,output:,option:,Ow:,option-global:,config:,color,pass-all-to-slaves,legacy,stdout,critical-warning,tmp:,stderr:,keep,slave,\*=\* #,binpath:,desktop,prefix # long options
+    optspec_long=defined-flags:,defined-vars:,enabled-flags:,output:,option:,Ow:,option-global:,config:,color,pass-all-to-slaves,legacy,stdout,critical-warning,tmp:,stderr:,keep,slave,\*=\* #,binpath:,desktop,prefix # long options
     PROCESSED_OPTSPEC=`getopt -qo $optspec --long $optspec_long \
     -n $appname -- "$@"` 
     eval set -- "$PROCESSED_OPTSPEC"
 	  while [ !  $#  -eq 1 ] ; do
 	    case $1 in 
-	      --defined-flags)  input_defined_flags=${2} ; shift 2 ;;
+	      --defined-flags|--defined-vars)  input_defined_vars=${2} ; shift 2 ;;
 	      --enabled-flags)  input_enabled_flagst=${2} ; shift  2;;
 	      -o|--output) target_name="$2"; shift 2 ;;
 	      -O|--option) # pass options to shpp or enable options
