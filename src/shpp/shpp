@@ -204,7 +204,6 @@ write_flags() { # write #\\ flags to $3
 }
 
 
-
 ############################
 
 find_commands() {
@@ -216,11 +215,14 @@ find_commands() {
   for _command in $( grep  \#\\\\\\\\ "$1" | sed -e 's/^#\\\\//' -e 's/^[ \t]*//' | tr '\n' ':' ) ; do
     IFS=$old_ifs
     _find_command_count=$(( $_find_command_count + 1 ))
-    current_line=$( read_farray $command_lines $_find_command_count )
+    current_line=$(( $( read_farray $command_lines $_find_command_count ) - ${removed_stack:-0} )) # remove removed lines from current_line
+    _command=$( echo "$_command" | sed 's|\ $||')
     if [ $erase_till_endif = true ] ; then
       if [ $_command = endif ] || [ $_command = else ]  ; then
-	sed -ie  "$if_line,$current_line d" "$1"
+	sed -ie "$if_line,$current_line d" "$1" 
+#\\debug_if		cp "$1" "$tmp_dir/ifsteps/pc_file.stage.$_find_command_count"
 	erase_till_endif=false
+	removed_stack=$(( ( $current_line - $if_line  + 1) + ${removed_stack:-0} )) # save removed lines (difference between $current_line and $if_line + 1)
 	[ $_command = else ] && found_else=true
       elif [ ! $endif_notfound = false ] ; then
 	false
@@ -230,7 +232,7 @@ find_commands() {
       if echo $_command | grep -qv "\ " ; then
 	current_cleared_command=$_command							# if $_command has no space, we assume that $_command is already clear
       else
-	current_cleared_command=$( echo $_command | sed -e "s|${_command#*\ }||" -e  "s|\ ||" ) # else clear it and give the commands still the ability to know who they are
+	current_cleared_command=$( echo $_command | sed -e "s|${_command#*\ }||" -e  "s|^\ ||" -e 's|\ $||') # else clear it and give the commands still the ability to know who they are
       fi
       current_command="$_command"					      			# if command wants the raw $_command it can use it
       _command=$( echo $_command | sed -e "s|${_command%\ *}||" -e  "s|^\ ||")		      	# we clear $0 from $_command now, the commands don't need to do it
@@ -422,7 +424,7 @@ main() {
       fi
   fi
   tmp_dir=$tmp_dir/$$
-
+#\\debug_if	mkdir -p "$tmp_dir/ifsteps"
   mkdir -p "$tmp_dir/including"
   mkdir -p "$tmp_dir/backups"
   mkdir -p "$tmp_dir/logs"
