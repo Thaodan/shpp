@@ -26,7 +26,7 @@ readonly SH_MAKE_REV SH_MAKE_VER
 
 . "@prefix@/lib/sh_make/libsh_make"
 
-err_input_messages='No input given or no sh_makefile found!:To little input given!' # err message for test_input
+err_input_messages='No input given or no sh_makefile found!:Wrong or to less  input given!' # err message for test_input
 
 ####################################
 cleanup() {
@@ -113,11 +113,11 @@ case $1 in
     optspec=s:f: # b:dp #-: # short options
     optspec_long=shell:,make:,keep,debug,verbose #,binpath:,desktop,prefix # long options
     PROCESSED_OPTSPEC=`getopt -q --options $optspec --long $optspec_long \
-    -n $appname --  "$@"` ||  error  "$( read_farray "$err_input_messages" 2 )" || exit 1 # parsed optspec
+    -n $appname --  "$@"` ||  error  "Wrong or to less  input given!" || exit 1 # parsed optspec
     eval set -- "$PROCESSED_OPTSPEC"
-    while [ $? = 0 ] ; do
+    while [ ! $# = 0 ] ; do
       case $1 in 
-	-s|-shell) used_shell="$2"; readonly used_shell ; shift 2;;
+	-s|--shell) used_shell="$2"; readonly used_shell ; shift 2;;
 	--debug) debug=xv ; USE_COLOR=;  shift ;;
 	--verbose) debug=v ;USE_COLOR=;  shift ;;
 	-f|--make) sh_makefile="$2" ; shift 2 ;;

@@ -19,7 +19,7 @@
 # config vars ### 
 ####################################
 # version, rev config
-SHPP_VER=1.1
+SHPP_VER=1.8
 SHPP_REV=60
 #####################################
 # base config 
@@ -251,7 +251,7 @@ find_commands() {
    fi
    IFS=:
   done
-  unset _command var_number
+  unset _command _command_lines
 }
 
 
@@ -378,7 +378,7 @@ include_includes() {
     done
     old_ifs=$IFS
     _find_include_count=$(( $_find_include_count + 1 ))
-    current_line=$( read_farray $var_number $_find_include_count )
+    current_line=$( read_farray $includes_lines  $_find_include_count )
     tmp_include=$( read_farray $includes ${current_include_no:-1}  )
     if [ $(basename $_include) = $tmp_include ] ; then
        sed "$current_line,$ d" $1 > "$tmp_dir/including/cut_source"
