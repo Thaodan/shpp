@@ -1,5 +1,14 @@
-sh-make-tools (2.0-1) stable; urgency=low
+sh-make-tools (2.1.0-1) stable; urgency=low
+  * Major release
+ -- Bjoer Bidar <theodorstormgrade@gmail.com> To be released
 
-  * Initial release (Closes: #nnnn)  <nnnn is the bug number of your ITP>
+sh-make-tools (2.0.1-1) stable; urgency=low
+  * Minor bug fix release see 
+ -- Bjoer Bidar <theodorstormgrade@gmail.com> Fry, 02 Nov 2012 01:34:29 +0200
 
- -- Bjoern Bidar <bidar@unknown>  Sun, 09 Sep 2012 01:34:29 +0200
+
+sh-make-tools (2.0.0-1) stable; urgency=low
+
+  * Initial release 
+
+ -- Bjoern Bidar <theodorstormgrade@gmail.com>  Sun, 09 Sep 2012 01:34:29 +0200
