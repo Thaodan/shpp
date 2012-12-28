@@ -516,10 +516,10 @@ if [ ! $# = 0 ] ; then
       --*|*)
     optspec=o:O:C:c # b:dp #-: # short options
     optspec_long=defined-flags:,defined-vars:,enabled-flags:,output:,option:,Ow:,option-global:,config:,color,pass-all-to-slaves,legacy,stdout,critical-warning,tmp:,stderr:,keep,slave,\*=\* #,binpath:,desktop,prefix # long options
-    PROCESSED_OPTSPEC=`getopt -qo $optspec --long $optspec_long \
-    -n $appname -- "$@"` 
-    eval set -- "$PROCESSED_OPTSPEC"
-	  while [ !  $#  -eq 1 ] ; do
+    PROCESSED_OPTSPEC=$( getopt -qo $optspec --long $optspec_long \
+    -n $appname -- "$@" ) | ( error_msg input "Wrong or to less  input given!"
+    eval set -- "$PROCESSED_OPTSPEC"; exit 1 )
+	  while [ !  $#  =  1  ]  ; do
 	    case $1 in 
 	      --defined-flags|--defined-vars)  input_defined_vars=${2} ; shift 2 ;;
 	      --enabled-flags)  input_enabled_flagst=${2} ; shift  2;;
