@@ -281,8 +281,10 @@ ifdef() {
 
 #\\endif
 endif() { # just a stub that calls call_handler with error to handle if endif is before if/ifdef
- [ $found_else ] ||  ( verbose 'found endif before if, calling for error'
-  call_handler  error:syntax 'no if before endif' )
+  if [ ! $found_else ] ; then
+    verbose 'found endif before if, calling for error
+    call_handler  error:syntax 'no if before endif' 
+  fi
   unset found_else
 }
 
