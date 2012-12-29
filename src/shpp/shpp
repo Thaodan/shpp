@@ -282,7 +282,8 @@ ifdef() {
 #\\endif
 endif() { # just a stub that calls call_handler with error to handle if endif is before if/ifdef
   if [ ! $found_else ] ; then
-    verbose 'found endif before if, calling for error
+    verbose 'found endif before if, calling for error'
+
     call_handler  error:syntax 'no if before endif' 
   fi
   unset found_else
@@ -341,11 +342,11 @@ define() {
   #for _defined $( find_var $1 \#\\\\define ) ; do
    #cleaned_define="$( echo "$1" |  sed "s/define//" )"
     if [ ! -z ${1#\ *} ] ; then
-      verbose "found content in $1 saving it in \$_my_$2"
-      my_$2=${1#*\ } #define our private var of $_defined to prevent variable nameing issues 
+      verbose "found content in $1 saving it in \$my_${2}"
+      eval my_$1=${2#*\ } #define our private var of $_defined to prevent variable nameing issues 
     fi
     if echo $defined_vars | grep -qv  ${1%\ *} ; then
-      write_farray $defined_vars $(( $( get_farray_lenght $defined_vars ) + 1 )) ${1%\ *}
+      write_farray \$defined_vars $(( $( get_farray_lenght $defined_vars ) + 1 )) ${1%\ *}
     fi
       
  # done
