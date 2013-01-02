@@ -518,15 +518,20 @@ if [ ! $# = 0 ] ; then
     #   #-*)		echo `read_farray "$err_input_messages" 1`;;
       --*|*)
     optspec=o:O:C:c # b:dp #-: # short options
-    optspec_long=defined-flags:,defined-vars:,enabled-flags:,output:,option:,Ow:,option-global:,config:,color,pass-all-to-slaves,legacy,stdout,critical-warning,tmp:,stderr:,keep,slave,\*=\* #,binpath:,desktop,prefix # long options
+    optspec_long=defined-flags:,defined-vars:,enabled-flags:,output:,option:,Ow:,option-global:,config:,color,pass-all-to-slaves,legacy,stdout,critical-warning,tmp:,stderr:,keep,slave,debug,errexit,\*=\* #,binpath:,desktop,prefix # long options
     PROCESSED_OPTSPEC=$( getopt -qo $optspec --long $optspec_long \
     -n $appname -- "$@" ) || error_msg input "Wrong or to less  input given!" ||  exit 1 
     eval set -- "$PROCESSED_OPTSPEC"; 
 	  while [ !  $#  =  1  ]  ; do
 	    case $1 in 
-	      --defined-flags|--defined-vars)  input_defined_vars=${2} ; shift 2 ;;
-	      --enabled-flags)  input_enabled_flagst=${2} ; shift  2;;
-	      -o|--output) target_name="$2"; shift 2 ;;
+	      --debug)
+		set -o verbose
+		set -o xtrace
+		shift
+		;;
+	      --errexit) set -o errexit ; shift ;;
+	      -c|--color) USE_COLOR=true ; shift 1 ;;
+	      -C|--config) . "$2" ; slaveconfig_file="$2" ;shift 2;;
 	      -O|--option) # pass options to shpp or enable options
 		case $2 in 
 		  *=*) eval $2 ; pass_chain -g $2 ;; # self explained
@@ -542,16 +547,17 @@ if [ ! $# = 0 ] ; then
 		esac
 		shift 2 
 		;;
-	      -c|--color) USE_COLOR=true ; shift 1 ;;
-	      -C|--config) . "$2" ; slaveconfig_file="$2" ;shift 2;;
+	      --tmp) tmp_dir=${2} ; shift 2;;
+	      --keep) keep=true; shift ;; # keep temp files
+	      --critical-warning) WARNING_IS_ERROR=true ; shift ;; # all warnings are critical
+	      --slave) slave=true; shift ;; # process is a slave, it now links to their master and dont provides links to its directorys in main temp
+	      --defined-flags|--defined-vars)  input_defined_vars=${2} ; shift 2 ;;
+	      --enabled-flags)  input_enabled_flagst=${2} ; shift  2;;
+	      -o|--output) target_name="$2"; shift 2 ;;
 	      --pass-all-to-slaves) give_them_all=true; shift ;; # pass all option to slaves
 	      --legacy) legacy_mode=true ; shift ;;
 	      --stdout) target_name="stdout" ; shift ;;
-	      --critical-warning) WARNING_IS_ERROR=true ; shift ;; # all warnings are critical
-	      --tmp) tmp_dir=${2} ; shift 2;;
 	      --stderr) stder=${2} ; shift  2;; # tells shpp to pass stder to $2
-	      --keep) keep=true; shift ;; # keep temp files
-	      --slave) slave=true; shift ;; # process is a slave, it now links to their master and dont provides links to its directorys in main temp
 	      --) shift; break ;;
 	    esac
 	  done 

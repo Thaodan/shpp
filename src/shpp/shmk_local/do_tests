@@ -1,10 +1,14 @@
 #!/bin/sh
-do_test() {
+do_tests() {
 	testrun=$1
 	shift
-  for test_file in TESTFILES ; do
+	IFS=" "
+  for test_file in $TESTFILES ; do
 		__testrun=$(echo "$testrun" | sed "s|%f|$test_file|")
-		eval $test_file > $test_file.fine || ( error error:return_stat "${testrun%\ *} returned $? on $testfile, saving result to $test_file.ftest"; \
-												mv $test_file.fine $test_file.fail
+		eval $__testrun > $test_file.fine
+		if [ $? -ge 1 ]   ; then 
+			error error:return_stat "${testrun%\ *} returned $? on $testfile, saving result to $test_file.fail" 
+			mv $test_file.fine $test_file.fail
+		fi
 	done
 }

@@ -7,7 +7,7 @@ install_prefix=/usr
 shpp=shpp
 APPNAME=shpp
 VER=1.8
-TESTFILES=tests/*
+TESTFILES=$(find tests ! -iname "*~" -type f | tr '\n ' " ")
 # if no sh_make instslled run it with tools/simple_shmake, just make shure that shpp is in $PATH
 
 default() {
@@ -28,8 +28,8 @@ install() {
 }
 
 tests() {
-	load_module shm_local/do_tests
-	do_tests $APPNAME   
+	load_module shmk_local/do_tests
+	do_tests "./$APPNAME %f --stdout"
 }
 install_shpp() {
 	$install shpp $DESTDIR/$PREFIX/bin/shpp
