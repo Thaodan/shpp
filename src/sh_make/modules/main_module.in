@@ -8,7 +8,7 @@ run_entry_point() {
 }
 
 load_module(){
-  if echo $loaded_modules | grep -v $( basename $1 ) ; then
+  if echo $loaded_modules | grep -vq $( basename $1 ) ; then
     case "$1" in
     */*)
       . "$1"

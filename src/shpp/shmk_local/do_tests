@@ -8,7 +8,7 @@ do_tests() {
       eval $__testrun > $test_file.fine
       saved_return_status=$?
       if [ $saved_return_status -ge 1 ] ; then 
-	error error:return_status "${testrun%\ *} returned $saved_return_status  on $testfile, saving result to $test_file.fail" 
+	error error:return_status "'${__testrun%\ *}' returned $saved_return_status  on $testfile, saving result to $test_file.fail" 
 	mv $test_file.fine $test_file.fail
       elif [ ! $SHMK_TESTS_SAVEFINE ] ; then # set to true do remove fine files
 	rm $test_file.fine
