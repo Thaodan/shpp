@@ -167,8 +167,8 @@ pass_chain() {
   
 }
 parse_chaines() {
-  mv -f slaveconfig	"$tmp_dir/slaveconfig" > /dev/null 2>&1  || echo "destination=valhalla" > "$tmp_dir/slaveconfig"
-  mv -f master_config	"$tmp_dir/master_config" > /dev/null 2>&1  
+  mv -f slaveconfig	"$tmp_dir/slaveconfig" > /dev/null 2>&1  || echo "destination=valhalla" > "$tmp_dir/slaveconfig" || true # ignore this error it isn't needed
+  mv -f master_config	"$tmp_dir/master_config" > /dev/null 2>&1  || true 
 
   if [ "$give_them_all" = true ] ; then
     cat $tmp_dir/slaveconfig >> $tmp_dir/master_config 

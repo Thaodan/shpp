@@ -6,8 +6,9 @@ do_tests() {
   for test_file in $TESTFILES ; do
 		__testrun=$(echo "$testrun" | sed "s|%f|$test_file|")
 		eval $__testrun > $test_file.fine
-		if [ $? -ge 1 ]   ; then 
-			error error:return_stat "${testrun%\ *} returned $? on $testfile, saving result to $test_file.fail" 
+		saved_return_status=$?
+		if [ $saved_return_status -ge 1 ]   ; then 
+			error error:return_status "${testrun%\ *} returned $saved_return_status  on $testfile, saving result to $test_file.fail" 
 			mv $test_file.fine $test_file.fail
 		fi
 	done

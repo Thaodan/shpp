@@ -29,7 +29,7 @@ install() {
 
 tests() {
 	load_module shmk_local/do_tests
-	do_tests "./$APPNAME %f --stdout"
+	do_tests "./$APPNAME %f --stdout --errexit"
 }
 install_shpp() {
 	$install shpp $DESTDIR/$PREFIX/bin/shpp
