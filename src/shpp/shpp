@@ -216,7 +216,8 @@ find_commands() {
   for _command in $( grep  \#\\\\\\\\ "$1" | sed -e 's/^#\\\\//' -e 's/^[ \t]*//' | tr '\n' ':' ) ; do
     IFS=$old_ifs
     _find_command_count=$(( $_find_command_count + 1 ))
-    current_line=$(( $( read_farray $command_lines $_find_command_count ) - ${removed_stack:-0} )) # remove removed lines from current_line
+    current_line_ued=$( read_farray $command_lines  $_find_command_count  ) # current with removeing deleted lines
+    current_line=$(( $curent_line_real - ${removed_stack:-0} )) # remove removed lines from current_line
     _command=$( echo "$_command" | sed 's|\ $||')
     if [ $erase_till_endif = true ] ; then
       if [ $_command = endif ] || [ $_command = else ]  ; then
@@ -229,7 +230,7 @@ find_commands() {
 	false
       fi
    else
-      verbose "found $_command calling corresponding command"
+      verbose "L$current_line_ued:Found $_command calling corresponding command"
       if echo $_command | grep -qv "\ " ; then
 	current_cleared_command=$_command							# if $_command has no space, we assume that $_command is already clear
       else
@@ -274,7 +275,7 @@ ifdef() {
     IFS=:
   done 
   if [ "$unsuccesfull" = true ] ; then
-     verbose 'tested var was not defined, remove content till endif, erase_till_endif ist set to true'
+     verbose 'L$current_line_ued:Tested var was not defined, remove content till endif, erase_till_endif ist set to true'
      if_line=$current_line # save $current_line for find_commands 
      erase_till_endif=true # say find_commands it has to erase fill from $if_line till next found endif
   fi
@@ -283,7 +284,7 @@ ifdef() {
 #\\endif
 endif() { # just a stub that calls call_handler with error to handle if endif is before if/ifdef
   if [ ! $found_else ] ; then
-    verbose 'found endif before if, calling for error'
+    verbose 'L$current_line_ued:Found endif before if, calling for error'
 
     call_handler  error:syntax 'no if before endif' 
   fi
@@ -293,18 +294,18 @@ endif() { # just a stub that calls call_handler with error to handle if endif is
 #\\else
 Else() {
   if [ "$unsuccesfull" = false ] ; then
-    verbose 'last if was succesfull, removing content till endif'
+    verbose 'L$current_line_ued:Last if was succesfull, removing content till endif'
     if_line=$current_line # save $current_line for find_commands 
     erase_till_endif=true # say find_commands it has to erase fill from $if_line till next found endif
   else
-    verbose 'found else before if, calling for error'
+    verbose 'L$current_line_ued:Found else before if, calling for error'
     call_handler  error:syntax 'no if before else'
   fi
 }
 
 #\\include
 include() {
-  verbose "opened $1 to parse, call ourself to process file" 
+  verbose "L$current_line_ued:Opened $1 to parse, call ourself to process file" 
 #  cleaned_include="$( echo "$1" |  sed "s/include//" | sed 's/ //g')" # fist input with ifdef
   for var in $1 ; do
     case $var in 
@@ -343,7 +344,7 @@ define() {
   #for _defined $( find_var $1 \#\\\\define ) ; do
    #cleaned_define="$( echo "$1" |  sed "s/define//" )"
     if [ ! -z ${1#\ *} ] ; then
-      verbose "found content in $1 saving it in \$my_${2}"
+      verbose "L$current_line_ued: found content in $1 saving it in \$my_${2}"
       eval my_$1=${2#*\ } #define our private var of $_defined to prevent variable nameing issues 
     fi
     if echo $defined_vars | grep -qv  ${1%\ *} ; then
@@ -356,13 +357,13 @@ define() {
 
 #\\error
 error() {  
-  verbose 'Got error from #\\error'
+  verbose 'L$current_line_ued:Got error from #\\error'
   call_handler error:called "$1"
 }
 
 #\\warning
 warning() {
-  verbose 'Got warning from #\\warning'
+  verbose 'L$current_line_ued:Got warning from #\\warning'
   call_handler warning "$1"
 }
 ### commands end ### 
@@ -419,7 +420,7 @@ main() {
   init_stats
 
   if [ -z $tmp_dir ] ; then
-      tmp_dir=tmp
+      tmp_dir=${appname}tmp
       mkdir -p $tmp_dir
   else
       mkdir -p $tmp_dir

@@ -7,8 +7,9 @@ arch=('any')
 license=('GPL2')
 depends=('sh' 'coreutils' 'sed' 'libsh')
 source=("${pkgname}-${pkgver}.tar.gz")
+md5sums=('1f16ae34ec3a720586375ab1f2ca0ee0')
 
-md5sums=('a64858ae1832aad5586419d5521256fc')
+
 
 
 
