@@ -217,7 +217,7 @@ find_commands() {
     IFS=$old_ifs
     _find_command_count=$(( $_find_command_count + 1 ))
     current_line_ued=$( read_farray $command_lines  $_find_command_count  ) # current with removeing deleted lines
-    current_line=$(( $curent_line_real - ${removed_stack:-0} )) # remove removed lines from current_line
+    current_line=$(( $current_line_ued - ${removed_stack:-0} )) # remove removed lines from current_line
     _command=$( echo "$_command" | sed 's|\ $||')
     if [ $erase_till_endif = true ] ; then
       if [ $_command = endif ] || [ $_command = else ]  ; then
@@ -275,7 +275,7 @@ ifdef() {
     IFS=:
   done 
   if [ "$unsuccesfull" = true ] ; then
-     verbose 'L$current_line_ued:Tested var was not defined, remove content till endif, erase_till_endif ist set to true'
+     verbose "L$current_line_ued:Tested var was not defined, remove content till endif, erase_till_endif ist set to true"
      if_line=$current_line # save $current_line for find_commands 
      erase_till_endif=true # say find_commands it has to erase fill from $if_line till next found endif
   fi
@@ -284,7 +284,7 @@ ifdef() {
 #\\endif
 endif() { # just a stub that calls call_handler with error to handle if endif is before if/ifdef
   if [ ! $found_else ] ; then
-    verbose 'L$current_line_ued:Found endif before if, calling for error'
+    verbose "L$current_line_ued:Found endif before if, calling for error"
 
     call_handler  error:syntax 'no if before endif' 
   fi
@@ -294,11 +294,11 @@ endif() { # just a stub that calls call_handler with error to handle if endif is
 #\\else
 Else() {
   if [ "$unsuccesfull" = false ] ; then
-    verbose 'L$current_line_ued:Last if was succesfull, removing content till endif'
+    verbose "L$current_line_ued:Last if was succesfull, removing content till endif"
     if_line=$current_line # save $current_line for find_commands 
     erase_till_endif=true # say find_commands it has to erase fill from $if_line till next found endif
   else
-    verbose 'L$current_line_ued:Found else before if, calling for error'
+    verbose "L$current_line_ued:Found else before if, calling for error"
     call_handler  error:syntax 'no if before else'
   fi
 }
@@ -357,13 +357,13 @@ define() {
 
 #\\error
 error() {  
-  verbose 'L$current_line_ued:Got error from #\\error'
+  verbose "L$current_line_ued:Got error from #\\error"
   call_handler error:called "$1"
 }
 
 #\\warning
 warning() {
-  verbose 'L$current_line_ued:Got warning from #\\warning'
+  verbose "L$current_line_ued:Got warning from #\\warning"
   call_handler warning "$1"
 }
 ### commands end ### 
