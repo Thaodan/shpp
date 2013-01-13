@@ -225,7 +225,7 @@ find_commands() {
 #\\debug_if		cp "$1" "$tmp_dir/ifsteps/pc_file.stage.$_find_command_count"
 	erase_till_endif=false
 	removed_stack=$(( ( $current_line - $if_line  + 1) + ${removed_stack:-0} )) # save removed lines (difference between $current_line and $if_line + 1)
-	[ $_command = else ] && found_else=true
+	[ $_command = else ] && found_if_or_else=true
       elif [ ! $endif_notfound = false ] ; then
 	false
       fi
@@ -271,7 +271,11 @@ ifdef() {
   IFS=:
   for _defined in $defined_vars $input_defined_vars ; do # look if var is defined:
     IFS=$old_ifs
-    test "$_defined" = "$1"  &&  unsuccesfull=false && break  # if $_cleadif machtes with one of $defined_vars clear unsuccesfull and break
+    if [ "$_defined" = "$1"  ] ; then  # if $_cleadif machtes with one of $defined_vars clear unsuccesfull and break
+	found_if_or_else=true 
+	unsuccesfull=false 
+	break
+    fi
     IFS=:
   done 
   if [ "$unsuccesfull" = true ] ; then
