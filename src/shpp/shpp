@@ -244,16 +244,18 @@ find_commands() {
 	ifdef)		ifdef "$_command" ;;
 	else)		Else "$_command"  ;;
 	endif)		endif ;; # just a stub call for syntax error cause endif was used before if/ifdef#
-	rem)   		: ;; # ignore just a comment
 	break)   	verbose 'found break abort parsing'; break ;;
-	error)		error "$_command" ;;
+	error)		error "$_command"   ;;
 	warning)	warning "$_command" ;;
-	*) stub ;;
+        ![a-z]*|rem)        :              ;; # ignore stubs for ignored functions
+	*) call_handler warning:unkown "found $current_cleared_command, bug or unkown command, raw string is $$curent_command" ;;
       esac
    fi
    IFS=:
   done
-  unset _command _command_lines
+  unset _command command_lines _find_command_count current_command current_cleared_command  \
+        removed_stack found_if_or_else  current_line current_line_ued  # unset runtime vars
+
 }
 
 
@@ -347,12 +349,12 @@ include() {
 define() {
   #for _defined $( find_var $1 \#\\\\define ) ; do
    #cleaned_define="$( echo "$1" |  sed "s/define//" )"
-    if [ ! -z ${1#\ *} ] ; then
+    if echo "$1" | grep -q " "; then
       verbose "L$current_line_ued: found content in $1 saving it in \$my_${2}"
-      eval my_$1=${2#*\ } #define our private var of $_defined to prevent variable nameing issues 
+      eval my_$1=${1#*\ } #define our private var of $_defined to prevent variable nameing issues 
     fi
     if echo $defined_vars | grep -qv  ${1%\ *} ; then
-      write_farray \$defined_vars $(( $( get_farray_lenght $defined_vars ) + 1 )) ${1%\ *}
+      write_farray defined_vars $(( $( get_farray_lenght $defined_vars ) + 1 )) ${1%\ *}
     fi
       
  # done
@@ -371,6 +373,21 @@ warning() {
   call_handler warning "$1"
 }
 ### commands end ### 
+
+### runners ###
+
+write_shortifdefs() { # write #\\! flags to $2
+    old_ifs=$IFS
+    IFS=: 
+    for var1 in $1 ; do 
+	 IFS=$old_ife
+	 sed -i "s/"^#\\\\\\\\\!$var1"//" $2
+	 IFS=:
+    done
+    IFS=$old_ifs
+    unset var1 
+}
+
 
 include_includes() { 
   cp "$tmp_dir/pc_file.stage2" "$tmp_dir/backups/pre_include" # make backups before do include
@@ -461,12 +478,13 @@ main() {
     
   if [ $legacy_mode ] ; then
     verbose 'found $legacy_mode, entering legacy mode'
+    call_handler warning:deprected "legacy mode (eg --legacy) is deprected now use with care"
     write_flags $input_enabled_flagst $defined_flags:$input_defined_vars "$tmp_dir/pc_file.stage1"  || call_handler error:exit_stat "write_flags or defined_flags quited with $?"
     mv "$tmp_dir/pcfile.stage1" $target_name || call_handler error:file "cant copy $tmp_dir/pcfile.stage to $target_name"
   else
     cp "$tmp_dir/pc_file.stage1" "$tmp_dir/pc_file.stage2"
     find_commands "$tmp_dir/pc_file.stage2"
-    write_flags '!*' "$defined_vars" 
+    write_shortifdefs  "$defined_vars" "$tmp_dir/pc_file.stage2"
     test ! -z $includes && include_includes "$tmp_dir/pc_file.stage2" # finaly include our $includes if $includes is not empty
   fi
 
