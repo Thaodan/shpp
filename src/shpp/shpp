@@ -222,7 +222,7 @@ find_commands() {
     if [ $erase_till_endif = true ] ; then
       if [ $_command = endif ] || [ $_command = else ]  ; then
 	sed -ie "$if_line,$current_line d" "$1" 
-#\\debug_if		cp "$1" "$tmp_dir/ifsteps/pc_file.stage.$_find_command_count"
+#\\!debug_if		cp "$1" "$tmp_dir/ifsteps/pc_file.stage.$_find_command_count"
 	erase_till_endif=false
 	removed_stack=$(( ( $current_line - $if_line  + 1) + ${removed_stack:-0} )) # save removed lines (difference between $current_line and $if_line + 1)
 	[ $_command = else ] && found_if_or_else=true
@@ -248,7 +248,7 @@ find_commands() {
 	error)		error "$_command"   ;;
 	warning)	warning "$_command" ;;
         ![a-z]*|rem)        :              ;; # ignore stubs for ignored functions
-	*) call_handler warning:unkown "found $current_cleared_command, bug or unkown command, raw string is $$curent_command" ;;
+	*) call_handler warning:unkown "found $current_cleared_command, bug or unkown command, raw string is '$current_command'" ;;
       esac
    fi
    IFS=:
@@ -450,7 +450,7 @@ main() {
       fi
   fi
   tmp_dir=$tmp_dir/$$
-#\\debug_if	mkdir -p "$tmp_dir/ifsteps"
+#\\!debug_if	mkdir -p "$tmp_dir/ifsteps"
   mkdir -p "$tmp_dir/including"
   mkdir -p "$tmp_dir/backups"
   mkdir -p "$tmp_dir/logs"
