@@ -1,4 +1,12 @@
 #!/bin/sh 
+
+####################################
+SH_MAKE_VER=@sh_make_ver@
+SH_MAKE_REV=@git_rev@
+#####################################
+readonly SH_MAKE_REV SH_MAKE_VER
+#####################################
+
 USE_COLOR=true
 
 . "${libdir:-@prefix@/lib}/libsh"

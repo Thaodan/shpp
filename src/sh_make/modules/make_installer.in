@@ -65,7 +65,7 @@ input_not_required=true
   cat <<_MY_INSTALLER
 #!/bin/sh
 $(add_std_license_header)
-install_sh_ver=1.03
+install_sh_ver=1.04
 build_sh_make_ver=$SH_MAKE_VER:$SH_MAKE_REV
 INSTALL_APPNAME="$APPNAME"
 INSTALL_APPNAME_VER=$VER

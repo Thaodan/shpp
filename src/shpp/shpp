@@ -220,7 +220,7 @@ find_commands() {
     current_line=$(( $current_line_ued - ${removed_stack:-0} )) # remove removed lines from current_line
     _command=$( echo "$_command" | sed 's|\ $||')
     if [ $erase_till_endif = true ] ; then
-      if [ $_command = endif ] || [ $_command = else ]  ; then
+      if [ "$_command" = endif ] || [ "$_command" = else ]  ; then
 	sed -ie "$if_line,$current_line d" "$1" 
 #\\!debug_if		cp "$1" "$tmp_dir/ifsteps/pc_file.stage.$_find_command_count"
 	erase_till_endif=false
@@ -300,7 +300,7 @@ endif() { # just a stub that calls call_handler with error to handle if endif is
 #\\else
 Else() {
   if [ "$unsuccesfull" = false ] ; then
-    verbose "L$current_line_ued:Last if was succesfull, removing content till endif"
+    verbose "L$current_line_ued:Last if was succesfull, removing content from last if till else"
     if_line=$current_line # save $current_line for find_commands 
     erase_till_endif=true # say find_commands it has to erase fill from $if_line till next found endif
   else

@@ -20,18 +20,18 @@ add_input_action() {
       tmp_action="$(read_farray "$argument" 1 )"
       tmp_command="$(read_farray "$argument" 2)"
       tmp_help="$(read_farray "$argument" 3 )"
-      if [ -z $input_actions ] ; then 
+      if [ -z "$input_actions" ] ; then 
 	input_actions="${tmp_action:-\:}"
       else
 	input_actions="$input_actions:${tmp_action:-\:}"
       fi
-      if [ -z $input_commands ] ; then
+      if [ -z "$input_commands" ] ; then
 	input_commands="${tmp_command:-\:}"
       else
 	input_commands="$input_commands:${tmp_command:-\:}"
       fi
 
-      if [ -z $input_help ] ; then
+      if [ -z "$input_help" ] ; then
 	input_help="${tmp_help:-\-}"
       else
 	input_help="$input_help:${tmp_help:-\-}"
@@ -76,20 +76,21 @@ gen_input_parser() {
 gen_help() {
   echo "echo "\$INSTALL_APPNAME - help ""
   if [  -z $HELP_DISABLE_DEFAULTS ] ; then
-    echo 'cat <<STD_HELP_TEXT'
-    echo 'standart options:'
-    echo '   --help  	show this message' 
-    echo '   --version -v show version of $appname'
-    echo ''
-    echo 'STD_HELP_TEXT'
+    printf 'cat <<STD_HELP_TEXT'
+    printf 'standart options:\n'
+    printf '\t--help\tshow this message\n' 
+    printf '\t--version -v\t show version of $appname\n'
+    printf '\n'
+    printf 'STD_HELP_TEXT\n'
  fi
   input_actions_count=$( get_farray_lenght "$input_actions" )
-  echo 'cat <<HELP_TEXT'
+  printf 'cat <<HELP_TEXT\n'
+  printf 'options:\n'
   while [  ! ${counter:-1} = $input_actions_count ] ; do
     counter=$(( $counter + 1 ))
-    echo "   $(read_farray "$input_actions" $counter )   $(read_farray "$input_help" $counter)"
+    printf "\t$(read_farray "$input_actions" $counter )\t$(read_farray "$input_help" $counter)"
   done
-   echo 	'HELP_TEXT'
+   printf 	'HELP_TEXT\n'
 }
 
 after_parse() {

@@ -17,13 +17,6 @@
 # with this program; if not, write to the Free Software Foundation, Inc.,
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
-####################################
-SH_MAKE_VER=@sh_make_ver@
-SH_MAKE_REV=@git_rev@
-#####################################
-readonly SH_MAKE_REV SH_MAKE_VER
-#####################################
-
 . "@prefix@/lib/sh_make/libsh_make"
 
 err_input_messages='No input given or no sh_makefile found!:Wrong or to less  input given!' # err message for test_input
