@@ -159,7 +159,7 @@ case $1 in
 		if [ -z $chained_vars ] ; then
 		  chained_vars=$( echo $1 | cut -d '=' -f1 )
 		else
-		  chained_vars=$( echo $1 | cut -d '=' -f1 )
+		  chained_vars=$chained_vars:$( echo $1 | cut -d '=' -f1 )
 		fi
 		shift
 		;;
