@@ -58,8 +58,8 @@ list_entrys() {
 main() {
   if [ ! $used_shell ] ; then 
       first_line=$( sed -e '2,$ d' "$sh_makefile" ) 
-      if echo "$first_line" | grep '#!' ; then # if we found no shebang use /bin/sh as default shell
-	  echo "$first_line" | sed -e 's|#\!||' || used_shell=/bin/sh 
+      if echo "$first_line" | grep -q '#!' ; then # if we found no shebang use /bin/sh as default shell
+	  used_shell=$( echo "$first_line" | sed -e 's|#\!||' ) || used_shell=/bin/sh 
       else
 	  used_shell=/bin/sh
       fi
