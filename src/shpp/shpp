@@ -350,8 +350,8 @@ define() {
   #for _defined $( find_var $1 \#\\\\define ) ; do
    #cleaned_define="$( echo "$1" |  sed "s/define//" )"
     if echo "$1" | grep -q " "; then
-      verbose "L$current_line_ued: found content in $1 saving it in \$my_${2}"
-      eval my_$1=${1#*\ } #define our private var of $_defined to prevent variable nameing issues 
+      verbose "L$current_line_ued: found content in $1 saving it in \$my_${1}"
+      eval my_$1=${1#*\ } #define our private var of $_defined to prevent variable nameing issues       
     fi
     if echo $defined_vars | grep -qv  ${1%\ *} ; then
       write_farray defined_vars $(( $( get_farray_lenght $defined_vars ) + 1 )) ${1%\ *}
@@ -561,7 +561,7 @@ if [ ! $# = 0 ] ; then
 		  *=*) eval $2 ; pass_chain -g $2 ;; # self explained
 		  *) $2=true ; pass_chain -g $2=true ;;  # if its no var (options can be paased as var too) threat it as option and enable it
 		esac
-		shift 2 
+ 		shift 2 
 		;;
 	      #+O) $1=false ; shift 2;; # tell shppp to disable option
 	      --Ow|--option-global) 					# pass option to slave and master

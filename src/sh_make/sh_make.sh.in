@@ -133,7 +133,7 @@ case $1 in
 #   #-*)		echo `read_farray "$err_input_messages" 1`;;
   --*|*)
     optspec=s:f: # b:dp # short options
-    optspec_long=shell:,make:,keep,debug,verbose,mod-path,list-entrys # long options
+    optspec_long=shell:,make:,keep,debug,verbose,debug-full,verbose-full,mod-path,list-entrys # long options
     PROCESSED_OPTSPEC=`getopt -q --options $optspec --long $optspec_long \
     -n $appname --  "$@"` ||  error  "Wrong or to less  input given!" || exit 1 # parsed optspec
     eval set -- "$PROCESSED_OPTSPEC"
