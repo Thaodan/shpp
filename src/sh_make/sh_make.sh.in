@@ -57,7 +57,12 @@ list_entrys() {
 ### main ###
 main() {
   if [ ! $used_shell ] ; then 
-      used_shell=$( sed -e '2,$ d' -e 's|#\!||'  "$sh_makefile" ) || used_shell=/bin/sh 
+      first_line=$( sed -e '2,$ d' "$sh_makefile" ) 
+      if echo "$first_line" | grep '#!' ; then # if we found no shebang use /bin/sh as default shell
+	  echo "$first_line" | sed -e 's|#\!||' || used_shell=/bin/sh 
+      else
+	  used_shell=/bin/sh
+      fi
   fi
   "${used_shell:-/bin/sh}" -n "$sh_makefile"  || call_handler error:syntax "$used_shell exited with $? syntax check for $sh_makefile"
 
@@ -98,7 +103,7 @@ fi
 
 #
   # run used shell give it our main functions that we have, load the generated env file, load the main_module while inits module handling and such and than load the sh_makefile so that it can run with the given functions
-  "$used_shell"  -c$debug ". @prefix@/lib/sh_make/libsh_make; . @prefix@/lib/sh_make/modules/main_module; test ! -z $temp_sh_makefile_dir &&  cd $temp_sh_makefile_dir; . $sh_makefile;. $PWD/$tmp_dir/env; run_entry_point \"$entry_points"\" || call_handler error:exit "got error $? while running $sh_makefile"  
+  "$used_shell"  -c$debug ". @prefix@/lib/sh_make/libsh_make; . @prefix@/lib/sh_make/modules/main_module; test ! -z $temp_sh_makefile_dir &&  cd $temp_sh_makefile_dir; . $sh_makefile;. $PWD/$tmp_dir/env; run_entry_point $entry_points"  || call_handler error:exit "got error $? while running $sh_makefile"  
 
 
   files_to_remove=$tmp_dir
