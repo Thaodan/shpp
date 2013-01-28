@@ -7,7 +7,7 @@ SH_MAKE_REV=@git_rev@
 readonly SH_MAKE_REV SH_MAKE_VER
 #####################################
 
-USE_COLOR=true
+
 
 . "${libdir:-@prefix@/lib}/libsh"
 
@@ -31,4 +31,3 @@ pass_chained_vars() {
 }
 
 
-init_stats

@@ -1,6 +1,7 @@
 #!/bin/sh
 # syntax: $0 [ --debug ] version:rev target 
 # sh_make configure replacment with make functions
+
 # Copyright (C) 2012  Björn Bidar
 #
 # This program is free software; you can redistribute it and/or modify
@@ -16,16 +17,20 @@
 # You should have received a copy of the GNU General Public License along
 # with this program; if not, write to the Free Software Foundation, Inc.,
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
-
+#### load base tools (shared)
 . "@prefix@/lib/sh_make/libsh_make"
-
+# config
+###################################
 err_input_messages='No input given or no sh_makefile found!:Wrong or to less  input given!' # err message for test_input
+MODULE_PATH=@prefix@/lib/sh_make/modules # default module path if no overwridden
 
 ####################################
+
+### private tools ###
 cleanup() {
   if [ ! $keep ] ; then
     old_ifs=$IFS
-    export IFS=:;rm -rf $file_to_remove; 
+    export IFS=:;rm -rf $files_to_remove; 
   
     export IFS=$old_ifs
   fi
@@ -46,11 +51,14 @@ call_handler() {
   fi
 }
 
-
-
-
+list_entrys() {
+    grep -E '*\(\)' $sh_makefile | sed 's|{||'
+}
+### main ###
 main() {
-  if [ -z $used_shell ] ; then used_shell=/bin/sh ; fi
+  if [ ! $used_shell ] ; then 
+      used_shell=$( sed -e '2,$ d' -e 's|#\!||'  "$sh_makefile" ) || used_shell=/bin/sh 
+  fi
   "${used_shell:-/bin/sh}" -n "$sh_makefile"  || call_handler error:syntax "$used_shell exited with $? syntax check for $sh_makefile"
 
   if [ -z $tmp_dir ] ; then
@@ -63,11 +71,10 @@ main() {
       fi
   fi
 
-# here will be some generating that generates the envoriment based functions 
+# gen dynamic config stuff and init basic stuff
 cat > "$tmp_dir/env" <<_ENV
-
-used_shell=$used_shell
-MODULE_PATH=@prefix@/lib/sh_make/modules
+USED_SHELL=$used_shell     
+MODULE_PATH=$MODULE_PATH
 chained_vars=$chained_vars
 $( for chain in $chained_vars ; do \
 echo "$chain=$( eval echo \$my_$chain)"; done)
@@ -76,16 +83,25 @@ IFS=:
 for chain in \$chained_vars ; do
   eval \$chain=\$( eval echo \\\$\$chain )
 done
-
+USE_COLOR=$USE_COLOR
+init_stats
 _ENV
 
+if [ "$debug_options" ] && [ ! $debug ] ; then
+   echo "set -o $debug_options" >> "$tmp_dir/env"
+fi
+
+
+
+
+
+
 #
-  export USE_COLOR
   # run used shell give it our main functions that we have, load the generated env file, load the main_module while inits module handling and such and than load the sh_makefile so that it can run with the given functions
-  "$used_shell"  -c$debug ". @prefix@/lib/sh_make/libsh_make; . @prefix@/lib/sh_make/modules/main_module; test ! -z $temp_sh_makefile_dir &&  cd $temp_sh_makefile_dir; . $sh_makefile;. $PWD/$tmp_dir/env; run_entry_point $entry_point" || call_handler error:exit "got error $? while running $sh_makefile"  
+  "$used_shell"  -c$debug ". @prefix@/lib/sh_make/libsh_make; . @prefix@/lib/sh_make/modules/main_module; test ! -z $temp_sh_makefile_dir &&  cd $temp_sh_makefile_dir; . $sh_makefile;. $PWD/$tmp_dir/env; run_entry_point \"$entry_points"\" || call_handler error:exit "got error $? while running $sh_makefile"  
 
 
-  file_to_remove=$tmp_dir
+  files_to_remove=$tmp_dir
 
 
   cleanup
@@ -94,27 +110,40 @@ _ENV
 }
 
 print_help() {
-  stub
+  cat <<EOF
+$appname usage:
+     $appname [Options] entry_point
+  Options:
+  --help    -H -h                    print this help
+  --version -V                       print version
+  --color   -c                       enable colored output
+EOF
 }
-
+### input parser ###
+init_stats
 case $1 in 
   --help|-H|-h)	print_help ;; 
   --revision) 	echo $SH_MAKE_REV ;;
   --version)	echo $SH_MAKE_VER:$SH_MAKE_REV  ;;
 #   #-*)		echo `read_farray "$err_input_messages" 1`;;
   --*|*)
-    optspec=s:f: # b:dp #-: # short options
-    optspec_long=shell:,make:,keep,debug,verbose #,binpath:,desktop,prefix # long options
+    optspec=s:f: # b:dp # short options
+    optspec_long=shell:,make:,keep,debug,verbose,mod-path,list-entrys # long options
     PROCESSED_OPTSPEC=`getopt -q --options $optspec --long $optspec_long \
     -n $appname --  "$@"` ||  error  "Wrong or to less  input given!" || exit 1 # parsed optspec
     eval set -- "$PROCESSED_OPTSPEC"
     while [ ! $# = 0 ] ; do
       case $1 in 
 	-s|--shell) used_shell="$2"; readonly used_shell ; shift 2;;
-	--debug) debug=xv ; USE_COLOR=;  shift ;;
-	--verbose) debug=v ;USE_COLOR=;  shift ;;
+	--list-entrys) main_runner=list_entrys; break ;shift;;
+	--debug-full) debug=xv ; USE_COLOR=n;  shift ;;
+        --verbose-full) debug=v ;USE_COLOR=n;  shift ;;
+	--debug) debug_options='xtrace verbose' ; shift ;;
+	--verbose) debug_options='verbose' ; shift ;;
 	-f|--make) sh_makefile="$2" ; shift 2 ;;
-	--keep) keep=true; shift ;;
+	--mod-path) MODULE_PATH="$2"; shift 2 ;;
+	--keep) keep=true; shift ;; # dont remove tmp dir
+	--color|-c) USE_COLOR=y ; shift ;;
 	--) shift ; break
       esac
     done
@@ -150,8 +179,8 @@ case $1 in
       echo "No input given or sh_makefile found"
       false 
     fi && \
-    entry_point="${1:-default}" && \
-    main
+    entry_points="${@:-default}" && \
+    ${main_runner:-main}
   ;;
 esac 
 

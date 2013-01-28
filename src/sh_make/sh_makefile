@@ -1,4 +1,4 @@
-#!/bin/false
+#!/bin/sh
 install=/usr/bin/install
 DESTDIR=pkg
 prefix=/usr
@@ -55,7 +55,7 @@ install_sh_make() {
 install_modules() {
  $install modules/configure $DESTDIR/$PREFIX/$LIBPREFIX/sh_make/modules
  $install modules/make_installer $DESTDIR/$PREFIX/$LIBPREFIX/sh_make/modules
-$install modules/main_module $DESTDIR/$PREFIX/$LIBPREFIX/sh_make/modules
+ $install modules/main_module $DESTDIR/$PREFIX/$LIBPREFIX/sh_make/modules
 }
 
 clean() {
