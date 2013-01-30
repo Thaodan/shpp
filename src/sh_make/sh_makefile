@@ -5,71 +5,66 @@ prefix=/usr
 PREFIX=$prefix
 install_prefix=/usr
 LIBPREFIX=lib
-shpp=../shpp/shpp
+SHPP=../shpp/shpp
 APPNAME=sh_make
 VER=2.1
 git_rev=$(./../../tools/git_revgen)
 # if no sh_make instslled run it with tools/simple_shmake, just make shure that shpp is in $PATH
 
 default() {
- sh_make
- modules 
+    sh_make
+    modules 
 }
 
 prepare() {
- mkdir -p $DESTDIR/$PREFIX/bin
- mkdir -p $DESTDIR/$PREFIX/lib/sh_make/modules
+    mkdir -p $DESTDIR/$PREFIX/bin
+    mkdir -p $DESTDIR/$PREFIX/lib/sh_make/modules
 }
 
 sh_make() {
-   $shpp prefix=$prefix libsh_make.sh.in -o libsh_make 
-   $shpp sh_make_ver=$VER git_rev=$git_rev prefix=$prefix sh_make.sh.in -o sh_make
-   chmod +x sh_make
+    $SHPP  sh_make_ver=$VER git_rev=$git_rev prefix=$PREFIX libsh_make.sh.in -o libsh_make 
+    $SHPP  prefix=$PREFIX sh_make.sh.in -o sh_make
+    chmod +x sh_make
 }
 
 
 modules() {
-	$shpp modules/configure.in -o modules/configure
-	$shpp modules/main_module.in -o modules/main_module
-	$shpp modules/make_installer.in -o modules/make_installer
+    $SHPP modules/configure.in -o modules/configure
+    $SHPP modules/main_module.in -o modules/main_
+    $SHPP modules/make_installer.in -o modules/make_installer
 
 }
 
-clean() {
-	rm -rf sh_make libsh_make
-	#rm -rf modules
-}
 
 install() {
-  prepare
-  install_sh_make
-  install_modules
-
+    prepare
+    install_sh_make
+    install_modules
 }
 
 install_sh_make() {
- $install sh_make $DESTDIR/$PREFIX/bin/sh_make
- $install libsh_make $DESTDIR/$PREFIX/$LIBPREFIX/sh_make/libsh_make
+    $INSTALL  sh_make $DESTDIR/$PREFIX/bin/sh_make
+    $INSTALL  libsh_make $DESTDIR/$PREFIX/$LIBPREFIX/sh_make/libsh_make
 }
 
 install_modules() {
- $install modules/configure $DESTDIR/$PREFIX/$LIBPREFIX/sh_make/modules
- $install modules/make_installer $DESTDIR/$PREFIX/$LIBPREFIX/sh_make/modules
- $install modules/main_module $DESTDIR/$PREFIX/$LIBPREFIX/sh_make/modules
+    $INSTALL modules/configure $DESTDIR/$PREFIX/$LIBPREFIX/sh_make/modules
+    $INSTALL modules/make_installer $DESTDIR/$PREFIX/$LIBPREFIX/sh_make/modules
+    $INSTALL modules/main_module $DESTDIR/$PREFIX/$LIBPREFIX/sh_make/modules
 }
 
 clean() {
-	rm -f sh_make
-	rm -f libsh_make
-	rm -f modules/configure
-	rm -f modules/make_installer
-	rm -f modules/main_module
-	rm -rf pkg
+    rm -f sh_make \
+	  libsh_make \
+          modules/configure \
+	  modules/make_installer \
+	  modules/main_module \
+	  pkg \
 	
 }
 
 installer() {
-  load_module configure
-  load_module make_installer
-  gen_installer > install.sh
+    load_module configure
+    load_module make_installer
+    gen_installer > install.sh
 }
