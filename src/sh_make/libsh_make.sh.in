@@ -9,7 +9,7 @@ readonly SH_MAKE_REV SH_MAKE_VER
 
 
 
-. "${libdir:-@prefix@/lib}/libsh"
+. "${LIBSH:-${libdir:-@prefix@/lib}/libsh}"
 
 
 

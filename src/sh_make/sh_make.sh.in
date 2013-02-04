@@ -18,7 +18,7 @@
 # with this program; if not, write to the Free Software Foundation, Inc.,
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #### load base tools (shared)
-. "@prefix@/lib/sh_make/libsh_make"
+. "${libdir:-@prefix@/lib}/sh_make/libsh_make"
 # config
 ###################################
 err_input_messages='No input given or no sh_makefile found!:Wrong or to less  input given!' # err message for test_input
@@ -103,7 +103,7 @@ fi
 
 #
   # run used shell give it our main functions that we have, load the generated env file, load the main_module while inits module handling and such and than load the sh_makefile so that it can run with the given functions
-  "$used_shell"  -c$debug ". @prefix@/lib/sh_make/libsh_make; . @prefix@/lib/sh_make/modules/main_module; test ! -z $temp_sh_makefile_dir &&  cd $temp_sh_makefile_dir; . $sh_makefile;. $PWD/$tmp_dir/env; run_entry_point $entry_points"  || call_handler error:exit "got error $? while running $sh_makefile"  
+  "$used_shell"  -c$debug ". ${libdir:-@prefix@/lib}/sh_make/libsh_make; . ${libdir:-@prefix@/lib}/sh_make/modules/main_module; test ! -z $temp_sh_makefile_dir &&  cd $temp_sh_makefile_dir; . $sh_makefile;. $PWD/$tmp_dir/env; run_entry_point $entry_points"  || call_handler error:exit "got error $? while running $sh_makefile"  
 
 
   files_to_remove=$tmp_dir
@@ -133,7 +133,7 @@ case $1 in
 #   #-*)		echo `read_farray "$err_input_messages" 1`;;
   --*|*)
     optspec=s:f: # b:dp # short options
-    optspec_long=shell:,make:,keep,debug,verbose,debug-full,verbose-full,mod-path,list-entrys # long options
+    optspec_long=shell:,make:,keep,debug,verbose,debug-full,verbose-full,mod-path:,list-entrys # long options
     PROCESSED_OPTSPEC=`getopt -q --options $optspec --long $optspec_long \
     -n $appname --  "$@"` ||  error  "Wrong or to less  input given!" || exit 1 # parsed optspec
     eval set -- "$PROCESSED_OPTSPEC"

@@ -1,8 +1,7 @@
 #!/bin/sh
-install=/usr/bin/install
+INSTALL=/usr/bin/install
 DESTDIR=pkg
-prefix=/usr
-PREFIX=$prefix
+PREFIX=/usr
 install_prefix=/usr
 LIBPREFIX=lib
 SHPP=../shpp/shpp

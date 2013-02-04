@@ -1,5 +1,6 @@
 #!/bin/sh
 loaded_modules=main_module
+
 run_entry_point() {
   while [ ! $# = 0 ] ; do
     $1
@@ -25,5 +26,4 @@ load_module(){
   else
     return 1
   fi
-
 }
