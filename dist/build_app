@@ -2,6 +2,6 @@
   
   cd 	src/sh_make
   sh 	tools/simple_shmake -f sh_makefile 
-  sh 	tools/simple_shmake -f sh_makefile install
   cd ..
   sh sh_make/tools/simple_shmake -f sh_makefile 
+  sh sh_make/tools/simple_shmake -f sh_makefile install

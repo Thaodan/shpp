@@ -29,7 +29,7 @@ sh_make() {
 
 modules() {
     $SHPP modules/configure.in -o modules/configure
-    $SHPP modules/main_module.in -o modules/main_
+    $SHPP modules/main_module.in -o modules/main_module
     $SHPP modules/make_installer.in -o modules/make_installer
 
 }
