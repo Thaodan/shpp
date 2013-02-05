@@ -1,0 +1,55 @@
+#!/bin/sh
+DESTDIR=../pkg
+prefix=/usr
+PREFIX=usr
+APPNAME=libsh
+LIBSH_VER=2.3
+LIBSH_REV=2230
+VER=$LIBSH_VER
+install_prefix=/usr
+INSTALL=/usr/bin/install
+DEBUG_DEFINES=DEBUG_FARRAY_LESS_OUTPUT
+#sh_make=./sh_make_pkg
+shpp_version=$(shpp --version | sed 's|:[0-9]||')
+
+
+
+default() {
+	if [ $( echo "$shpp_version  >= 1.8" | bc ) = 0 ]  ; then 
+		error  error:version "shpp version is $shpp_version, need 1.8 or greater"
+		exit 1
+	else
+		libsh
+	fi
+}
+
+prepare() {
+	mkdir -p $DESTDIR/$PREFIX/lib
+}
+
+install()  {
+	prepare
+	libsh_install
+}
+
+
+
+libsh() {
+	shpp LIBSH_VER=$LIBSH_VER LIBSH_REV=$LIBSH_REV libsh.sh.in -o libsh
+}
+
+libsh_debug() {
+	shpp LIBSH_VER=$LIBSH_VER LIBSH_REV=$LIBSH_REV  --defined-flags $DEBUG_DEFINES libsh.sh.in -o libsh 
+}
+libsh_install() {
+	$INSTALL libsh $DESTDIR/$PREFIX/lib/libsh
+}
+clean()  {
+	rm -rf libsh
+}
+
+installer() {
+	load_module configure
+	load_module make_installer
+	gen_installer > ../install.sh
+}

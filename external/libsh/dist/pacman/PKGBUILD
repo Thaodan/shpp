@@ -1,0 +1,20 @@
+pkgname=libsh
+pkgver=2.3
+pkgrel=1
+pkgdesc="shell library that making programming in shell easyer cause it adds functions like import and f(ake)array support (for shells that dont support this)"
+arch=('any')
+#url="http://nadvsh.sourceforge.net/"
+license=('GPL2')
+depends=('sh' 'bash' 'coreutils' 'sed' )
+source=("${pkgname}-${pkgver}.tar.gz")
+md5sums=('94ec3c0e4d8e74a457cfdcd81b0b3e4e')
+
+makedepends=('sh-make-tools')
+
+
+
+package() {
+  cd $srcdir/$pkgname-$pkgver
+  sh dist/build_app
+  mv pkg/* $pkgdir/.
+}
