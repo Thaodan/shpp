@@ -441,7 +441,7 @@ main() {
   init_stats
 
   if [ -z $tmp_dir ] ; then
-      tmp_dir=${appname}tmp
+      tmp_dir=$PWD/${appname}tmp
       mkdir -p $tmp_dir
   else
       mkdir -p $tmp_dir
@@ -581,7 +581,7 @@ if [ ! $# = 0 ] ; then
 	      --pass-all-to-slaves) give_them_all=true; shift ;; # pass all option to slaves
 	      --legacy) legacy_mode=true ; shift ;;
 	      --stdout) target_name="stdout" ; shift ;;
-	      --stderr) stder=${2} ; shift  2;; # tells shpp to pass stder to $2
+	      --stderr) exec 2> $2 ; shift  2;; # tells shpp to pass stder to $2
 	      --) shift; break ;;
 	    esac
 	  done 
