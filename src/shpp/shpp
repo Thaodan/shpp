@@ -234,10 +234,10 @@ find_commands() {
       if echo $_command | grep -qv "\ " ; then
 	current_cleared_command=$_command							# if $_command has no space, we assume that $_command is already clear
       else
-	current_cleared_command=$( echo $_command | sed -e "s|${_command#*\ }||" -e  "s|^\ ||" -e 's|\ $||') # else clear it and give the commands still the ability to know who they are
+	current_cleared_command=$( echo $_command | sed -e "s| .*||" -e  "s|^\ ||" -e 's|\ $||') # else clear it and give the commands still the ability to know who they are
       fi
       current_command="$_command"					      			# if command wants the raw $_command it can use it
-      _command=$( echo $_command | sed -e "s|${_command%\ *}||" -e  "s|^\ ||")		      	# we clear $0 from $_command now, the commands don't need to do it
+      _command=$( echo $_command | sed -e "s|$current_cleared_command ||" -e  "s|^\ ||")		      	# we clear $0 from $_command now, the commands don't need to do it
       case "$current_cleared_command" in
 	define) 	define "$_command" ;;
 	include) 	include "$_command" ;;
