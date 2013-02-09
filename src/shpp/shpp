@@ -326,7 +326,7 @@ include() {
   base_include=$( basename "$cleaned_include" )
  # echo "$base_include"
   case ${parser:-shpp} in 
-    shpp)  $shpp  $chained_options $parser_args --config $slaveconfig_file --defined-flags $defined_flags --enabled-flags $enabled_flags --tmp $tmp_dir/slaves --slave --stdout --stderr $tmp_dir/log/errors_$base_include.log "$cleaned_include"> $tmp_dir/including/$base_include  || call_handler error:exit_stat "spawned copy of ourself: $appname returned $$, quiting" ;; 
+    shpp)  $shpp  $chained_options $parser_args --config $slaveconfig_file --defined-flags $defined_flags --enabled-flags $enabled_flags --tmp $tmp_dir/slaves --slave --stdout --stderr=$tmp_dir/logs/errors_$base_include.log "$cleaned_include"> $tmp_dir/including/$base_include  || call_handler error:exit_stat "spawned copy of ourself: $appname returned $?, quiting" ;; 
     no_parse)  cp $cleaned_include $tmp_dir/including/$base_include ;; # no $parser is used
     *) $parser $parser_args ;; # use $parser with $parser_args 
   esac
