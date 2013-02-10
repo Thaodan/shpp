@@ -283,7 +283,7 @@ If() {
   while [ ! $# = 0 ]; do
       case $1 in 
 	  !) logic_char=0 ;;
-	  defined) defined $2; __condition="$? == 0"; break;;
+	  defined) __condition="$(defined $2) == 1"; break;;
 	  *) __condition="$@" ;break ;;
       esac
   done
@@ -308,13 +308,13 @@ defined() {
   for _defined in $defined_vars $input_defined_vars ; do # look if var is defined:
     IFS=$old_ifs
     if [ "$_defined" = "$1"  ] ; then  # if $_cleadif machtes with one of $defined_vars clear unsuccesfull and break
-	__isDefined_return_status=0;
+	__isDefined_return_status=1;
     fi
     IFS=:
   done
   IFS=$old_ifs
   unset _defined
-  return ${__isDefined_return_status:-1}
+  echo  ${__isDefined_return_status:-0}
 }
 
 #### if conditions ### end
