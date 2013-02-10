@@ -141,10 +141,10 @@ shpp() { # function for our self to have ourself for exit call
 
 cleanup() {
   if [ ! $keep ] ; then 
-    old_ifs=$IFS
-    export IFS=: ; rm -rf $files_to_remove; 
-  
-    export IFS=$old_ifs
+    old_ifs="$IFS";
+    export IFS=":";
+    rm -rf $files_to_remove; 
+    export IFS="$old_ifs"
   fi
 }
 
@@ -206,10 +206,19 @@ write_flags() { # write #\\ flags to $3
 
 
 ############################
+#alias commands 
+#this are commands that are only provided as alias, as workaround these alias are before commands (alias must be known before use, instead before call unlike functions)
+
+
+#\\ifdef 
+alias ifdef='If defined'
+#\\ifndef
+alias ifndef='If ! defined' 
 
 find_commands() {
   erase_till_endif=false
   endif_notfound=false 
+  removed_stack=0
   command_lines=$( grep -hn \#\\\\\\\\ "$1"  | sed 's|:.*||' | tr '\n' ':')
   old_ifs=$IFS
   IFS=:
@@ -217,14 +226,14 @@ find_commands() {
     IFS=$old_ifs
     _find_command_count=$(( $_find_command_count + 1 ))
     current_line_ued=$( read_farray $command_lines  $_find_command_count  ) # current with removeing deleted lines
-    current_line=$(( $current_line_ued - ${removed_stack:-0} )) # remove removed lines from current_line
+    current_line=$(( $current_line_ued - ${removed_stack} )) # remove removed lines from current_line
     _command=$( echo "$_command" | sed 's|\ $||')
     if [ $erase_till_endif = true ] ; then
       if [ "$_command" = endif ] || [ "$_command" = else ]  ; then
 	sed -ie "$if_line,$current_line d" "$1" 
 #\\!debug_if		cp "$1" "$tmp_dir/ifsteps/pc_file.stage.$_find_command_count"
 	erase_till_endif=false
-	removed_stack=$(( ( $current_line - $if_line  + 1) + ${removed_stack:-0} )) # save removed lines (difference between $current_line and $if_line + 1)
+	removed_stack=$(( ( $current_line - $if_line  + 1) + ${removed_stack} )) # save removed lines (difference between $current_line and $if_line + 1)
 	[ $_command = else ] && found_if_or_else=true
       elif [ ! $endif_notfound = false ] ; then
 	false
@@ -235,13 +244,14 @@ find_commands() {
 	current_cleared_command=$_command							# if $_command has no space, we assume that $_command is already clear
       else
 	current_cleared_command=$( echo $_command | sed -e "s| .*||" -e  "s|^\ ||" -e 's|\ $||') # else clear it and give the commands still the ability to know who they are
+	_command=$( echo $_command | sed -e "s|$current_cleared_command ||" -e  "s|^\ ||")		      	# we clear $0 from $_command now, the commands don't need to do it
       fi
       current_command="$_command"					      			# if command wants the raw $_command it can use it
-      _command=$( echo $_command | sed -e "s|$current_cleared_command ||" -e  "s|^\ ||")		      	# we clear $0 from $_command now, the commands don't need to do it
       case "$current_cleared_command" in
 	define) 	define "$_command" ;;
 	include) 	include "$_command" ;;
 	ifdef)		ifdef "$_command" ;;
+	  if)           If "$_command"    ;;
 	else)		Else "$_command"  ;;
 	endif)		endif ;; # just a stub call for syntax error cause endif was used before if/ifdef#
 	break)   	verbose 'found break abort parsing'; break ;;
@@ -265,27 +275,48 @@ find_commands() {
 
 ### commands ### 
 
-#!\\ifdev
-ifdef() {
+#!\\if
+If() {
+  __logic_number=1 # set default logig eg. positive
+  # parse modifers
+  while [ ! $# = 0 ]; do
+      case $1 in 
+	  !) logic_char=0 ;;
+	  defined) defined $2; __condition="$? == 0"; break;;
+	  *) __condition="$@" ;break ;;
+      esac
+  done
+  if [ ` echo "$__condition " | bc ` = $__logic_number ] ; then  
   #cleared_if="$( echo "$1" |  sed -e "s/ifdef//" )" # fist input with ifdef
-  unsuccesfull=true
+  #unsuccesfull=true
+      found_if_or_else=true
+  else
+     verbose "L$current_line_ued:Tested var was not defined, remove content till endif, erase_till_endif ist set to true"
+     if_line=$current_line # save $current_line for find_commands 
+     erase_till_endif=true # say find_commands it has to erase fill from $if_line till next found endif
+  fi
+}
+
+#### if conditions ###
+
+defined() {
+  unset __isDefined_return_status
   old_ifs=$IFS
   IFS=:
   for _defined in $defined_vars $input_defined_vars ; do # look if var is defined:
     IFS=$old_ifs
     if [ "$_defined" = "$1"  ] ; then  # if $_cleadif machtes with one of $defined_vars clear unsuccesfull and break
 	found_if_or_else=true 
-	unsuccesfull=false 
-	break
+	__isDefined_return_status=0;
     fi
     IFS=:
-  done 
-  if [ "$unsuccesfull" = true ] ; then
-     verbose "L$current_line_ued:Tested var was not defined, remove content till endif, erase_till_endif ist set to true"
-     if_line=$current_line # save $current_line for find_commands 
-     erase_till_endif=true # say find_commands it has to erase fill from $if_line till next found endif
-  fi
+  done
+  IFS=$old_ifs
+  unset _defined
+  return ${__isDefined_return_status:-1}
 }
+
+#### if conditions ### end
 
 #\\endif
 endif() { # just a stub that calls call_handler with error to handle if endif is before if/ifdef
@@ -313,14 +344,14 @@ Else() {
 include() {
   verbose "L$current_line_ued:Opened $1 to parse, call ourself to process file" 
 #  cleaned_include="$( echo "$1" |  sed "s/include//" | sed 's/ //g')" # fist input with ifdef
-  for var in $1 ; do
-    case $var in 
+  for __include_arg in $1 ; do
+    case $__include_arg in 
    #   include) : ;; 
       noparse)  parser=no_parse ; call_handler warning:deprected 'no_parse is deprected now, use with care' ;;
       parser=*) parser=$( echo $1 | sed 's|parser=||' ) ;; # set parser to use another parser than shpp 
       parser_args=*) parser_args=$( echo $1 | sed 's|parser_args=||' ) ;; 
       
-      *) cleaned_include="$var" ;;
+      *) cleaned_include="$__include_argr" ;;
     esac
   done
   base_include=$( basename "$cleaned_include" )
@@ -342,7 +373,7 @@ include() {
 # copy content before #\\include to new file
 # copy include argument to new file
 # copy content past #\\include to new file 
- unset noparse
+ unset noparse include_arg
 }
 
 #\\define
