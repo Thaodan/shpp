@@ -219,10 +219,10 @@ find_commands() {
   erase_till_endif=false
   endif_notfound=false 
   removed_stack=0
-  command_lines=$( grep -hn \#\\\\\\\\ "$1"  | sed 's|:.*||' | tr '\n' ':')
+  command_lines=$( grep -hn \#\\\\\\\\ "$1"  | sed 's|:.*||' | tr '\n'  ':' | sed -e 's/\(.*\)./\1/')
   old_ifs=$IFS
   IFS=:
-  for _command in $( grep  \#\\\\\\\\ "$1" | sed -e 's/^#\\\\//' -e 's/^[ \t]*//' | tr '\n' ':' ) ; do
+  for _command in $( grep  \#\\\\\\\\ "$1" | sed -e 's/^#\\\\//' -e 's/^[ \t]*//' | tr '\n' ':' | sed -e 's/\(.*\)./\1/' ) ; do
     IFS=$old_ifs
     _find_command_count=$(( $_find_command_count + 1 ))
     current_line_ued=$( read_farray $command_lines  $_find_command_count  ) # current with removeing deleted lines
@@ -258,7 +258,7 @@ find_commands() {
 	error)		error "$_command"   ;;
 	warning)	warning "$_command" ;;
         ![a-z]*|rem)        :              ;; # ignore stubs for ignored functions
-	*) call_handler warning:unkown "found $current_cleared_command, bug or unkown command, raw string is '$current_command'" ;;
+	*) call_handler warning:unkown "found '$current_cleared_command', bug or unkown command, raw string is '$current_command'" ;;
       esac
    fi
    IFS=:
@@ -278,6 +278,7 @@ find_commands() {
 #!\\if
 If() {
   __logic_number=1 # set default logig eg. positive
+  unsuccesfull=false
   # parse modifers
   while [ ! $# = 0 ]; do
       case $1 in 
@@ -291,9 +292,10 @@ If() {
   #unsuccesfull=true
       found_if_or_else=true
   else
-     verbose "L$current_line_ued:Tested var was not defined, remove content till endif, erase_till_endif ist set to true"
+     verbose "L$current_line_ued: condition was not true, remove content till endif, erase_till_endif ist set to true"
      if_line=$current_line # save $current_line for find_commands 
      erase_till_endif=true # say find_commands it has to erase fill from $if_line till next found endif
+     unsuccesfull=true
   fi
 }
 
@@ -306,7 +308,6 @@ defined() {
   for _defined in $defined_vars $input_defined_vars ; do # look if var is defined:
     IFS=$old_ifs
     if [ "$_defined" = "$1"  ] ; then  # if $_cleadif machtes with one of $defined_vars clear unsuccesfull and break
-	found_if_or_else=true 
 	__isDefined_return_status=0;
     fi
     IFS=:
@@ -325,7 +326,7 @@ endif() { # just a stub that calls call_handler with error to handle if endif is
 
     call_handler  error:syntax 'no if before endif' 
   fi
-  unset found_else
+  unset found_if_or_els
 }
 
 #\\else
