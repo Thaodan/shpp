@@ -32,41 +32,42 @@ SHPP_REV=60
 
 . "${libdir:-/usr/lib}/libsh"
 if [ $( dirname $0 ) = . ] ; then
-  shpp=$(which $0 2>/dev/null ) || shpp=$( dirname $0 )/shpp
+    shpp=$(which $0 2>/dev/null ) || shpp=$( dirname $0 )/shpp
 else
-  shpp=$( dirname $0 )/shpp
+    shpp=$( dirname $0 )/shpp
 fi
 
 
 stub() {
-  echo stub
+    echo stub
 }
 #########################################################################
 
 
 init_stats(){
-  if [  -t 1 ] || ( [ $FORCE_COLOR ] && [ ! $FORCE_COLOR = n ] ) ; then
-    if  [ $USE_COLOR ] && [ ! $USE_COLOR = [Nn] ] || ( [ $FORCE_COLOR ] && [ ! $FORCE_COLOR = n ]  ) ; then # use only colored out if enabled and if output goes to the terminal
+    if [  -t 1 ] || ( [ $FORCE_COLOR ] && [ ! $FORCE_COLOR = n ] ) ; then
+    # use only colored out if enabled and if output goes to the terminal
+	if  [ $USE_COLOR ] && [ ! $USE_COLOR = [Nn] ] || ( [ $FORCE_COLOR ] && [ ! $FORCE_COLOR = n ]  ) ; then 
 	# prefer terminal safe colored and bold text when tput is supported [ ! -t 1 ]  && 
-	if tput setaf 0 > /dev/null 2>&1 ; then
+	    if tput setaf 0 > /dev/null 2>&1 ; then
 		ALL_OFF="$(tput sgr0)"
 		BOLD="$(tput bold)"
 		BLUE="${BOLD}$(tput setaf 4)"
 		GREEN="${BOLD}$(tput setaf 2)"
 		RED="${BOLD}$(tput setaf 1)"
 		YELLOW="${BOLD}$(tput setaf 3)"
-	else
+	    else
 		ALL_OFF="\e[1;0m"
 		BOLD="\e[1;1m"
 		BLUE="${BOLD}\e[1;34m"
 		GREEN="${BOLD}\e[1;32m"
 		RED="${BOLD}\e[1;31m"
 		YELLOW="${BOLD}\e[1;33m"
+	    fi
 	fi
     fi
- fi
 }
-# 
+
 
 
 
@@ -77,56 +78,58 @@ init_stats(){
 
 ### communication ###
 plain() {
-	first="$1"
-	shift
-	echo "${ALL_OFF}${BOLD} $first:${ALL_OFF} "$@""
-	unset first
+    first="$1"
+    shift
+    echo "${ALL_OFF}${BOLD} $first:${ALL_OFF} "$@""
+    unset first
 }
 
 msg() {
-	first="$1"
-	shift
-	echo "${GREEN}==>${ALL_OFF}${BOLD} $first:${ALL_OFF} "$@"" 
-	unset first
+    first="$1"
+    shift
+    echo "${GREEN}==>${ALL_OFF}${BOLD} $first:${ALL_OFF} "$@"" 
+    unset first
 }
 
 msg2() {
-	echo "${BLUE} ->${ALL_OFF}${BOLD} $first:${ALL_OFF} "$@""
-	unset first
+    first="$1"
+    shift
+    echo "${BLUE} ->${ALL_OFF}${BOLD} $first:${ALL_OFF} "$@""
+    unset first
 }
 
 warning_msg() {
-	first="$1"
-	shift
-	echo "${YELLOW}==>${ALL_OFF}${BOLD} $first:${ALL_OFF} "$@"" >&2
-# 	unset first
+    first="$1"
+    shift
+    echo "${YELLOW}==>${ALL_OFF}${BOLD} $first:${ALL_OFF} "$@"" >&2
+    unset first
 }
 
 error_msg() {
-	first="$1"
-	shift
-	echo "${RED}==>${ALL_OFF}${BOLD} $first:${ALL_OFF} "$@"" >&2
-	unset first
-	return 1
+    first="$1"
+    shift
+    echo "${RED}==>${ALL_OFF}${BOLD} $first:${ALL_OFF} "$@"" >&2
+    unset first
+    return 1
 } 
 
 verbose() {
-  if [ $verbose_output ] ; then
-    warning_msg $@
-  fi
+    if [ $verbose_output ] ; then
+	warning_msg $@
+    fi
 }
 
 
 call_handler() {
-  case $1 in
-    error*) error_msg "$@"; die=1 ;;
-    warning*) test "$WARNING_IS_ERROR" = true && die=1; warning_msg "$@";; 
-  esac
-  if [ $die ]  ; then
-    verbose 'got signal to die, dieing'
-    cleanup_die
-    exit ${assumed_err_status:-13}
-  fi
+    case $1 in
+	error*) error_msg "$@"; die=1 ;;
+	warning*) test "$WARNING_IS_ERROR" = true && die=1; warning_msg "$@";; 
+    esac
+    if [ $die ]  ; then
+	verbose 'got signal to die, dieing'
+	cleanup_die
+	exit ${assumed_err_status:-13}
+    fi
 }
 
 
@@ -135,49 +138,45 @@ call_handler() {
 ##################################
 
 shpp() { # function for our self to have ourself for exit call
-  $shpp $@
-  our_self_id=$!                                         
+    $shpp $@
+    our_self_id=$!                                         
 }
 
 cleanup() {
-  if [ ! $keep ] ; then 
-    old_ifs="$IFS";
-    export IFS=":";
-    rm -rf $files_to_remove; 
-    export IFS="$old_ifs"
-  fi
+    if [ ! $keep ] ; then 
+	old_ifs="$IFS";
+	export IFS=":";
+	rm -rf $files_to_remove; 
+	export IFS="$old_ifs"
+    fi
 }
 
 cleanup_die() {
-  old_ifs=$IFS
-  cleanup
-  if [ $our_self_id ] ; then 
-   verbose "killing copys of our self that where parsing includes: $our_self_id"
-   kill $our_self_id
-  fi
- 
-  export IFS=$old_ifs
-
+    cleanup
+    if [ $our_self_id ] ; then 
+	verbose "killing copys of our self that where parsing includes: $our_self_id"
+	kill $our_self_id
+    fi
 }
 
 pass_chain() {
-  case $1 in 
-    -g|--global)	echo "$2">>"${tmp_dir:-$PWD}/master_config" ;;
-    *)			echo "$1">>"${tmp_dir:-$PWD}/slaveconfig" ;;
-  esac
-  
+    case $1 in 
+	-g|--global)	echo "$2">>"${tmp_dir:-$PWD}/master_config" ;;
+	*)			echo "$1">>"${tmp_dir:-$PWD}/slaveconfig" ;;
+    esac
 }
+
 parse_chaines() {
-  mv -f slaveconfig	"$tmp_dir/slaveconfig" > /dev/null 2>&1  || echo "destination=valhalla" > "$tmp_dir/slaveconfig" || true # ignore this error it isn't needed
-  mv -f master_config	"$tmp_dir/master_config" > /dev/null 2>&1  || true 
+    mv -f slaveconfig	"$tmp_dir/slaveconfig" > /dev/null 2>&1  || echo "destination=valhalla" > "$tmp_dir/slaveconfig" || true # ignore this error it isn't needed
+    mv -f master_config	"$tmp_dir/master_config" > /dev/null 2>&1  || true 
 
-  if [ "$give_them_all" = true ] ; then
-    cat $tmp_dir/slaveconfig >> $tmp_dir/master_config 
+    if [ "$give_them_all" = true ] ; then
+	cat $tmp_dir/slaveconfig >> $tmp_dir/master_config 
 
-    [ $WARNING_IS_ERROR = true ] && pass_chain -g WARNING_IS_ERROR=true 
-    [ $keep ] && pass_chain -g keep=true
-  fi
-  slaveconfig_file="$tmp_dir/slaveconfig"
+	[ $WARNING_IS_ERROR = true ] && pass_chain -g WARNING_IS_ERROR=true 
+	[ $keep ] && pass_chain -g keep=true
+    fi
+    slaveconfig_file="$tmp_dir/slaveconfig"
 }
 
 ############################################################
@@ -206,9 +205,10 @@ write_flags() { # write #\\ flags to $3
 
 
 ############################
-#alias commands 
-#this are commands that are only provided as alias, as workaround these alias are before commands (alias must be known before use, instead before call unlike functions)
 
+###  alias commands ### 
+# this are commands that are only provided as alias, as workaround these alias are before commands 
+# (alias must be known before use, instead before call unlike functions)
 
 #\\ifdef 
 alias ifdef='If defined'
@@ -216,193 +216,215 @@ alias ifdef='If defined'
 alias ifndef='If ! defined' 
 
 find_commands() {
-  erase_till_endif=false
-  endif_notfound=false 
-  removed_stack=0
-  command_lines=$( grep -hn \#\\\\\\\\ "$1"  | sed 's|:.*||' | tr '\n'  ':' | sed -e 's/\(.*\)./\1/')
-  old_ifs=$IFS
-  IFS=:
-  for _command in $( grep  \#\\\\\\\\ "$1" | sed -e 's/^#\\\\//' -e 's/^[ \t]*//' | tr '\n' ':' | sed -e 's/\(.*\)./\1/' ) ; do
-    IFS=$old_ifs
-    _find_command_count=$(( $_find_command_count + 1 ))
-    current_line_ued=$( read_farray $command_lines  $_find_command_count  ) # current with removeing deleted lines
-    current_line=$(( $current_line_ued - ${removed_stack} )) # remove removed lines from current_line
-    _command=$( echo "$_command" | sed 's|\ $||')
-    if [ $erase_till_endif = true ] ; then
-      if [ "$_command" = endif ] || [ "$_command" = else ]  ; then
-	sed -ie "$if_line,$current_line d" "$1" 
-#\\!debug_if		cp "$1" "$tmp_dir/ifsteps/pc_file.stage.$_find_command_count"
-	erase_till_endif=false
-	removed_stack=$(( ( $current_line - $if_line  + 1) + ${removed_stack} )) # save removed lines (difference between $current_line and $if_line + 1)
-	[ $_command = else ] && found_if_or_else=true
-      elif [ ! $endif_notfound = false ] ; then
-	false
-      fi
-   else
-      verbose "L$current_line_ued:Found $_command calling corresponding command"
-      if echo $_command | grep -qv "\ " ; then
-	current_cleared_command=$_command							# if $_command has no space, we assume that $_command is already clear
-      else
-	current_cleared_command=$( echo $_command | sed -e "s| .*||" -e  "s|^\ ||" -e 's|\ $||') # else clear it and give the commands still the ability to know who they are
-	_command=$( echo $_command | sed -e "s|$current_cleared_command ||" -e  "s|^\ ||")		      	# we clear $0 from $_command now, the commands don't need to do it
-      fi
-      current_command="$_command"					      			# if command wants the raw $_command it can use it
-      case "$current_cleared_command" in
-	define) 	define "$_command" ;;
-	include) 	include "$_command" ;;
-	ifdef)		ifdef "$_command" ;;
-	  if)           If "$_command"    ;;
-	else)		Else "$_command"  ;;
-	endif)		endif ;; # just a stub call for syntax error cause endif was used before if/ifdef#
-	break)   	verbose 'found break abort parsing'; break ;;
-	error)		error "$_command"   ;;
-	warning)	warning "$_command" ;;
-        ![a-z]*|rem)        :              ;; # ignore stubs for ignored functions
-	*) call_handler warning:unkown "found '$current_cleared_command', bug or unkown command, raw string is '$current_command'" ;;
-      esac
-   fi
-   IFS=:
-  done
-  unset _command command_lines _find_command_count current_command current_cleared_command  \
+    erase_till_endif=false
+    endif_notfound=false 
+    removed_stack=0
+    command_lines=$( grep -hn \#\\\\\\\\ "$1"  | sed 's|:.*||' | tr '\n'  ':' | sed -e 's/\(.*\)./\1/')
+    old_ifs=$IFS
+    IFS=:
+    for _command in $( grep  \#\\\\\\\\ "$1" | sed -e 's/^#\\\\//' -e 's/^[ \t]*//' | tr '\n' ':' | sed -e 's/\(.*\)./\1/' ) ; do
+	IFS=$old_ifs
+	_find_command_count=$(( $_find_command_count + 1 ))
+	current_line_ued=$( read_farray $command_lines  $_find_command_count  ) # current line with removeing deleted lines
+	current_line=$(( $current_line_ued - ${removed_stack} )) # remove removed lines from current_line      
+	_command=$( echo "$_command" | sed -e 's|\ $||')
+	if [ $erase_till_endif = true ] ; then
+	    if [ "$_command" = endif ] || [ "$_command" = else ]  ; then
+		sed -ie "$if_line,$current_line d" "$1" 
+#\\!debug_if  cp "$1" "$tmp_dir/ifsteps/pc_file.stage.$_find_command_count"
+		erase_till_endif=false
+	        # save removed lines (difference between $current_line and $if_line + 1)
+		removed_stack=$(( ( $current_line - $if_line  + 1) + ${removed_stack} )) 
+		[ $_command = else ] && found_if_or_else=true
+	    elif [ ! $endif_notfound = false ] ; then
+		false
+	    fi
+	else
+	    verbose "L$current_line_ued:Found $_command calling corresponding command"
+            # if command wants the raw $_command it can use it
+	    current_command="$_command"
+            # we clear $0 from $_command now, the commands don't need to do it
+	    if echo $_command | grep -qv "\ " ; then
+	        # if $_command has no space, we assume that $_command is already clear
+		current_cleared_command=$_command							
+	    else
+	        # else clear it and give the commands still the ability to know who they are
+		current_cleared_command=$( echo $_command | sed -e "s| .*||" -e  "s|^\ ||" -e 's|\ $||') 
+		_command=$( echo $_command | sed -e "s|$current_cleared_command ||" -e  "s|^\ ||")  	
+	    fi					      			
+	    case "$current_cleared_command" in
+		define) 	define "$_command" ;;
+		include) 	include "$_command" ;;
+		ifdef)	ifdef "$_command" ;;
+		if)       If $_command    ;;
+		else)	Else "$_command"  ;;
+		endif)	endif ;; # just a stub call for syntax error cause endif was used before if/ifdef#
+		break)   	verbose 'found break abort parsing'; break ;;
+		error)	error "$_command"   ;;
+		warning)	warning "$_command" ;;
+		![a-z]*|rem) : ;; # ignore stubs for ignored functions
+		*) call_handler warning:unkown "found '$current_cleared_command', bug or unkown command, raw string is '$current_command'" ;;
+	    esac
+        fi
+       IFS=:
+    done
+    unset _command command_lines _find_command_count current_command current_cleared_command  \
         removed_stack found_if_or_else  current_line current_line_ued  # unset runtime vars
 
 }
-
-
-
-
 
 
 ### commands ### 
 
 #!\\if
 If() {
-  __logic_number=1 # set default logig eg. positive
-  unsuccesfull=false
+    __logic_number=1 # set default logig eg. positive
+    __condition_done=false
+    unsuccesfull=false
   # parse modifers
-  while [ ! $# = 0 ]; do
-      case $1 in 
-	  !) logic_char=0 ;;
-	  defined) __condition="$(defined $2) == 1"; break;;
-	  *) __condition="$@" ;break ;;
-      esac
-  done
-  if [ ` echo "$__condition " | bc ` = $__logic_number ] ; then  
-  #cleared_if="$( echo "$1" |  sed -e "s/ifdef//" )" # fist input with ifdef
-  #unsuccesfull=true
-      found_if_or_else=true
-  else
-     verbose "L$current_line_ued: condition was not true, remove content till endif, erase_till_endif ist set to true"
-     if_line=$current_line # save $current_line for find_commands 
-     erase_till_endif=true # say find_commands it has to erase fill from $if_line till next found endif
-     unsuccesfull=true
-  fi
+    old_ifs=$IFS
+    IFS=" "
+    while [ ! $__condition_done = true ] ; do
+	while [ ! $# = 0 ]; do
+	    case $1 in 
+		!) logic_number=0 ;shift ;;
+		defined) IFS=$old_ifs;  __condition="$(defined $2) $__condition"; IFS=" ";shift 2;;
+		\|\|) __break_false=true; shift ;break;;
+		\&\&) __break_true=true; shift ;break;;
+		*) __condition="$1 $__condition" ; shift;;
+	    esac
+	done
+	if [ ` echo "$__condition " | bc ` = $__logic_number ] ; then
+	  # if condition was true and we found && (and) go and parse the rest of condition
+	    if [ $__break_true ] ; then 
+		unset __condition
+		continue
+	    fi
+	else
+	    # same for || (or)
+	    if [ $__break_false ] ; then
+		unset __condition
+		continue 
+	    else
+		unsuccesfull=true # no chance left that condition can be true, everything is lost we're unsuccesfull
+	    fi
+	fi
+	__condition_done=true
+	found_if_or_else=true
+    done
+    # check result
+    if [ $unsuccesfull = true ] ; then
+	verbose "L$current_line_ued:Condition was not true, remove content till endif, erase_till_endif ist set to true"
+	if_line=$current_line # save $current_line for find_commands 
+	erase_till_endif=true # say find_commands it has to erase fill from $if_line till next found endif
+    fi
 }
 
 #### if conditions ###
 
 defined() {
-  unset __isDefined_return_status
-  old_ifs=$IFS
-  IFS=:
-  for _defined in $defined_vars $input_defined_vars ; do # look if var is defined:
-    IFS=$old_ifs
-    if [ "$_defined" = "$1"  ] ; then  # if $_cleadif machtes with one of $defined_vars clear unsuccesfull and break
-	__isDefined_return_status=1;
-    fi
+    unset __isDefined_return_status
+    old_ifs=$IFS
     IFS=:
-  done
-  IFS=$old_ifs
-  unset _defined
-  echo  ${__isDefined_return_status:-0}
+    # look if var is defined
+    for _defined in $defined_vars $input_defined_vars ; do
+	IFS=$old_ifs
+        # if $_cleadif machtes with one of $defined_vars clear unsuccesfull and break
+	if [ "$_defined" = "$1"  ] ; then  
+	    __isDefined_return_status=1;
+	fi
+	IFS=:
+    done
+    IFS=$old_ifs
+    [ ${_isDefined_return_status:-0} = 0 ] && verbose "L$current_line_ued:$1 was not defined" 
+    unset _defined
+    echo  ${__isDefined_return_status:-0}
 }
 
 #### if conditions ### end
 
 #\\endif
-endif() { # just a stub that calls call_handler with error to handle if endif is before if/ifdef
-  if [ ! $found_if_or_else ] ; then
-    verbose "L$current_line_ued:Found endif before if, calling for error"
-
-    call_handler  error:syntax 'no if before endif' 
-  fi
-  unset found_if_or_els
+endif() { 
+    # just a stub that calls call_handler with error to handle if endif is before if/ifdef
+    if [ ! $found_if_or_else ] ; then
+	verbose "L$current_line_ued:Found endif before if, calling for error"
+	call_handler  error:syntax 'no if before endif' 
+    fi
+    unset found_if_or_els
 }
 
 #\\else
 Else() {
-  if [ "$unsuccesfull" = false ] ; then
-    verbose "L$current_line_ued:Last if was succesfull, removing content from last if till else"
-    if_line=$current_line # save $current_line for find_commands 
-    erase_till_endif=true # say find_commands it has to erase fill from $if_line till next found endif
-  else
-    verbose "L$current_line_ued:Found else before if, calling for error"
-    call_handler  error:syntax 'no if before else'
-  fi
+    if [ "$unsuccesfull" = false ] ; then
+	verbose "L$current_line_ued:Last if was succesfull, removing content from last if till" 
+	if_line=$current_line # save $current_line for find_commands 
+	erase_till_endif=true # say find_commands it has to erase fill from $if_line till next found endif
+    else
+	verbose "L$current_line_ued:Found else before if, calling for error"
+	call_handler  error:syntax 'no if before else'
+    fi
 }
 
 #\\include
 include() {
-  verbose "L$current_line_ued:Opened $1 to parse, call ourself to process file" 
-#  cleaned_include="$( echo "$1" |  sed "s/include//" | sed 's/ //g')" # fist input with ifdef
-  for __include_arg in $1 ; do
-    case $__include_arg in 
-   #   include) : ;; 
-      noparse)  parser=no_parse ; call_handler warning:deprected 'no_parse is deprected now, use with care' ;;
-      parser=*) parser=$( echo $1 | sed 's|parser=||' ) ;; # set parser to use another parser than shpp 
-      parser_args=*) parser_args=$( echo $1 | sed 's|parser_args=||' ) ;; 
-      
-      *) cleaned_include="$__include_argr" ;;
+    verbose "L$current_line_ued:Opened $1 to parse, call ourself to process file" 
+    for __include_arg in $1 ; do
+	case $__include_arg in  
+	    noparse)  parser=no_parse ; call_handler warning:deprected 'no_parse is deprected now, use with care' ;;
+	    parser=*) parser=$( echo $1 | sed 's|parser=||' ) ;; # set parser to use another parser than shpp 
+	    parser_args=*) parser_args=$( echo $1 | sed 's|parser_args=||' ) ;; 
+	    *) cleaned_include="$__include_arg" ;;
+	esac
+    done
+    base_include=$( basename "$cleaned_include" )
+    case ${parser:-shpp} in 
+	shpp)  $shpp  $chained_options $parser_args --config $slaveconfig_file --defined-flags $defined_flags --enabled-flags $enabled_flags --tmp $tmp_dir/slaves --slave --stdout --stderr=$tmp_dir/logs/errors_$base_include.log "$cleaned_include"> $tmp_dir/including/$base_include  || call_handler error:exit_stat "spawned copy of ourself: $appname returned $?, quiting" ;; 
+	no_parse)  cp $cleaned_include $tmp_dir/including/$base_include ;; # no $parser is used
+	*) $parser $parser_args ;; # use $parser with $parser_args 
     esac
-  done
-  base_include=$( basename "$cleaned_include" )
- # echo "$base_include"
-  case ${parser:-shpp} in 
-    shpp)  $shpp  $chained_options $parser_args --config $slaveconfig_file --defined-flags $defined_flags --enabled-flags $enabled_flags --tmp $tmp_dir/slaves --slave --stdout --stderr=$tmp_dir/logs/errors_$base_include.log "$cleaned_include"> $tmp_dir/including/$base_include  || call_handler error:exit_stat "spawned copy of ourself: $appname returned $?, quiting" ;; 
-    no_parse)  cp $cleaned_include $tmp_dir/including/$base_include ;; # no $parser is used
-    *) $parser $parser_args ;; # use $parser with $parser_args 
-  esac
 
-   if [ -z "$includes" ] ; then
-    includes="$base_include"
-    includes_lines="$current_line"
-  else
-    includes="$includes:$base_include"
-    includes_lines="$includes_lines:$current_line"
-  fi
+    if [ -z "$includes" ] ; then
+	includes="$base_include"
+	includes_lines="$current_line"
+    else
+	includes="$includes:$base_include"
+	includes_lines="$includes_lines:$current_line"
+    fi
 # for us and run argument of #\\include with us and copy to temp file/stdout
 # copy content before #\\include to new file
 # copy include argument to new file
 # copy content past #\\include to new file 
- unset noparse include_arg
+ unset __include_arg noparse parser parser_args cleaned_include base_include 
 }
 
 #\\define
 define() {
-  #for _defined $( find_var $1 \#\\\\define ) ; do
-   #cleaned_define="$( echo "$1" |  sed "s/define//" )"
     if echo "$1" | grep -q " "; then
-      verbose "L$current_line_ued: found content in $1 saving it in \$my_${1}"
-      eval my_$1=${1#*\ } #define our private var of $_defined to prevent variable nameing issues       
+	case $1 in
+	    # define defined_function if define $1 is a function macro
+	    *\(\)*|*\(*\)*) eval "defined_${1%\ *} () { ${1#*\ }";; 
+	    *) # else is just a var
+		#define our private var of $_defined to prevent variable nameing issues       
+		verbose "L$current_line_ued: found content in $1 saving it in \$defined_${1}"
+		eval defined_${1%\ *}=${1#*\ }
+		;;
+	esac    
     fi
     if echo $defined_vars | grep -qv  ${1%\ *} ; then
-      write_farray defined_vars $(( $( get_farray_lenght $defined_vars ) + 1 )) ${1%\ *}
+	write_farray defined_vars $(( $( get_farray_lenght $defined_vars ) + 1 )) ${1%\ *}
     fi
-      
- # done
- # unset _defined
 }
 
 #\\error
 error() {  
-  verbose "L$current_line_ued:Got error from #\\error"
-  call_handler error:called "$1"
+    verbose "L$current_line_ued:Got error from #\\error"
+    call_handler error:called "$1"
 }
 
 #\\warning
 warning() {
-  verbose "L$current_line_ued:Got warning from #\\warning"
-  call_handler warning "$1"
+    verbose "L$current_line_ued:Got warning from #\\warning"
+    call_handler warning "$1"
 }
 ### commands end ### 
 
@@ -412,9 +434,9 @@ write_shortifdefs() { # write #\\! flags to $2
     old_ifs=$IFS
     IFS=: 
     for var1 in $1 ; do 
-	 IFS=$old_ife
-	 sed -i "s/"^#\\\\\\\\\!$var1"//" $2
-	 IFS=:
+	IFS=$old_ife
+	sed -i "s/"^#\\\\\\\\\!$var1"//" $2
+	IFS=:
     done
     IFS=$old_ifs
     unset var1 
@@ -422,45 +444,48 @@ write_shortifdefs() { # write #\\! flags to $2
 
 
 include_includes() { 
-  cp "$tmp_dir/pc_file.stage2" "$tmp_dir/backups/pre_include" # make backups before do include
-  includes_lines=$( grep -hn \#\\\\\\\\include "$1"  | sed 's|:.*||' | tr '\n' ':')
-  for _include in $( grep  \#\\\\\\\\include "$1" | sed -e 's/^#\\\\//' -e 's/^[ \t]*//' -e  's/^ //'  | tr '\n' ':'  ) ; do
-    old_ifs=$IFS
-    IFS=' '
-    for include_argument in $_include ; do
-      case $include_argument in 
-	include) : ;; 
-        noparse|parser=*|parser_args=*) : ;; # stub arguments that are only used by #\\include
-        *) _include=$include_argument ;;
-      esac
+    cp "$tmp_dir/pc_file.stage2" "$tmp_dir/backups/pre_include" # make backups before do include
+    includes_lines=$( grep -hn \#\\\\\\\\include "$1"  | sed 's|:.*||' | tr '\n' ':')
+    for _include in $( grep  \#\\\\\\\\include "$1" | sed -e 's/^#\\\\//' -e 's/^[ \t]*//' -e  's/^ //'  | tr '\n' ':'  ) ; do
+	old_ifs=$IFS
+	IFS=' '
+	for include_argument in $_include ; do
+	    case $include_argument in 
+		include) : ;; 
+		noparse|parser=*|parser_args=*) : ;; # stub arguments that are only used by #\\include
+		*) _include=$include_argument ;;
+	    esac
+	done
+	old_ifs=$IFS
+	_find_include_count=$(( $_find_include_count + 1 ))
+	current_include_line=$( read_farray $includes_lines  $_find_include_count )
+	tmp_include=$( read_farray $includes ${current_include_no:-1}  )
+	if [ $(basename $_include) = $tmp_include ] ; then
+	    sed "$current_include_line,$ d" $1 > "$tmp_dir/including/cut_source"
+	    sed "1,$current_include_line d" $1 > "$tmp_dir/including/cut_source_end"
+	    cat "$tmp_dir/including/$tmp_include" >> "$tmp_dir/including/cut_source"
+	    cat "$tmp_dir/including/cut_source_end" >> "$tmp_dir/including/cut_source"
+	    cp "$tmp_dir/including/cut_source" "$tmp_dir/pc_file.stage2"
+	    current_include_no=$(( ${current_include_no:-1}  + 1 ))
+	    continue
+	fi
+	current_include_no=$(( ${current_include_no:-1}  + 1 ))
     done
-    old_ifs=$IFS
-    _find_include_count=$(( $_find_include_count + 1 ))
-    current_line=$( read_farray $includes_lines  $_find_include_count )
-    tmp_include=$( read_farray $includes ${current_include_no:-1}  )
-    if [ $(basename $_include) = $tmp_include ] ; then
-       sed "$current_line,$ d" $1 > "$tmp_dir/including/cut_source"
-      sed "1,$current_line d" $1 > "$tmp_dir/including/cut_source_end"
-      cat "$tmp_dir/including/$tmp_include" >> "$tmp_dir/including/cut_source"
-      cat "$tmp_dir/including/cut_source_end" >> "$tmp_dir/including/cut_source"
-      cp "$tmp_dir/including/cut_source" "$tmp_dir/pc_file.stage2"
-      current_include_no=$(( ${current_include_no:-1}  + 1 ))
-      continue
-    fi
-    current_include_no=$(( ${current_include_no:-1}  + 1 ))
-  done
-  unset _include
+    unset include_lines _include include_argument _find_include_count \
+	current_include_line current_include_no    tmp_include
 }
+
 replace_vars() {
-  replace_file=$2 
-  for replace_var in $( read_farray $1 0 ) ; do
-    verbose "replacing @$replace_var@ with $( eval echo \$$replace_var ) in $2"
-   sed -ie "s|@$replace_var@|$( eval echo  \$$replace_var)|g"  $2 || call_handler error:exit_stat "replace_var: sed quit with $?"
-  done 
+    replace_file=$2 
+    for replace_var in $( read_farray $1 0 ) ; do
+	verbose "replacing @$replace_var@ with $( eval echo \$defined_$replace_var ) in $2"
+	sed -ie "s|@$replace_var@|$( eval echo  \$defined_$replace_var)|g"  $2 || call_handler error:exit_stat "replace_var: sed quit with $?"
+    done 
+    unset replace_file replace_var
 }
 
 clear_flags() { # cleas #\\ flags in 
-  sed -ie '/^#\\\\*/d' $1
+    sed -ie '/^#\\\\*/d' $1
 }
 
 
@@ -470,68 +495,66 @@ clear_flags() { # cleas #\\ flags in
 ### main function ###
 
 main() {
-  init_stats
+    init_stats
 
-  if [ -z $tmp_dir ] ; then
-      tmp_dir=$PWD/${appname}tmp
-      mkdir -p $tmp_dir
-  else
-      mkdir -p $tmp_dir
-     if  [ ! -z $(ls $tmp_dir )  ] ; then
-	call_handler warning:dir "$tmp_dir already exits, hmm"
-      fi
-  fi
-  tmp_dir=$tmp_dir/$$
+    if [ -z $tmp_dir ] ; then
+	tmp_dir=$PWD/${appname}tmp
+	mkdir -p $tmp_dir
+    else
+	mkdir -p $tmp_dir
+	if  [ ! -z $(ls $tmp_dir )  ] ; then
+	    call_handler warning:dir "$tmp_dir already exits, hmm"
+	fi
+    fi
+    readonly tmp_dir=$tmp_dir/$$
 #\\!debug_if	mkdir -p "$tmp_dir/ifsteps"
-  mkdir -p "$tmp_dir/including"
-  mkdir -p "$tmp_dir/backups"
-  mkdir -p "$tmp_dir/logs"
-  mkdir -p "$tmp_dir/slaves"
-  if [ $slave ] ; then
-    ln -s "../.."	"$tmp_dir/master"
-    files_to_remove=$tmp_dir
-  else
-    dirname_temp=$( dirname $tmp_dir )
-    basename_temp=$( basename $tmp_dir )
-    ln -s "$basename_temp/including"	"$dirname_temp/including"
-    ln -s "$basename_temp/backups"	"$dirname_temp/backups" 	
-    ln -s "$basename_temp/logs"		"$dirname_temp/logs"
-    ln -s "$$" 		        "$dirname_temp/master"
-    files_to_remove=$tmp_dir:$dirname_temp
-    parse_chaines
-  fi
-
-
-  unset basename_temp
-  cp $source_file $tmp_dir/pc_file.stage1
-  if [ ! -z "$replace_vars" ] ; then 
-    replace_vars $replace_vars $tmp_dir/pc_file.stage1 # processed file stage1 
-  fi
+    mkdir -p "$tmp_dir/including"
+    mkdir -p "$tmp_dir/backups"
+    mkdir -p "$tmp_dir/logs"
+    mkdir -p "$tmp_dir/slaves"
+    if [ $slave ] ; then
+	ln -s "../.."	"$tmp_dir/master"
+	files_to_remove=$tmp_dir
+    else
+	dirname_temp=$( dirname $tmp_dir )
+	basename_temp=$( basename $tmp_dir )
+	ln -s "$basename_temp/including"	"$dirname_temp/including"
+	ln -s "$basename_temp/backups"	"$dirname_temp/backups" 	
+	ln -s "$basename_temp/logs"		"$dirname_temp/logs"
+	ln -s "$$" 		        "$dirname_temp/master"
+	files_to_remove=$tmp_dir:$dirname_temp
+	parse_chaines
+	unset dirname_temp basename_temp
+    fi
+    # make a copy for our ser
+    cp "$source_file" "$tmp_dir/pc_file.stage1"
     
-  if [ $legacy_mode ] ; then
-    verbose 'found $legacy_mode, entering legacy mode'
-    call_handler warning:deprected "legacy mode (eg --legacy) is deprected now use with care"
-    write_flags $input_enabled_flagst $defined_flags:$input_defined_vars "$tmp_dir/pc_file.stage1"  || call_handler error:exit_stat "write_flags or defined_flags quited with $?"
-    mv "$tmp_dir/pcfile.stage1" $target_name || call_handler error:file "cant copy $tmp_dir/pcfile.stage to $target_name"
-  else
-    cp "$tmp_dir/pc_file.stage1" "$tmp_dir/pc_file.stage2"
-    find_commands "$tmp_dir/pc_file.stage2"
-    write_shortifdefs  "$defined_vars" "$tmp_dir/pc_file.stage2"
-    test ! -z $includes && include_includes "$tmp_dir/pc_file.stage2" # finaly include our $includes if $includes is not empty
-  fi
+    if [ $legacy_mode ] ; then
+	verbose 'found $legacy_mode, entering legacy mode'
+	call_handler warning:deprected "legacy mode (eg --legacy) is deprected now use with care"
+	write_flags $input_enabled_flagst $defined_flags:$input_defined_vars "$tmp_dir/pc_file.stage1"  || call_handler error:exit_stat "write_flags or defined_flags quited with $?"
+	mv "$tmp_dir/pcfile.stage1" $target_name || call_handler error:file "cant copy $tmp_dir/pcfile.stage1 to $target_name"
+    else
+	find_commands "$tmp_dir/pc_file.stage1"
+	write_shortifdefs  "$defined_vars" "$tmp_dir/pc_file.stage1"
+	cp "$tmp_dir/pc_file.stage1" "$tmp_dir/pc_file.stage2"
+	test ! -z $defined_vars && replace_vars "$defined_vars"  "$tmp_dir/pc_file.stage2"
+         # finaly include our $includes if $includes is not empty
+	test ! -z $includes && include_includes "$tmp_dir/pc_file.stage2" 
+    fi
 
-  clear_flags "$tmp_dir/pc_file.stage2"
-  cp "$tmp_dir/pc_file.stage2" "$target_name"
+    clear_flags "$tmp_dir/pc_file.stage2"
+    cp "$tmp_dir/pc_file.stage2" "$target_name"
   
-  if [ $target_name = stdout ] ; then
-      cat $target_name
-      files_to_remove=$files_to_remove:$target_name
-  fi
+    if [ $target_name = stdout ] ; then
+	cat $target_name
+	files_to_remove=$files_to_remove:$target_name
+    fi
 
 
 
   
-  cleanup # finaly at the end cleanup
+    cleanup # finaly at the end cleanup
       
 
 }
@@ -565,89 +588,84 @@ HELP
 
 
 if [ ! $# = 0 ] ; then 
-  while [ ! $# = 0 ] ; do
-    case $1 in 
-      --help|-H|-h)	print_help ; shift ;; 
-      --revision) 	echo $SHPP_REV ; shift ;;
-      --verbose|-v) 	verbose_output=true ; shift  ;;
-      -V|--version)	echo $SHPP_VER:$SHPP_REV  ; shift ;;
-    #   #-*)		echo `read_farray "$err_input_messages" 1`;;
-      --*|*)
-    optspec=o:O:C:c # b:dp #-: # short options
-    optspec_long=defined-flags:,defined-vars:,enabled-flags:,output:,option:,Ow:,option-global:,config:,color,pass-all-to-slaves,legacy,stdout,critical-warning,tmp:,stderr:,keep,slave,debug,errexit,\*=\* #,binpath:,desktop,prefix # long options
-    PROCESSED_OPTSPEC=$( getopt -qo $optspec --long $optspec_long \
-    -n $appname -- "$@" ) || error_msg input "Wrong or to less  input given!" ||  exit 1 
-    eval set -- "$PROCESSED_OPTSPEC"; 
-	  while [ !  $#  =  1  ]  ; do
-	    case $1 in 
-	      --debug)
-		set -o verbose
-		set -o xtrace
-		shift
+    while [ ! $# = 0 ] ; do
+	case $1 in 
+	    --help|-H|-h)	print_help ; shift ;; 
+	    --revision) 	echo $SHPP_REV ; shift ;;
+	    --verbose|-v) 	verbose_output=true ; shift  ;;
+	    -V|--version)	echo $SHPP_VER:$SHPP_REV  ; shift ;;
+            #   #-*)		echo `read_farray "$err_input_messages" 1`;;
+	    --*|*)
+		optspec=o:O:C:cD: # b:dp #-: # short options
+		optspec_long=defined-flags:,defined-vars:,enabled-flags:,output:,option:,Ow:,option-global:,config:,color,pass-all-to-slaves,legacy,stdout,critical-warning,tmp:,stderr:,keep,slave,debug,errexit,\*=\* #,binpath:,desktop,prefix # long options
+		PROCESSED_OPTSPEC=$( getopt -qo $optspec --long $optspec_long \
+		    -n $appname -- "$@" ) || error_msg input "Wrong or to less  input given!" ||  exit 1 
+		eval set -- "$PROCESSED_OPTSPEC"; 
+		while [ !  $#  =  1  ]  ; do
+		    case $1 in 
+                       # config stuff
+			--debug)
+			    set -o verbose
+			    set -o xtrace
+			    shift
+			    ;;
+			--errexit) set -o errexit ; shift ;;
+			-c|--color) USE_COLOR=true ; shift 1 ;;
+			-C|--config) . "$2" ; slaveconfig_file="$2" ;shift 2;;
+			-O|--option) # pass options to shpp or enable options
+			    case $2 in 
+				*=*) eval $2 ; pass_chain -g $2 ;; # self explained
+				# if its no var (options can be paased as var too) threat it as option and enable it
+				*) $2=true ; pass_chain -g $2=true ;;  
+			    esac
+ 			    shift 2 
+			    ;;
+	                #+O) $1=false ; shift 2;; # tell shppp to disable option
+			--Ow|--option-global) 					# pass option to slave and master
+			    case $2 in 
+				*=*) eval $2 ; pass_chain $2 ;; 
+				*) $2=true ; pass_chain $2=true ;;  
+			    esac
+			    shift 2 
+			    ;;
+			--tmp) tmp_dir=${2} ; shift 2;;
+			--keep) keep=true; shift ;; # keep temp files
+			--critical-warning) WARNING_IS_ERROR=true ; shift ;; # all warnings are critical
+			--slave) slave=true; shift ;; # process is a slave, it now links to their master and dont provides links to its directorys in main temp
+# 
+			--defined-flags|--defined-vars)  input_defined_vars=${2} ; shift 2 ;;
+			-D)
+			    arg0="$( echo "$2" | sed -e 's/=.*//' )"
+			    arg1="$( echo "$2" | cut -d '=' -f2)"
+			    define "$arg0 $arg1" 
+			    unset arg0 arg1
+			    shift 2
+			    ;;
+			-o|--output) target_name="$2"; shift 2 ;;
+			--pass-all-to-slaves) give_them_all=true; shift ;; # pass all option to slaves
+			--legacy) legacy_mode=true ; shift ;;
+			--stdout) target_name="stdout" ; shift ;;
+			--stderr) exec 2> $2 ; shift  2;; # tells shpp to pass stder to $2
+			--) shift; break ;;
+		    esac
+		done 	  
+     		if [ -z "$target_name" ] ; then
+		    target_name=stdout
+		    warning_msg warning "using /dev/stdout as default output"
+		fi && \
+		source_file="$1" && \
+		if [ ! -e "$source_file" ] ; then
+		    error_msg error  "$source_file not found" 
+		    false
+		    shift
+		fi && \
+		shift && \
+		main 
 		;;
-	      --errexit) set -o errexit ; shift ;;
-	      -c|--color) USE_COLOR=true ; shift 1 ;;
-	      -C|--config) . "$2" ; slaveconfig_file="$2" ;shift 2;;
-	      -O|--option) # pass options to shpp or enable options
-		case $2 in 
-		  *=*) eval $2 ; pass_chain -g $2 ;; # self explained
-		  *) $2=true ; pass_chain -g $2=true ;;  # if its no var (options can be paased as var too) threat it as option and enable it
-		esac
- 		shift 2 
-		;;
-	      #+O) $1=false ; shift 2;; # tell shppp to disable option
-	      --Ow|--option-global) 					# pass option to slave and master
-		case $2 in 
-		  *=*) eval $2 ; pass_chain $2 ;; # self explained
-		  *) $2=true ; pass_chain $2=true ;;  # if its no var (options can be paased as var too) threat it as option and enable it
-		esac
-		shift 2 
-		;;
-	      --tmp) tmp_dir=${2} ; shift 2;;
-	      --keep) keep=true; shift ;; # keep temp files
-	      --critical-warning) WARNING_IS_ERROR=true ; shift ;; # all warnings are critical
-	      --slave) slave=true; shift ;; # process is a slave, it now links to their master and dont provides links to its directorys in main temp
-	      --defined-flags|--defined-vars)  input_defined_vars=${2} ; shift 2 ;;
-	      --enabled-flags)  input_enabled_flagst=${2} ; shift  2;;
-	      -o|--output) target_name="$2"; shift 2 ;;
-	      --pass-all-to-slaves) give_them_all=true; shift ;; # pass all option to slaves
-	      --legacy) legacy_mode=true ; shift ;;
-	      --stdout) target_name="stdout" ; shift ;;
-	      --stderr) exec 2> $2 ; shift  2;; # tells shpp to pass stder to $2
-	      --) shift; break ;;
-	    esac
-	  done 
-	  
-	  for var in $@ ; do
-	    case $1 in
-	      	      *=*)
-		eval $1;
-		if [ -z $replace_vars ] ; then
-		  replace_vars=$( echo $1 | cut -d '=' -f1 )
-		else
-		  replace_vars=$( echo $1 | cut -d '=' -f1 ):$replace_vars
-		fi
-		shift
-		;;
-	    esac
-	  done
-	  if [ -z "$target_name" ] ; then
-	      target_name=stdout
-	      warning_msg warning "using /dev/stdout as default output"
-	  fi && \
-	  source_file="$1" && \
-	  if [ ! -e "$source_file" ] ; then
-	    error_msg error  "$source_file not found" 
-	    false
-	    shift
-	  fi && \
-	  shift && \
-	  main 
-      ;;
-    esac 
-  done
+	esac 
+    done
 else
-  echo "No input given enter $appname -h for help"
-  false
+    echo "No input given enter $appname -h for help"
+    false
 fi
 exit $?
