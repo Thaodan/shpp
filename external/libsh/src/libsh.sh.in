@@ -73,11 +73,12 @@ import() { # . file with check if already . it
     done 
     IFS=$old_ifs
     if [   -z $__lib_aready_imported  ] ; then
-      if shload $1 : then
-	already_imported_libs=$already_imported_libs:$1
-      else
-	echo "error loading $1"
-	return 2
+	if shload $1 ;then
+	    already_imported_libs=$already_imported_libs:$1
+	else
+	    echo "error loading $1"
+	    return 2
+	fi
     fi
     shift
     unset __lib_aready_imported
@@ -307,7 +308,7 @@ get_farray_lenght() { # get lenght of fake array
 	get_farry_lenght_count=$(( $get_farry_lenght_count + 1 ))
     done
     IFS=$old_ifs
-    echo	$get_farry_lenght_count
+    echo  ${get_farry_lenght_count:-0}
     unset get_farry_lenght_count var
   else
     echo 0
@@ -353,7 +354,11 @@ write_farray() {  # write fake array
 #\\endif
 		farry_content=$( eval echo \$$1)
 		if [ ! -z "$farry_content" ] ; then 
+		    if [ $( get_farray_lenght "$farry_content") = $(( $2 - 1 )) ] ; then
+			eval $1=$farry_content:$3
+		    else
 			eval $( echo $1)=$( echo $farry_content | sed "s/$(read_farray $farry_content $2 )/$3/")
+		    fi
 		elif [ $2 = 1 ] ; then
 			eval $1=$3
 		else

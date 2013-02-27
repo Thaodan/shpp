@@ -24,8 +24,9 @@ SHPP_REV=60
 #####################################
 # base config 
 
-
-
+# init defined_vars
+defined_vars=all
+defined_all=true
 
 
 ################################################################
@@ -221,8 +222,8 @@ find_commands() {
     removed_stack=0
     command_lines=$( grep -hn \#\\\\\\\\ "$1"  | sed 's|:.*||' | tr '\n'  ':' | sed -e 's/\(.*\)./\1/')
     old_ifs=$IFS
-    IFS=:
-    for _command in $( grep  \#\\\\\\\\ "$1" | sed -e 's/^#\\\\//' -e 's/^[ \t]*//' | tr '\n' ':' | sed -e 's/\(.*\)./\1/' ) ; do
+    IFS=$'\n'
+    for _command in $( grep  \#\\\\\\\\ "$1" | sed -e 's/^#\\\\//' -e 's/^[ \t]*//' ) ; do
 	IFS=$old_ifs
 	_find_command_count=$(( $_find_command_count + 1 ))
 	current_line_ued=$( read_farray $command_lines  $_find_command_count  ) # current line with removeing deleted lines
@@ -294,7 +295,8 @@ If() {
 		*) __condition="$1 $__condition" ; shift;;
 	    esac
 	done
-	if [ ` echo "$__condition " | bc ` = $__logic_number ] ; then
+	if [ ` echo "$__condition" | bc ` = $__logic_number ] ; then
+	  verbose "$__condition was true"
 	  # if condition was true and we found && (and) go and parse the rest of condition
 	    if [ $__break_true ] ; then 
 		unset __condition
@@ -326,18 +328,20 @@ defined() {
     unset __isDefined_return_status
     old_ifs=$IFS
     IFS=:
+   # __defined_cleared=$(echo "$1" | cut -d '@' -f2)
     # look if var is defined
     for _defined in $defined_vars $input_defined_vars ; do
 	IFS=$old_ifs
         # if $_cleadif machtes with one of $defined_vars clear unsuccesfull and break
-	if [ "$_defined" = "$1"  ] ; then  
-	    __isDefined_return_status=1;
+	if [ "$_defined" = "$1"  ] ; then
+	#	__isDefined_return=$(eval echo \\$_defined_$__defined_cleared) 
+		__isDefined_return_status=1
 	fi
 	IFS=:
     done
     IFS=$old_ifs
-    [ ${_isDefined_return_status:-0} = 0 ] && verbose "L$current_line_ued:$1 was not defined" 
-    unset _defined
+    [ ${__isDefined_return_status:-0} = 0 ] && verbose "L$current_line_ued:$__defined_cleared was not defined" 
+    unset _defined 
     echo  ${__isDefined_return_status:-0}
 }
 
@@ -411,7 +415,7 @@ define() {
 	esac    
     fi
     if echo $defined_vars | grep -qv  ${1%\ *} ; then
-	write_farray defined_vars $(( $( get_farray_lenght $defined_vars ) + 1 )) ${1%\ *}
+	defined_vars=$defined_vars:${1%\ *}
     fi
 }
 
@@ -446,8 +450,9 @@ write_shortifdefs() { # write #\\! flags to $2
 include_includes() { 
     cp "$tmp_dir/pc_file.stage2" "$tmp_dir/backups/pre_include" # make backups before do include
     includes_lines=$( grep -hn \#\\\\\\\\include "$1"  | sed 's|:.*||' | tr '\n' ':')
-    for _include in $( grep  \#\\\\\\\\include "$1" | sed -e 's/^#\\\\//' -e 's/^[ \t]*//' -e  's/^ //'  | tr '\n' ':'  ) ; do
-	old_ifs=$IFS
+    old_ifs=$IFS
+    IFS='\n'
+    for _include in $( grep  \#\\\\\\\\include "$1" | sed -e 's/^#\\\\//' -e 's/^[ \t]*//' -e  's/^ //' ) ; do
 	IFS=' '
 	for include_argument in $_include ; do
 	    case $include_argument in 
@@ -538,9 +543,9 @@ main() {
 	find_commands "$tmp_dir/pc_file.stage1"
 	write_shortifdefs  "$defined_vars" "$tmp_dir/pc_file.stage1"
 	cp "$tmp_dir/pc_file.stage1" "$tmp_dir/pc_file.stage2"
-	test ! -z $defined_vars && replace_vars "$defined_vars"  "$tmp_dir/pc_file.stage2"
+	test ! -z "$defined_vars" && replace_vars "$defined_vars"  "$tmp_dir/pc_file.stage2"
          # finaly include our $includes if $includes is not empty
-	test ! -z $includes && include_includes "$tmp_dir/pc_file.stage2" 
+	test ! -z "$includes" && include_includes "$tmp_dir/pc_file.stage2" 
     fi
 
     clear_flags "$tmp_dir/pc_file.stage2"
