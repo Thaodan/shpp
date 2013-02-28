@@ -27,11 +27,12 @@ SHPP_REV=60
 # init defined_vars
 defined_vars=all
 defined_all=true
-
+registed_commands=stub
 
 ################################################################
 
 . "${libdir:-/usr/lib}/libsh"
+
 if [ $( dirname $0 ) = . ] ; then
     shpp=$(which $0 2>/dev/null ) || shpp=$( dirname $0 )/shpp
 else
@@ -160,6 +161,8 @@ cleanup_die() {
     fi
 }
 
+  
+
 pass_chain() {
     case $1 in 
 	-g|--global)	echo "$2">>"${tmp_dir:-$PWD}/master_config" ;;
@@ -206,6 +209,7 @@ write_flags() { # write #\\ flags to $3
 
 
 ############################
+
 
 ###  alias commands ### 
 # this are commands that are only provided as alias, as workaround these alias are before commands 
@@ -256,6 +260,7 @@ find_commands() {
 	    case "$current_cleared_command" in
 		define) 	define "$_command" ;;
 		include) 	include "$_command" ;;
+		macro) macro $_command;;
 		ifdef)	ifdef "$_command" ;;
 		if)       If $_command    ;;
 		else)	Else "$_command"  ;;
@@ -264,7 +269,13 @@ find_commands() {
 		error)	error "$_command"   ;;
 		warning)	warning "$_command" ;;
 		![a-z]*|rem) : ;; # ignore stubs for ignored functions
-		*) call_handler warning:unkown "found '$current_cleared_command', bug or unkown command, raw string is '$current_command'" ;;
+		*)  if echo $_command | grep -q $registed_commands ; then
+		        verbose "running external $current_cleared_command"
+		        $current_cleared_command $_command
+		    else
+		        call_handler warning:unkown "found '$current_cleared_command', bug or unkown command, raw string is '$current_command'"
+		    fi
+		    ;;
 	    esac
         fi
        IFS=:
@@ -276,6 +287,44 @@ find_commands() {
 
 
 ### commands ### 
+# description:	this are commands that can be executed in $source_file (#\\*)
+# 		commands can be builtin or suplied by macro files
+# 		most commands exept if* do their write parts after find_commands()
+# 		external commands shoud do their write part with a runner that is executed after find_commands()
+
+register_external() { 
+# usage:  register externa
+# usage:  register externals in macro files
+# description: this command (#\\macro) register externals to shpp either commands (#\\*) or runners 
+  case $1 in  # set component to register
+    -c|--command) __mode=add_command;;
+    -R|--runner)  _mode=add_runner;;
+    *) return 1;;
+  esac
+  shift 
+  while [ ! $# = 0 ] ; do
+    case $__mode in
+      add_command) registed_commands=$register_commands:$1 ;;
+      add_runner) registed_runners=$registed_runners:$1;;
+    esac
+    shift
+  done
+ 
+  unset __mode
+}
+
+
+#\\macro
+macro() {
+  verbose "found macro: $cleaned_macro, doing syntax check"
+  if sh -n $1 ; then
+      . $1
+  else
+    call_handler error:syntax "$cleaned_macro don't passed syntax check, quiting"
+  fi  
+}
+
+#### built im commands ###
 
 #!\\if
 If() {
@@ -322,12 +371,12 @@ If() {
     fi
 }
 
-#### if conditions ###
 
+
+#### if conditions ###
 defined() {
     unset __isDefined_return_status
-    old_ifs=$IFS
-    IFS=:
+    old_ifs=$
    # __defined_cleared=$(echo "$1" | cut -d '@' -f2)
     # look if var is defined
     for _defined in $defined_vars $input_defined_vars ; do
@@ -550,7 +599,7 @@ main() {
 
     clear_flags "$tmp_dir/pc_file.stage2"
     cp "$tmp_dir/pc_file.stage2" "$target_name"
-  
+
     if [ $target_name = stdout ] ; then
 	cat $target_name
 	files_to_remove=$files_to_remove:$target_name

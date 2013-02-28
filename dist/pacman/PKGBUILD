@@ -16,6 +16,7 @@ md5sums=('bdc6ddd670b23479222379b9ac7ac4a0')
 
 
 
+
 package() {
   cd $srcdir/$pkgname-$pkgver
   sh dist/build_app
