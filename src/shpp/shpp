@@ -282,6 +282,7 @@ find_commands() {
         fi
        IFS=:
     done
+    IFS=$old_ifs
     unset _command command_lines _find_command_count current_command current_cleared_command  \
         removed_stack found_if_or_else  current_line current_line_ued  # unset runtime vars
 
@@ -460,7 +461,7 @@ include() {
 	   call_handler error:file "L$current_line_ued:$current_cleared_command: $__cleaned_include not found"
 	   ;;
     esac
-    __outputfile__cleaned_include=$( echo $__cleaned_include | sed 's|\/|_|')
+    __outputfile__cleaned_include=$( echo $__cleaned_include | sed -e 's|\/|_|g' -e 's|\.|_|g')
     case ${__parser:-shpp} in  
 	shpp)  $shpp  $chained_options  --slave  $slaveconfig_file  --tmp $tmp_dir/slaves --stdout --stderr=$tmp_dir/logs/errors$__outputfile__cleaned_include.log "$__cleaned_include"> $tmp_dir/including/$__outputfile__cleaned_include  || call_handler error:exit_stat "spawned copy of ourself: $appname returned $?, quiting" ;; 
 	no_parse)  cp $__cleaned_include $tmp_dir/including/$__outputfile__cleaned_include ;; # no $parser is used
@@ -531,14 +532,14 @@ include_includes() {
     cp "$tmp_dir/pc_file.stage2" "$tmp_dir/backups/pre_include" # make backups before do include
     includes_lines=$( grep -hn \#\\\\\\\\include "$1"  | sed 's|:.*||' | tr '\n' ':')
     old_ifs=$IFS
-    IFS='\n'
+    IFS=$'\n'
     for __include in $( grep  \#\\\\\\\\include "$1" | sed -e 's/^#\\\\//' -e 's/^[ \t]*//' -e  's/^ //' ) ; do
-	IFS=' '
-	for __include_argument in $_include ; do
+	IFS=$old_ifs
+	for __include_argument in $__include ; do
 	    case $__include_argument in 
 		include) : ;; 
 		noparse|parser=*|parser_args=*) : ;; # stub arguments that are only used by #\\include
-		*) __include=$include_argument ;;
+		*) __include=$__include_argument ;;
 	    esac
 	done
 	case $__include in
@@ -553,21 +554,22 @@ include_includes() {
 		done 
 	   ;;
 	esac
-	__include=$( echo $__include | sed 's|\/|_|')
+	__include=$( echo $__include | sed -e 's|\/|_|g' -e 's|\.|_|g')
 	old_ifs=$IFS
 	__find_include_count=$(( $__find_include_count + 1 ))
-	current_include_line=$( read_farray $includes_lines  $_find_include_count )
+	current_include_line=$( read_farray $includes_lines  $__find_include_count )
 	__tmp_include=$( read_farray $includes ${current_include_no:-1}  )
-	if [ $(basename $__include) = $__tmp_include ] ; then
+	if [ $__include = $__tmp_include ] ; then
 	    sed "$current_include_line,$ d" $1 > "$tmp_dir/including/cut_source"
 	    sed "1,$current_include_line d" $1 > "$tmp_dir/including/cut_source_end"
-	    cat "$tmp_dir/including/$tmp_include" >> "$tmp_dir/including/cut_source"
+	    cat "$tmp_dir/including/$__tmp_include" >> "$tmp_dir/including/cut_source"
 	    cat "$tmp_dir/including/cut_source_end" >> "$tmp_dir/including/cut_source"
 	    cp "$tmp_dir/including/cut_source" "$tmp_dir/pc_file.stage2"
 	    current_include_no=$(( ${current_include_no:-1}  + 1 ))
 	    continue
 	fi
 	current_include_no=$(( ${current_include_no:-1}  + 1 ))
+	IFS=$'\n'
     done
     unset include_lines __include include_argument __find_include_count \
 	current_include_line current_include_no    __tmp_include __realy_cleaned_include __include_space
@@ -729,7 +731,7 @@ if [ ! $# = 0 ] ; then
 			--tmp) tmp_dir=${2} ; shift 2;;
 			--keep) keep=true; shift ;; # keep temp files
 			--critical-warning) WARNING_IS_ERROR=true ; shift ;; # all warnings are critical
-			--slave) slaveconfig_file="$2"; . $slaveconfig_file; slave=true; shift ;; # process is a slave, it now links to their master and dont provides links to its directorys in main temp
+			--slave) slaveconfig_file="$2"; . $slaveconfig_file; slave=true; shift 2;; # process is a slave, it now links to their master and dont provides links to its directorys in main temp
 # 
 			--defined-flags|--defined-vars)  input_defined_vars=${2} ; shift 2 ;;
 			-D)
