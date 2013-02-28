@@ -21,8 +21,8 @@ prepare() {
 }
 
 sh_make() {
-    $SHPP  sh_make_ver=$VER git_rev=$git_rev prefix=$PREFIX libsh_make.sh.in -o libsh_make 
-    $SHPP  prefix=$PREFIX sh_make.sh.in -o sh_make
+    $SHPP  -Dsh_make_ver=$VER -Dgit_rev=$git_rev -Dprefix=$PREFIX libsh_make.sh.in -o libsh_make 
+    $SHPP  -Dprefix=$PREFIX -Dsh_make.sh.in -o sh_make
     chmod +x sh_make
 }
 
