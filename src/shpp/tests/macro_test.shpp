@@ -1,0 +1,4 @@
+# 
+verbose "Testing #\\macro"
+register_external --command  msg
+

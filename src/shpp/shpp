@@ -271,7 +271,7 @@ find_commands() {
 		error)	error "$_command"   ;;
 		warning)	warning "$_command" ;;
 		![a-z]*|rem) : ;; # ignore stubs for ignored functions
-		*)  if echo $_command | grep -q $registed_commands ; then
+		*)  if echo $registed_commands | grep -q $current_cleared_command ; then
 		        verbose "running external $current_cleared_command"
 		        $current_cleared_command $_command
 		    else
