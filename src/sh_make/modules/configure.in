@@ -65,7 +65,7 @@ gen_input_parser() {
   echo '      esac'
   echo '   done'
   if [ ! "$input_not_required" ] ; then
-    echo 'else'
+   current_line_ued=$(( $current_line_ued + 1 )) echo 'else'
     echo '   echo "No options given run $0 --help for help"'
     echo '   exit 1'
     echo 'fi'
@@ -90,7 +90,7 @@ gen_help() {
     counter=$(( $counter + 1 ))
     printf "\t$(read_farray "$input_actions" $counter )\t$(read_farray "$input_help" $counter)"
   done
-   printf 	'HELP_TEXT\n'
+   printf 	'HELP_TEXT\n' 
 }
 
 after_parse() {

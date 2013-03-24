@@ -22,7 +22,7 @@ prepare() {
 
 sh_make() {
     $SHPP  -Dsh_make_ver=$VER -Dgit_rev=$git_rev -Dprefix=$PREFIX libsh_make.sh.in -o libsh_make 
-    $SHPP  -Dprefix=$PREFIX sh_make.sh.in -o sh_make
+    $SHPP  --debug -Dprefix=$PREFIX sh_make.sh.in -o sh_make
     chmod +x sh_make
 }
 

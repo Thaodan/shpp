@@ -141,26 +141,18 @@ call_handler() {
 
 ##################################
 
-shpp() { # function for our self to have ourself for exit call
-    $shpp $@
-    our_self_id=$!                                         
-}
 
 cleanup() {
     if [ ! $keep ] ; then 
 	old_ifs="$IFS";
 	export IFS=":";
-	rm -rf $files_to_remove; 
+	rm -rf `qcat $tmp_dir/self/clean_files`; 
 	export IFS="$old_ifs"
     fi
 }
 
 cleanup_die() {
     cleanup
-    if [ $our_self_id ] ; then 
-	verbose "killing copys of our self that where parsing includes: $our_self_id"
-	kill $our_self_id
-    fi
 }
 
   
@@ -209,7 +201,13 @@ write_flags() { # write #\\ flags to $3
     unset var var1
 }
 
-
+qcat() {
+    if [ ! -e "$1" ] ; then
+	:
+    else
+        cat "$1"
+    fi
+}
 ############################
 
 
@@ -222,26 +220,27 @@ alias ifdef='If defined'
 #\\ifndef
 alias ifndef='If ! defined' 
 
+
 find_commands() {
     erase_till_endif=false
     endif_notfound=false 
-    removed_stack=0
-    command_lines=$( grep -hn \#\\\\\\\\ "$1"  | sed 's|:.*||' | tr '\n'  ':' | sed -e 's/\(.*\)./\1/')
+    echo 0 > $tmp_dir/self/removed_stack
+    grep -hn \#\\\\\\\\$2 "$1"  | sed 's|:.*||' | tr '\n'  ':' | sed -e 's/\(.*\)./\1/' > "$tmp_dir/self/command_lines";
     old_ifs=$IFS
     IFS=$'\n'
-    for _command in $( grep  \#\\\\\\\\ "$1" | sed -e 's/^#\\\\//' -e 's/^[ \t]*//' ) ; do
+    for _command in $( grep  \#\\\\\\\\$2 "$1" | sed -e 's/^#\\\\//' -e 's/^[ \t]*//' ) ; do
 	IFS=$old_ifs
-	_find_command_count=$(( $_find_command_count + 1 ))
-	current_line_ued=$( read_farray $command_lines  $_find_command_count  ) # current line with removeing deleted lines
-	current_line=$(( $current_line_ued - ${removed_stack} )) # remove removed lines from current_line      
+	echo $(( $( qcat $tmp_dir/self/find_command_count) + 1 )) > $tmp_dir/self/find_command_count
+	current_line_ued=$( read_farray $(cat $tmp_dir/self/command_lines)  $(cat $tmp_dir/self/find_command_count)  ) # current line with removeing deleted lines
+	current_line=$(( $current_line_ued - $(cat $tmp_dir/self/removed_stack) )) # remove removed lines from current_line      
 	_command=$( echo "$_command" | sed -e 's|\ $||')
 	if [ $erase_till_endif = true ] ; then
-	    if [ "$_command" = endif ] || [ "$_command" = else ]  ; then
+	    if [ $_command = endif ] || [ $_command = else ]  ; then
 		sed -ie "$if_line,$current_line d" "$1" 
 #\\!debug_if  cp "$1" "$tmp_dir/ifsteps/pc_file.stage.$_find_command_count"
 		erase_till_endif=false
 	        # save removed lines (difference between $current_line and $if_line + 1)
-		removed_stack=$(( ( $current_line - $if_line  + 1) + ${removed_stack} )) 
+		echo $(( ( $current_line - $if_line  + 1) + $(qcat $tmp_dir/self/removed_stack) )) > $tmp_dir/self/removed_stack 
 		[ $_command = else ] && found_if_or_else=true
 	    elif [ ! $endif_notfound = false ] ; then
 		false
@@ -249,17 +248,17 @@ find_commands() {
 	else
 	    verbose "L$current_line_ued:Found $_command calling corresponding command"
             # if command wants the raw $_command it can use it
-	    current_command="$_command"
+	    current_command_raw="$_command"
             # we clear $0 from $_command now, the commands don't need to do it
 	    if echo $_command | grep -qv "\ " ; then
 	        # if $_command has no space, we assume that $_command is already clear
-		current_cleared_command=$_command							
+		current_command=$_command							
 	    else
 	        # else clear it and give the commands still the ability to know who they are
-		current_cleared_command=$( echo $_command | sed -e "s| .*||" -e  "s|^\ ||" -e 's|\ $||') 
-		_command=$( echo $_command | sed -e "s|$current_cleared_command ||" -e  "s|^\ ||")  	
+		current_command=$( echo $_command | sed -e "s| .*||" -e  "s|^\ ||" -e 's|\ $||') 
+		_command=$( echo $_command | sed -e "s|$current_command ||" -e  "s|^\ ||")  	
 	    fi					      			
-	    case "$current_cleared_command" in
+	    case "$current_command" in
 		define) 	define "$_command" ;;
 		include) 	include "$_command" ;;
 		macro) macro $_command;;
@@ -271,11 +270,11 @@ find_commands() {
 		error)	error "$_command"   ;;
 		warning)	warning "$_command" ;;
 		![a-z]*|rem) : ;; # ignore stubs for ignored functions
-		*)  if echo $registed_commands | grep -q $current_cleared_command ; then
-		        verbose "running external $current_cleared_command"
-		        $current_cleared_command $_command
+		*)  if echo $registed_commands | grep -q $current_command ; then
+		        verbose "running external $current_command"
+		        $current_command $_command
 		    else
-		        call_handler warning:unkown "found '$current_cleared_command', bug or unkown command, raw string is '$current_command'"
+		        call_handler warning:unkown "found '$current_cleared_command', bug or unkown command, raw string is '$current_command_raw'"
 		    fi
 		    ;;
 	    esac
@@ -283,9 +282,10 @@ find_commands() {
        IFS=:
     done
     IFS=$old_ifs
-    unset _command command_lines _find_command_count current_command current_cleared_command  \
-        removed_stack found_if_or_else  current_line current_line_ued  # unset runtime vars
-
+    unset _command   current_command current_cleared_command  \
+        found_if_or_else    # unset runtime vars
+    rm -f $tmp_dir/self/removed_stack
+    rm -f $tmp_dir/self/find_command_count
 }
 
 
@@ -301,14 +301,14 @@ register_external() {
 # description: this command (#\\macro) register externals to shpp either commands (#\\*) or runners 
   case $1 in  # set component to register
     -c|--command) __mode=add_command;;
-    -R|--runner)  _mode=add_runner;;
+    -R|--runner)  __mode=add_runner;;
     *) return 1;;
   esac
   shift 
   while [ ! $# = 0 ] ; do
     case $__mode in
       add_command) registed_commands=$register_commands:$1 ;;
-      add_runner) registed_runners=$registed_runners:$1;;
+      add_runner) registed_runners="$registed_runners $1";;
     esac
     shift
   done
@@ -388,6 +388,7 @@ If() {
 	if_line=$current_line # save $current_line for find_commands 
 	erase_till_endif=true # say find_commands it has to erase fill from $if_line till next found endif
     fi
+    unset __condition __condition_done
 }
 
 
@@ -458,28 +459,26 @@ include() {
 		   false
 	       fi
 	   done || \
-	   call_handler error:file "L$current_line_ued:$current_cleared_command: $__cleaned_include not found"
+	   call_handler error:file "L$current_line_ued:$current_command: $__cleaned_include not found"
 	   ;;
     esac
     __outputfile__cleaned_include=$( echo $__cleaned_include | sed -e 's|\/|_|g' -e 's|\.|_|g')
-    case ${__parser:-shpp} in  
+    case ${__parser:-SELF} in  
 	shpp)  $shpp  $chained_options  --slave  $slaveconfig_file  --tmp $tmp_dir/slaves --stdout --stderr=$tmp_dir/logs/errors$__outputfile__cleaned_include.log "$__cleaned_include"> $tmp_dir/including/$__outputfile__cleaned_include  || call_handler error:exit_stat "spawned copy of ourself: $appname returned $?, quiting" ;; 
-	no_parse)  cp $__cleaned_include $tmp_dir/including/$__outputfile__cleaned_include ;; # no $parser is used
+	no_parse)  ln -s  $__cleaned_include $tmp_dir/including/$__outputfile__cleaned_include ;; # no $parser is used
+	SELF)
+	    stub_main $__cleaned_include $__outputfile__cleaned_include ;;
 	*) $__parser $__parser_args ;; # use $parser with $parser_args 
     esac
-
-    if [ -z "$includes" ] ; then
-	includes="$__outputfile__cleaned_include"
-	includes_lines="$current_line"
-    else
-	includes="$includes:$__outputfile__cleaned_include"
-	includes_lines="$includes_lines:$current_line"
-    fi
+    printf "$__outputfile__cleaned_include:" >> $tmp_dir/self/includes
+    printf  "$current_line:" >> $tmp_dir/self/include_lines
+   
+  
 # for us and run argument of #\\include with us and copy to temp file/stdout
 # copy content before #\\include to new file
 # copy include argument to new file
 # copy content past #\\include to new file 
- unset __include_arg  __parser __parser_args __cleaned_include __outputfile__cleaned_include  __realy_cleaned_include __include_space
+    unset __include_arg  __parser __parser_args __cleaned_include __outputfile__cleaned_include  __realy_cleaned_include __include_space
 }
 
 #\\define
@@ -529,7 +528,7 @@ write_shortifdefs() { # write #\\! flags to $2
 
 
 include_includes() { 
-    cp "$tmp_dir/pc_file.stage2" "$tmp_dir/backups/pre_include" # make backups before do include
+    cp "$tmp_dir/self/pc_file.stage2" "$tmp_dir/self/pre_include" # make backups before do include
     includes_lines=$( grep -hn \#\\\\\\\\include "$1"  | sed 's|:.*||' | tr '\n' ':')
     old_ifs=$IFS
     IFS=$'\n'
@@ -556,22 +555,22 @@ include_includes() {
 	esac
 	__include=$( echo $__include | sed -e 's|\/|_|g' -e 's|\.|_|g')
 	old_ifs=$IFS
-	__find_include_count=$(( $__find_include_count + 1 ))
-	current_include_line=$( read_farray $includes_lines  $__find_include_count )
-	__tmp_include=$( read_farray $includes ${current_include_no:-1}  )
+	echo $(( $(cat $tmp_dir/self/find_include_count) + 1 )) > $tmp_dir/self/find_include_count
+	current_include_line=$( read_farray $(cat $tmp_dir/self/include_lines)  $(cat $tmp_dir/self/find_include_count) )
+	__tmp_include=$( read_farray $( cat $tmp_dir/self/includes)  ${current_include_no:-1}  )
 	if [ $__include = $__tmp_include ] ; then
-	    sed "$current_include_line,$ d" $1 > "$tmp_dir/including/cut_source"
-	    sed "1,$current_include_line d" $1 > "$tmp_dir/including/cut_source_end"
-	    cat "$tmp_dir/including/$__tmp_include" >> "$tmp_dir/including/cut_source"
-	    cat "$tmp_dir/including/cut_source_end" >> "$tmp_dir/including/cut_source"
-	    cp "$tmp_dir/including/cut_source" "$tmp_dir/pc_file.stage2"
+	    sed "$current_include_line,$ d" $1 > "$tmp_dir/self/including/cut_source"
+	    sed "1,$current_include_line d" $1 > "$tmp_dir/self/including/cut_source_end"
+	    cat "$tmp_dir/self/including/$__tmp_include" >> "$tmp_dir/self/including/cut_source"
+	    cat "$tmp_dir/self/including/cut_source_end" >> "$tmp_dir/self/including/cut_source"
+	    cp "$tmp_dir/self/including/cut_source" "$tmp_dir/self/pc_file.stage2"
 	    current_include_no=$(( ${current_include_no:-1}  + 1 ))
 	    continue
 	fi
 	current_include_no=$(( ${current_include_no:-1}  + 1 ))
 	IFS=$'\n'
     done
-    unset include_lines __include include_argument __find_include_count \
+    unset include_lines __include include_argument \
 	current_include_line current_include_no    __tmp_include __realy_cleaned_include __include_space
 }
 
@@ -590,8 +589,6 @@ clear_flags() { # cleas #\\ flags in
 
 
 
-
-
 ### main function ###
 
 main() {
@@ -606,55 +603,83 @@ main() {
 	    call_handler warning:dir "$tmp_dir already exits, hmm"
 	fi
     fi
-    readonly tmp_dir=$tmp_dir/$$
-#\\!debug_if	mkdir -p "$tmp_dir/ifsteps"
-    mkdir -p "$tmp_dir/including"
-    mkdir -p "$tmp_dir/backups"
-    mkdir -p "$tmp_dir/logs"
-    mkdir -p "$tmp_dir/slaves"
-    if [ $slave ] ; then
-	ln -s "../.."	"$tmp_dir/master"
-	files_to_remove=$tmp_dir
-    else
-	dirname_temp=$( dirname $tmp_dir )
-	basename_temp=$( basename $tmp_dir )
-	ln -s "$basename_temp/including"	"$dirname_temp/including"
-	ln -s "$basename_temp/backups"	"$dirname_temp/backups" 	
-	ln -s "$basename_temp/logs"		"$dirname_temp/logs"
-	ln -s "$$" 		        "$dirname_temp/master"
-	files_to_remove=$tmp_dir:$dirname_temp
-	parse_chaines
-	unset dirname_temp basename_temp
-    fi
-    # make a copy for our ser
-    cp "$source_file" "$tmp_dir/pc_file.stage1"
     
-    if [ $legacy_mode ] ; then
-	verbose 'found $legacy_mode, entering legacy mode'
-	call_handler warning:deprected "legacy mode (eg --legacy) is deprected now use with care"
-	write_flags $input_enabled_flagst $defined_flags:$input_defined_vars "$tmp_dir/pc_file.stage1"  || call_handler error:exit_stat "write_flags or defined_flags quited with $?"
-	mv "$tmp_dir/pcfile.stage1" $target_name || call_handler error:file "cant copy $tmp_dir/pcfile.stage1 to $target_name"
+    readonly source_file target_name tmp_dir
+
+stub_main()    {
+#\\!debug_if	mkdir -p "$tmp_dir/ifsteps"
+    if [ ! -e $tmp_dir/self ] ; then
+	# if we are the first instance our id is 1
+	mkdir -p "$tmp_dir/1"
+	ln -s 1 "$tmp_dir/self"
     else
-	find_commands "$tmp_dir/pc_file.stage1"
-	write_shortifdefs  "$defined_vars" "$tmp_dir/pc_file.stage1"
-	cp "$tmp_dir/pc_file.stage1" "$tmp_dir/pc_file.stage2"
-	test ! -z "$defined_vars" && replace_vars "$defined_vars"  "$tmp_dir/pc_file.stage2"
-         # finaly include our $includes if $includes is not empty
-	test ! -z "$includes" && include_includes "$tmp_dir/pc_file.stage2" 
+	# else gen rnd var and move old self to new instance and create new self
+	__tmp_rnd=`tr -dc 0-9 < /dev/urandom | head -c5`
+        mkdir -p "$tmp_dir/$__tmp_rnd"
+	mv "$tmp_dir/self" "$tmp_dir/$__tmp_rnd/.lastself"
+	ln -s $__tmp_rnd $tmp_dir/self
+	unset __tmp_rnd
     fi
 
-    clear_flags "$tmp_dir/pc_file.stage2"
-    cp "$tmp_dir/pc_file.stage2" "$target_name"
+    mkdir -p "$tmp_dir/self/including"
+    mkdir -p "$tmp_dir/self/logs"
+#    if [ $slave ] ; then # depre
+#	ln -s "../.."	"$tmp_dir/master"
+#	files_to_remove=$tmp_dir
+ #   else
+#	dirname_temp=$( dirname $tmp_dir )
+#	basename_temp=$( basename $tmp_dir )
+#	ln -s "$basename_temp/including"	"$dirname_temp/including"
+#	ln -s "$basename_temp/logs"		"$dirname_temp/logs"
+#	ln -s "$$" 		        "$dirname_temp/master"
+#	files_to_remove=$tmp_dir:$dirname_temp
+#	parse_chaines
+#	unset dirname_temp basename_temp
+ #   fi
+    ##
 
-    if [ $target_name = stdout ] ; then
-	cat $target_name
-	files_to_remove=$files_to_remove:$target_name
+    # make a copy for our self
+    cp "${1:-$source_file}" "$tmp_dir/self/pc_file.stage1"
+    find_commands "$tmp_dir/self/pc_file.stage1"
+    write_shortifdefs  "$defined_vars" "$tmp_dir/self/pc_file.stage1"
+    cp "$tmp_dir/self/pc_file.stage1" "$tmp_dir/self/pc_file.stage2"
+    test ! -z "$defined_vars" && replace_vars "$defined_vars"  "$tmp_dir/self/pc_file.stage2"
+    # do runners only in main instance
+    if [ $( readlink $tmp_dir/self )  = 1 ] ; then
+	for __runner in $registed_runners ; do
+	    $__runner
+	done
+
     fi
+    # finaly include our $includes if $includes is not empty
+    test ! -z "$includes" && include_includes "$tmp_dir/self/pc_file.stage2"
+    clear_flags "$tmp_dir/self/pc_file.stage2"
+    if [ $2 = stdout ] ; then
+	cat "$tmp_dir/self/pc_file.stage2"
+    else
+	cp "$tmp_dir/self/pc_file.stage2" "$2"
+    fi
+    if  [ ! $(readlink $tmp_dir/self) = 1 ] ; then 
+	__tmp_rnd=`readlink $tmp_dir/self`
+	for __file__ in $tmp_dir/$__tmp_rnd/* ; do
+	    echo "$__file__" >> $tmp_dir/self/clean_files
+	done
+	echo "$tmp_dir/$__tmp_rnd" >> $tmp_dir/self/cleanfiles
+	rm $tmp_dir/self
+	mv -f  $tmp_dir/$__tmp_rnd/.lastself $tmp_dir/self
+    else
+	echo "$tmp_dir" > "$tmp_dir/self/clean_files"
+    fi
+    cleanup      
+}
+
+    stub_main $source_file $target_name
+
+   
 
 
 
   
-    cleanup # finaly at the end cleanup
       
 
 }
