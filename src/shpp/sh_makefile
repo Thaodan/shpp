@@ -18,7 +18,9 @@ prepare() {
 }
 
 shpp() {
-	:
+	sed -e "s|@GITREV@|$(../../tools/git_revgen)|" \
+		-e "s|@VER@|$VER|"\
+		shpp.in > shpp
 }
 install() {
   prepare
