@@ -225,8 +225,8 @@ find_commands() {
 		false
 	    fi
 	else
-	    verbose "L$current_line_ued:Found 
-            $_command calling corresponding command"
+	    verbose "L$current_line_ued:Found\
+$_command calling corresponding command"
             # if command wants the raw $_command it can use it
 	    current_command_raw="$_command"
             # we clear $0 from $_command now, the commands don't need to do it
@@ -263,8 +263,8 @@ find_commands() {
 		        $current_command $_command
 		    else
 		        call_handler warning:unkown \
-			    "found '$current_command', 
-                             bug or unkown command, raw string is 
+			    "found '$current_command',\
+                             bug or unkown command, raw string is\ 
                              '$current_command_raw'"
 		    fi
 		    ;;
@@ -321,7 +321,7 @@ macro() {
 		   false
 	       fi
 	   done || \
-	   call_handler error:file "L$current_line_ued:$current_command: 
+	   call_handler error:file "L$current_line_ued:$current_command: \
                $__cleaned_include not found"
 	   ;;
 	   *) __cleaned_macro=$1;;
@@ -380,8 +380,8 @@ If() {
     done
     # check result
     if [ $unsuccesfull = true ] ; then
-	verbose "L$current_line_ued:Condition was not true, 
-           remove content till endif, erase_till_endif ist set to true"
+	verbose "L$current_line_ued:Condition was not true,\
+            remove content till endif, erase_till_endif ist set to true"
 	if_line=$current_line # save $current_line for find_commands 
 	erase_till_endif=true # say find_commands it has to erase fill from $if_line till next found endif
     fi
@@ -424,7 +424,7 @@ endif() {
 #\\else
 Else() {
     if [ "$unsuccesfull" = false ] ; then
-	verbose "L$current_line_ued:Last if was succesfull, 
+	verbose "L$current_line_ued:Last if was succesfull,\
                 removing content from last if till" 
 	if_line=$current_line # save $current_line for find_commands 
 	erase_till_endif=true # say find_commands it has to erase fill from 
@@ -437,7 +437,7 @@ Else() {
 
 #\\include
 include() {
-    verbose "L$current_line_ued:Opened $1 to parse, 
+    verbose "L$current_line_ued:Opened $1 to parse,\
             call ourself to process file" 
     for __include_arg in $1 ; do
 	case $__include_arg in  
@@ -461,7 +461,7 @@ include() {
 		   false
 	       fi
 	   done || \
-	   call_handler error:file "L$current_line_ued:$current_command: 
+	   call_handler error:file "L$current_line_ued:$current_command:\
                                    $__cleaned_include not found"
 	   ;;
     esac
@@ -479,7 +479,7 @@ include() {
 	    # no $parser is used
 	    ;;
 	SELF)
-	    stub_main $__cleaned_include $__outputfile__cleaned_include ;;
+	    stub_main $__cleaned_include $tmp_dir/$IID/including/$__outputfile__cleaned_include ;;
 	*) $__parser $__parser_args ;; # use $parser with $parser_args 
     esac
     printf "$__outputfile__cleaned_include:" >> $tmp_dir/self/includes
@@ -502,7 +502,7 @@ define() {
 	    *)  # else is just a var
 		# define our private var of $_defined to prevent variable 
 		# nameing issues       
-		verbose "L$current_line_ued: found content< in $1 saving it 
+		verbose "L$current_line_ued: found content< in $1 saving it\ 
                            in \$defined_${1}"
 		eval defined_${1%\ *}=${1#*\ }
 		;;
@@ -515,14 +515,12 @@ define() {
 
 #\\error
 error() {  
-    verbose "L$current_line_ued:Got error from #\\error"
-    call_handler error:called "$1"
+    call_handler error:called "L$current_line_ued:$1"
 }
 
 #\\warning
 warning() {
-    verbose "L$current_line_ued:Got warning from #\\warning"
-    call_handler warning "$1"
+    call_handler warning "L$current_line_ued:$1"
 }
 ### commands end ### 
 
@@ -544,6 +542,7 @@ write_shortifdefs() { # write #\\! flags to $2
 include_includes() { 
     # make backups before do include
     cp "$tmp_dir/self/pc_file.stage2" "$tmp_dir/self/pre_include" 
+    echo '0' > $tmp_dir/self/find_include_count
     includes_lines=$( grep -hn \#\\\\\\\\include "$1"  | sed 's|:.*||' | tr '\n' ':')
     old_ifs=$IFS
     IFS=$'\n'
@@ -635,18 +634,21 @@ main() {
 
 stub_main()    {
 #\\!debug_if	mkdir -p "$tmp_dir/ifsteps"
+    # if we are the first instance our id is 1
     if [ ! -e $tmp_dir/self ] ; then
-	# if we are the first instance our id is 1
+	# init InstanceID if we can't use $tmp_dir/self
+	IID=1
 	mkdir -p "$tmp_dir/1"
 	ln -s 1 "$tmp_dir/self"
+    # else gen rnd var and move old self to new instance and create new self
     else
-	# else gen rnd var and move old self to new instance and create new self
-	__tmp_rnd=`tr -dc 0-9 < /dev/urandom | head -c5`
-        mkdir -p "$tmp_dir/$__tmp_rnd"
-	mv "$tmp_dir/self" "$tmp_dir/$__tmp_rnd/.lastself"
-	ln -s $__tmp_rnd $tmp_dir/self
-	unset __tmp_rnd
+	# same here: init InstanceID
+	IID=`tr -dc 1-9 < /dev/urandom | head -c5`
+        mkdir -p "$tmp_dir/$IID"
+	mv "$tmp_dir/self" "$tmp_dir/$IID/.lastself"
+	ln -s $IID $tmp_dir/self
     fi
+    verbose "Entering instance $IID"
     echo "$tmp_dir/self/clean_files" >$tmp_dir/self/clean_files
     mkdir -p "$tmp_dir/self/including"
     mkdir -p "$tmp_dir/self/logs"
@@ -665,19 +667,19 @@ stub_main()    {
 	done
     fi
     # finaly include our $includes if $includes is not empty
-    test ! -z "$includes" && include_includes "$tmp_dir/self/pc_file.stage2"
+    test  -e "$tmp_dir/self/includes" && include_includes "$tmp_dir/self/pc_file.stage2"
     clear_flags "$tmp_dir/self/pc_file.stage2"
     if [ $2 = stdout ] ; then
 	cat "$tmp_dir/self/pc_file.stage2"
     else
 	cp "$tmp_dir/self/pc_file.stage2" "$2"
     fi
-    __tmp_rnd=`readlink $tmp_dir/self`
-    echo "$tmp_dir/$__tmp_rnd" >> $tmp_dir/self/cleanfiles
-    if  [ ! $__tmp_rnd = 1 ] ; then 
+    if  [ ! $IID = 1 ] ; then 
 	rm $tmp_dir/self
-	mv -f  $tmp_dir/$__tmp_rnd/.lastself $tmp_dir/self
+	mv -f  $tmp_dir/$IID/.lastself $tmp_dir/self
+	echo "$tmp_dir/$IID" >> $tmp_dir/self/cleanfiles
 	echo "$tmp_dir" > "$tmp_dir/self/clean_files"
+	IID=`readlink $tmp_dir/self` # re init id from last instance
     fi
     cleanup      
 }
