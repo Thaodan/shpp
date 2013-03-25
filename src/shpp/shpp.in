@@ -159,31 +159,6 @@ cleanup_die() {
 ############################################################
 
 
-#### old style functions ### 
-write_flags() { # write #\\ flags to $3
-    old_ifs=$IFS
-    IFS=:
-    for var in $1 ; do 
-      for var1 in $2 ; do 
-	#    count=$(( $count  + 1 )) 
-	IFS=$old_ifs
-	if [ $var = $var1 ] ; then
-	  #IFS=$old_ifs
-	  sed -i "s/"^#\\\\\\\\$var1"//" $3
-	  IFS=:
-	  break
-	fi
-      done
-#      unset count
-    done
-    IFS=$old_ifs
-    unset var var1
-}
-
-
-############################
-
-
 ###  alias commands ### 
 # this are commands that are only provided as alias, as workaround these alias are before commands 
 # (alias must be known before use, instead before call unlike functions)
@@ -247,6 +222,7 @@ find_commands() {
 		include) 	include "$_command" ;;
 		macro) macro $_command;;
 		ifdef)	ifdef "$_command" ;;
+		ifndef) ifndef "$_command" ;;
 		if)       If $_command    ;;
 		else)	Else "$_command"  ;;
 		endif)	
@@ -349,7 +325,7 @@ If() {
     while [ ! $__condition_done = true ] ; do
 	while [ ! $# = 0 ]; do
 	    case $1 in 
-		!) logic_number=0 ;shift ;;
+		!) __logic_number=0 ;shift ;;
 		defined) 
 		    IFS=$old_ifs;  __condition="$(defined $2) $__condition"; 
 		    IFS=" ";shift 2
