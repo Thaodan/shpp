@@ -91,7 +91,7 @@ init_stats
 _ENV
 
 if [ "$debug_options" ] && [ ! $debug ] ; then
-   echo "set -o $debug_options" >> "$tmp_dir/env"
+   echo "set -o $debug_options" >> "$SHMK_TEMP/env"
 fi
 
 
