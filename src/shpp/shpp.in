@@ -625,7 +625,7 @@ stub_main()    {
 	ln -s $IID $tmp_dir/self
     fi
     verbose "Entering instance $IID"
-    echo "$tmp_dir/self/clean_files" >$tmp_dir/self/clean_files
+    touch $tmp_dir/self/clean_files
     mkdir -p "$tmp_dir/self/including"
     mkdir -p "$tmp_dir/self/logs"
 
@@ -654,7 +654,6 @@ stub_main()    {
 	rm $tmp_dir/self
 	mv -f  $tmp_dir/$IID/.lastself $tmp_dir/self
 	echo "$tmp_dir/$IID" >> $tmp_dir/self/cleanfiles
-	echo "$tmp_dir" > "$tmp_dir/self/clean_files"
 	IID=`readlink $tmp_dir/self` # re init id from last instance
     fi
     cleanup      
