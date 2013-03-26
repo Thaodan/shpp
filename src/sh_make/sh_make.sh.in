@@ -75,7 +75,7 @@ main() {
   fi
 
 # gen dynamic config stuff and init basic stuff
-cat > "$tmp_dir/env" <<_ENV
+cat > "$SHMK_TEMP/env" <<_ENV
 USED_SHELL=$used_shell     
 MODULE_PATH=$MODULE_PATH
 chained_vars=$chained_vars
