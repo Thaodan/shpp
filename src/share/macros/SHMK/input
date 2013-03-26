@@ -1,0 +1,72 @@
+#!/bin/sh
+
+add_input_action() {
+        argument="$1"
+    shift
+    #old_ifs=$IFS
+   # IFS=:
+    #for arg in $argument ; do
+      tmp_action="$(read_farray "$argument" 1 )"
+      tmp_command="$(read_farray "$argument" 2)"
+      tmp_help="$(read_farray "$argument" 3 )"
+      if [ -z "$input_actions" ] ; then 
+	input_actions="${tmp_action:-\:}"
+      else
+	input_actions="$input_actions:${tmp_action:-\:}"
+      fi
+      if [ -z "$input_commands" ] ; then
+	input_commands="${tmp_command:-\:}"
+      else
+	input_commands="$input_commands:${tmp_command:-\:}"
+      fi
+
+      if [ -z "$input_help" ] ; then
+	input_help="${tmp_help:-\-}"
+      else
+	input_help="$input_help:${tmp_help:-\-}"
+      fi
+#       input_commands="$input_commands:
+#       input_help="$input_help:
+  #  done
+   # IFS=$old_ifs
+  done
+}
+
+
+SHMK_generate_help() {
+    echo "echo "\$INSTALL_APPNAME - help ""
+    if [  -z $defined_SHMK_INPUT_HELP_NODEFAULTS ] ; then
+	cat <<SHMK_INPUT_STD_HELP_TEXT
+    printf 'standart options:\n'
+    printf '\t--help\tshow this message\n' 
+    printf '\t--version -v\t show version of $appname\n'
+    printf '\n'
+SHMK_INPUT_STD_HELP_TEXT
+    fi
+    __input_actions_count=$( get_farray_lenght "$defined_input_actions" )
+    cat <<SHMK_INPUT_HELP_TEXT
+  printf 'cat <<SHMK_INPUT_HELP_TEXT\n'
+  printf 'options:\n'
+SHMK_INPUT_HELP_TEXT
+    while [  ! ${__counter:-1} = $__input_actions_count ] ; do
+	__counter=$(( $__counter + 1 ))
+	printf "\t$(read_farray "$input_actions" $counter )\t$(read_farray "$input_help" $counter)" >> "$tmp_dir/shmk_input_help.shpp"
+    done
+    SHMK_INPUT_HELP_TEXT
+
+
+
+
+    current_line_ued=$(( $current_line_ued + 1 ))
+    current_line=$(( $current_line + 1 ))
+    include noparse "$tmp_dir/shmk_input_help.shpp"
+}
+SHMK_generate_input_parser() {
+
+    current_line_ued=$(( $current_line_ued + 1 ))
+    current_line=$(( $current_line + 1 ))
+}
+
+register_external --command add_input_action
+register_external --runner SHMK_generate_help
+register_external --runner SHMK_generate_input_parser

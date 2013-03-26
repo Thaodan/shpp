@@ -1,0 +1,10 @@
+#!/bin/sh
+# shpp macro SHMK 
+detect_tools() {
+    for tool in $@ ; do
+	echo "$tool=$(which $tool)" >> $tmp_dir/deps_$1
+    done
+    include $tmp_dir/deps_$1
+}
+
+register_external --command detect_tools

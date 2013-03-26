@@ -1,0 +1,47 @@
+#!/bin/sh
+# description:
+#  macro that adds import function to load the file or include in static mode
+# syntax: #\\import --mode <mode> <file>
+# import modes:
+#  POSIX_SHELL: use posix shell .  to load file
+#  SHLOAD: use libsh shload to load file
+#  IMPORT: usene libsh import to load file (see libsh for more info)
+#  SOURCE|BASH: use bash's or zsh's source to load file
+# ver: 0.1
+# example:
+# macro for shpp
+# use with:
+#\\macro std/import
+#\\import ---mode BASH test_file
+##
+
+import() {
+    while [ ! $# = 0 ] ; do
+	case $1 in
+	    --mode) __import_link_mode=$2; shift 2;;
+	    *) __import_file=$1; shift ;;
+	esac
+    done
+
+    if [  $( defined STATIC ) = 0 ] ; then
+	case ${__import_link_mode:-POSIX_SHELL} in
+	    POSIX_SHELL) echo ". $__import_file" > \
+"$tmp_dir/import_$__import_file";;
+	    SHLOAD) echo "shload $__import_file" > \
+"$tmp_dir/import_$__import_file";;
+	    IMPORT) echo "import $__import_file"> \
+"$tmp_dir/import_$__import_file";;
+	    SOURCE|BASH) echo "source $__import_file" > \
+"$tmp_dir/import_$__import_file";;
+	    *) call_handler error:syntax "import: wrong or noimport link mode" ;;
+	esac
+	__import_file="$tmp_dir/import_$__import_file"
+    fi
+       
+    include noparse "$__import_file"
+    
+    unset __import_file __import_link_mode
+}
+
+
+register_external --command import
