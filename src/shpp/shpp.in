@@ -290,12 +290,16 @@ macro() {
   case $1 in
 	\<*\>) 
            __cleaned_macro=$(echo "$1" | sed -e 's/^<//' -e 's/>$//')
+	   old_ifs=$IFS
+	   IFS=:
 	   for __macro_space in $MACRO_SPACES ; do
+	       IFS=$old_ifs
 	       if [ -e "$__macro_space"/"$__cleaned_macro" ] ; then
 		   __cleaned_macro="$__macro_space"/"$__cleaned_macro"
 	       else
 		   false
 	       fi
+	       IFS=:
 	   done || \
 	   call_handler error:file "L$current_line_ued:$current_command: \
                $__cleaned_include not found"
@@ -430,12 +434,16 @@ include() {
 	\<*\>) 
            __realy_cleaned_include=$(echo "$__cleaned_include" | \
 	       sed -e 's/^<//' -e 's/>$//')
+	   old_ifs=$IFS
+	   IFS=:
 	   for __include_space in $INCLUDE_SPACES ; do
+               IFS=$old_ifs
 	       if [ -e "$__include_space"/"$__realy_cleaned_include" ] ; then
 		   __cleaned_include="$__include_space"/"$__realy_cleaned_include"
 	       else
 		   false
 	       fi
+	       IFS=:
 	   done || \
 	   call_handler error:file "L$current_line_ued:$current_command:\
                                    $__cleaned_include not found"
@@ -535,13 +543,17 @@ include_includes() {
 	    \<*\>) 
                 __realy_cleaned_include=$(echo "$__include" | \
 		    sed -e 's/^<//' -e 's/>$//')
+		old_ifs=$IFS
+                IFS=:
 		for __include_space in $INCLUDE_SPACES ; do
+		    IFS=$old_ifs
 		    if [ -e "$__include_space"/"$__realy_cleaned_include" ] 
 		    then
 			__include="$__include_space"/"$__realy_cleaned_include"
 		    else
 			false
 		    fi
+		    IFS=:
 		done 
 	   ;;
 	esac
