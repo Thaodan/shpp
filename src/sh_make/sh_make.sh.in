@@ -67,7 +67,7 @@ main() {
   "${used_shell:-/bin/sh}" -n "$sh_makefile"  || call_handler error:syntax "$used_shell exited with $? syntax check for $sh_makefile"
 
   if [ -z $SHMK_TEMP ] ; then
-      SHMK_TEMP=(mktemp -dt $appname)
+      SHMK_TEMP=$(mktemp -dt $appname)
   else
      if  [ ! -z $(ls $SHMK_TEMP )  ] ; then
 	call_handler warning:dir "$tmp_dir already exits and is not clear, hmm"
