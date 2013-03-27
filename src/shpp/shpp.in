@@ -176,7 +176,8 @@ find_commands() {
     echo '0' >$tmp_dir/self/find_command_count
     grep -hn \#\\\\\\\\$2 "$1"  | sed 's|:.*||' | tr '\n'  ':' | sed -e 's/\(.*\)./\1/' > "$tmp_dir/self/command_lines";
     old_ifs=$IFS
-    IFS=$'\n'
+    IFS='
+	'
     for _command in $( grep  \#\\\\\\\\$2 "$1" | sed -e 's/^#\\\\//' -e 's/^[ \t]*//' ) ; do
 	IFS=$old_ifs
 	echo $(( $( cat $tmp_dir/self/find_command_count) + 1 )) > \
@@ -219,7 +220,7 @@ $_command calling corresponding command"
 	    fi					      			
 	    case "$current_command" in
 		define) 	define "$_command" ;;
-		include) 	include "$_command" ;;
+		include) 	include $_command ;;
 		macro) macro $_command;;
 		ifdef)	ifdef "$_command" ;;
 		ifndef) ifndef "$_command" ;;
@@ -246,7 +247,8 @@ $_command calling corresponding command"
 		    ;;
 	    esac
         fi
-       IFS=:
+       IFS='
+	'
     done
     IFS=$old_ifs
     unset _command   current_command current_cleared_command  \
@@ -419,9 +421,9 @@ Else() {
 include() {
     verbose "L$current_line_ued:Opened $1 to parse,\
             call ourself to process file" 
-    for __include_arg in $1 ; do
+    for __include_arg in $@ ; do
 	case $__include_arg in  
-	    noparse)  __parser=no_parse;;
+	    noparse)  __parser=noparse;;
 	    parser=*) 
 		# set parser to use another parser than shpp 
 		__parser=$( echo $1 | sed 's|parser=||' )
@@ -458,8 +460,8 @@ include() {
 	    $tmp_dir/including/$__outputfile__cleaned_include  || \ 
 	    call_handler error:exit_stat \
 		"spawned copy of ourself: $appname returned $?, quiting" ;; 
-	no_parse)  ln -s  $__cleaned_include \
-	    $tmp_dir/including/$__outputfile__cleaned_include 
+	noparse)  ln -s  $__cleaned_include \
+	    $tmp_dir/self/including/$__outputfile__cleaned_include 
 	    # no $parser is used
 	    ;;
 	SELF)
@@ -529,7 +531,8 @@ include_includes() {
     echo '0' > $tmp_dir/self/find_include_count
     includes_lines=$( grep -hn \#\\\\\\\\include "$1"  | sed 's|:.*||' | tr '\n' ':')
     old_ifs=$IFS
-    IFS=$'\n'
+    IFS='
+	'
     for __include in $( grep  \#\\\\\\\\include "$1" | sed -e 's/^#\\\\//' -e 's/^[ \t]*//' -e  's/^ //' ) ; do
 	IFS=$old_ifs
 	for __include_argument in $__include ; do
@@ -580,7 +583,8 @@ include_includes() {
 	    continue
 	fi
 	current_include_no=$(( ${current_include_no:-1}  + 1 ))
-	IFS=$'\n'
+	IFS='
+	'
     done
     unset include_lines __include include_argument \
 	current_include_line current_include_no    __tmp_include \
