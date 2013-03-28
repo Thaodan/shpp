@@ -374,7 +374,8 @@ If() {
 
 #### if conditions ###
 defined() {
-    old_ifs=$
+    old_ifs=$IFS
+    IFS=:
     # look if var is defined
     for _defined in $defined_vars $input_defined_vars ; do
 	IFS=$old_ifs
