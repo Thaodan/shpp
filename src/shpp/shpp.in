@@ -131,7 +131,7 @@ call_handler() {
     esac
     if [ $die ]  ; then
 	verbose 'got signal to die, dieing'
-	cleanup_die
+	IID=1 cleanup
 	exit ${assumed_err_status:-13}
     fi
 }
@@ -146,16 +146,35 @@ cleanup() {
     if [ ! $keep ] ; then 
 	old_ifs="$IFS";
 	export IFS=":";
-	rm -rf `cat $tmp_dir/self/clean_files`; 
+	rm -rf `cat $tmp_dir/$IID/clean_files`; 
 	export IFS="$old_ifs"
     fi
 }
 
-cleanup_die() {
-    cleanup
+
+var() {
+    case $1 in 
+	*=) __var_part1=$( echo "$1" | cut -d '=' -f1) 
+	    __var_part2=$( echo "$1" | cut -d '=' -f2)
+	    mkdir -p $(dirname $tmp_dir/$__var_part1)
+	    echo $__var_part2 > $tmp_dir/$__var_part1 || return 666
+	    unset __var_part1 __var_part2
+	    ;;
+	*) 
+	    if [ -d $tmp_dir/$1 ] ; then
+		ls $tmp_dir/$1
+	    elif [ -e $tmp_dir/$1 ] ; then 
+		cat $tmp_dir/$1
+	    else
+		return 1
+	    fi
+	    ;;
+    esac	
 }
 
-
+unvar() {
+    rm -rf $tmp_dir/$1
+}
 ############################################################
 
 
@@ -219,7 +238,7 @@ $_command calling corresponding command"
 		    sed -e "s|$current_command ||" -e  "s|^\ ||")  	
 	    fi					      			
 	    case "$current_command" in
-		define) 	define "$_command" ;;
+		define) 	define $_command ;;
 		include) 	include $_command ;;
 		macro) macro $_command;;
 		ifdef)	ifdef "$_command" ;;
@@ -374,22 +393,12 @@ If() {
 
 #### if conditions ###
 defined() {
-    old_ifs=$IFS
-    IFS=:
-    # look if var is defined
-    for _defined in $defined_vars $input_defined_vars ; do
-	IFS=$old_ifs
-        # if $_cleadif machtes with one of $defined_vars clear unsuccesfull and break
-	if [ "$_defined" = "$1"  ] ; then
-		__isDefined_return_status=1
-	fi
-	IFS=:
-    done
-    IFS=$old_ifs
-    [ ${__isDefined_return_status:-0} = 0 ] && \
-    verbose "L$current_line_ued:$__defined_cleared was not defined" 
-    echo  ${__isDefined_return_status:-0}
-    unset __isDefined_return_status _defined 
+    if [ -e $tmp_dir/defines/$1 ] ;  then
+	echo 1
+    else
+	verbose "L$current_line_ued:$__defined_cleared was not defined" 
+	echo 0
+    fi
 }
 
 #### if conditions ### end
@@ -482,22 +491,10 @@ include() {
 
 #\\define
 define() {
-    if echo "$1" | grep -q " "; then
-	case $1 in
-	    # define defined_function if define $1 is a function macro
-	    *\(\)*|*\(*\)*) eval "defined_${1%\ *} () { ${1#*\ }";; 
-	    *)  # else is just a var
-		# define our private var of $_defined to prevent variable 
-		# nameing issues       
-		verbose "L$current_line_ued: found content< in $1 saving it\ 
-                           in \$defined_${1}"
-		eval defined_${1%\ *}=${1#*\ }
-		;;
-	esac    
-    fi
-    if echo $defined_vars | grep -qv  ${1%\ *} ; then
-	defined_vars=$defined_vars:${1%\ *}
-    fi
+    # use internal var function with defines as root space
+    # NOTE: settings arrays like this curenntly not supported:
+    # #\\define FRUITS { BANANA APPEL TOMATO }
+    var defines/${1}="$2"
 }
 
 #\\error
@@ -514,15 +511,13 @@ warning() {
 ### runners ###
 
 write_shortifdefs() { # write #\\! flags to $2
-    old_ifs=$IFS
-    IFS=: 
-    for var1 in $1 ; do 
-	IFS=$old_ife
-	sed -i "s/"^#\\\\\\\\\!$var1"//" $2
-	IFS=:
-    done
-    IFS=$old_ifs
-    unset var1 
+    __write_shortifdef_defines=$( var defines)
+    if [ $? = 0 ] ; then  #if var defines returns 1 do nothing
+	for var1 in $__write_shortifdef_defines  ; do 
+	    sed -i "s/"^#\\\\\\\\\!$var1"//" $1
+	done
+    fi
+    unset __write_shortifdef_defines
 }
 
 
@@ -593,13 +588,14 @@ include_includes() {
 }
 
 replace_vars() {
-    replace_file=$2 
-    for replace_var in $( read_farray $1 0 ) ; do
-	verbose "replacing @$replace_var@ with $( eval echo \$defined_$replace_var ) in $2"
-	sed -ie "s|@$replace_var@|$( eval echo \$defined_$replace_var)|g" $2|| \
+    verbose replace_vars "Opening $2"
+    for replace_var in $( var  $1 ) ; do
+	replace_var_content=$(var $1/$replace_var)
+	verbose "replacing @$replace_var@ with $replace_var_content"
+	sed -ie "s|@$replace_var@|$replace_var_content|g" $2|| \
 	   call_handler error:exit_stat "replace_var: sed quit with $?"
     done 
-    unset replace_file replace_var
+    unset replace_var replace_var_content
 }
 
 clear_flags() { # cleas #\\ flags in 
@@ -649,10 +645,10 @@ stub_main()    {
     # make a copy for our self
     cp "$1" "$tmp_dir/self/pc_file.stage1"
     find_commands "$tmp_dir/self/pc_file.stage1"
-    write_shortifdefs  "$defined_vars" "$tmp_dir/self/pc_file.stage1"
+    write_shortifdefs "$tmp_dir/self/pc_file.stage1"
     cp "$tmp_dir/self/pc_file.stage1" "$tmp_dir/self/pc_file.stage2"
-    test ! -z "$defined_vars" && \
-	replace_vars "$defined_vars"  "$tmp_dir/self/pc_file.stage2"
+    test -e $tmp_dir/defines  && \
+	replace_vars "defines"  "$tmp_dir/self/pc_file.stage2"
     # do runners only in main instance
     if [ $( readlink $tmp_dir/self )  = 1 ] ; then
 	for __runner in $registed_runners ; do
