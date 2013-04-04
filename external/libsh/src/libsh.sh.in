@@ -26,83 +26,89 @@ LIBSH_REV=@LIBSH_REV@
 
 # base config vars for some functions
 
-readonly IMPORT_LIBRARY_PATH=/usr/lib:/usr/lib32:/usr/local/lib:$HOME/.local/lib # base library path for import if  $SH_LIBRARY_PATH is not set
+# base library path for import if  $SH_LIBRARY_PATH is not set
+readonly IMPORT_LIBRARY_PATH=/usr/lib:/usr/lib32:/usr/local/lib:$HOME/.local/lib 
 
 
 #########################################################################
 
-shload() {
-  unset __shl_error_status
-  if [ $(dirname $1) = . ] ; then	
-  old_ifs=$IFS
-  IFS=:
-    for __lib_dir in ${IMPORT_LIBRARY_PATH}:${SH_LIBRARY_PATH}; do
-      old_ifs=$IFS
-      if [ -e $__lib_dir/$1 ] && [ -f $__lib_dir/$1 ] ; then 
-	. ${__lib_dir}/$1
-	__shl_error_status=$?
-	break
-      fi
-      IFS=:
-    done
-  else
-      . $1
-      __shl_error_status=$?
-  fi
-  unset  __lib __lib_dir
-  return $__shl_error_status
-  
-}
-import() { # . file with check if already . it
+shload()
 #################################################################
 # import sh libs that are in $IMPORT_LIBRARY_PATH and $SH_LIBRARY_PATH
 # vars:
 # IMPORT_LIBRARY_PATH set by  import
 # SH_LIBRARY_PATH     set by user use to add a library path
-#################################################################
-  old_ifs=$IFS
-  IFS=:
-  while [ ! $# = 0 ] ; do
-    for __lib in $already_imported_libs ; do
-      IFS=$old_ifs
-      if [ "$__lib" = $1 ] ; then
-	  __lib_aready_imported=true
-	  break 
-      fi
+#################################################################    
+{
+    unset __shl_error_status
+    if [ $(dirname $1) = . ] ; then	
+      old_ifs=$IFS
       IFS=:
-    done 
-    IFS=$old_ifs
-    if [   -z $__lib_aready_imported  ] ; then
-	if shload $1 ;then
-	    already_imported_libs=$already_imported_libs:$1
-	else
-	    echo "error loading $1"
-	    return 2
-	fi
+      for __lib_dir in ${IMPORT_LIBRARY_PATH}:${SH_LIBRARY_PATH}; do
+	  old_ifs=$IFS
+	  if [ -e $__lib_dir/$1 ] && [ -f $__lib_dir/$1 ] ; then 
+	      . ${__lib_dir}/$1
+	      __shl_error_status=$?
+	      break
+	  fi
+	  IFS=:
+      done
+    else
+	. $1
+	__shl_error_status=$?
     fi
-    shift
-    unset __lib_aready_imported
-  done  
-
- # IFS=$old_ifs
-
-  return 0 # return how many libs were already imported
-
+    unset  __lib __lib_dir
+    return $__shl_error_status
 }
+
+import() 
+# . file with check if already . it
+{
+    while [ ! $# = 0 ] ; do
+	old_ifs=$IFS
+	IFS=:
+	for __lib in $LIBSH_IMPORTED ; do
+	    IFS=$old_ifs
+	    if [ "$__lib" = $1 ] ; then
+		__lib_aready_imported=true
+		break 
+	    fi
+	    IFS=:
+	done 
+	IFS=$old_ifs
+	if [   -z $__lib_aready_imported  ] ; then
+	    if shload $1 ;then
+		LIBSH_IMPORTED=$LIBSH_IMPORTED:$1
+	    else
+		echo "error loading $1"
+		return 2
+	    fi
+	fi
+	shift
+	unset __lib_aready_imported
+    done  
+    return 0 # return how many libs were already imported
+}
+
 detectDE() 
 # detect which DE is running
 # taken from xdg-email script 
 {
-    if [ x"$KDE_FULL_SESSION" = x"true" ]; then DE=kde;
-    elif [ x"$GNOME_DESKTOP_SESSION_ID" != x"" ]; then DE=gnome;
-    elif `dbus-send --print-reply --dest=org.freedesktop.DBus /org/freedesktop/DBus org.freedesktop.DBus.GetNameOwner string:org.gnome.SessionManager > /dev/null 2>&1` ; then DE=gnome;
-    elif xprop -root _DT_SAVE_MODE 2> /dev/null | grep ' = \"xfce4\"$' >/dev/null 2>&1; then DE=xfce;
-    else DE=generic 
+    if [ x"$KDE_FULL_SESSION" = x"true" ]; then D
+	DE=kde;
+    elif [ x"$GNOME_DESKTOP_SESSION_ID" != x"" ]; then 
+	DE=gnome;
+    elif `dbus-send --print-reply --dest=org.freedesktop.DBus /org/freedesktop/DBus org.freedesktop.DBus.GetNameOwner string:org.gnome.SessionManager > /dev/null 2>&1` ; then 
+	DE=gnome;
+    elif xprop -root _DT_SAVE_MODE 2> /dev/null | grep ' = \"xfce4\"$' >/dev/null 2>&1; then 
+	DE=xfce;
+    else 
+	DE=generic 
     fi
 }
 
 
-d_msg() { # display msgs and get input 
+d_msg() # display msgs and get input 
 #########################################################################################################################
 # NOTE: needs kdialog ( or zenity ) to display graphical messages and get input in gui					#
 #########################################################################################################################
@@ -126,146 +132,144 @@ d_msg() { # display msgs and get input
 # DMSG_ICON				# icon that d_msg uses when is runned in gui mode if not set icon xorg is used 	#
 #															#
 #															#
-# DMSG_APP 				# say DMSG to use $DMSG_APP in cli possible vara are dialog and cgi_dialog	#												#	
+# DMSG_APP 				# say DMSG to use $DMSG_APP in cli possible vara are dialog and cgi_dialog	#  
 #															#
-#															#	
+#															#   
 #															#
 #															#
 #########################################################################################################################
-  if [ ! $# -lt 2 ] ; then
-      unset dmsg_return_status
-#       cgi_dialog() {
-# 	unset cfg_return_stat
-# 	case "$1" in 
-# 	  !) echo "$2" >&2 ; cgi_return_stat=1;;
-# 	  f) echo ""$2" y|n"
-# 	     read a 
-# 	     if [ ! $a = [Yy]* ] ; then
-# 	      cgi_return_stat=1
-# 	     fi
-# 	     ;;
-# 	  i) echo "$2"
-# 	     read  a 
-# 	     if [ -z "$a" ] ; then
-# 		cgi_return_stat=1
-# 	     fi
-# 	     #echo "$a"
-# 	     
-# 	     ;;
-# 	  *) echo "$1" ;;
-# 	esac
-# 
-# 	return ${cgi_return_stat:-0}
-#       }
-      if [  ${DMSG_GUI} = true ] > /dev/null 2>&1 || [ ! $DMSG_GUI = 0 ] > /dev/null 2>&1 ; then
-	if [  -z "$DMSG_GUI_APP" ] ; then
-	    detectDE
-	    DMSG_GUI_APP=$DE
+{
+    if [ ! $# -lt 2 ] ; then
+	unset dmsg_return_status
+	if [  "${DMSG_GUI}" = true ] || [ ! $DMSG_GUI = 0 ] ; then
+	    if [  -z "$DMSG_GUI_APP" ] ; then
+		detectDE
+		DMSG_GUI_APP=$DE
 	    case "$DMSG_GUI_APP" in 
-		kde)   	    which  kdialog  > /dev/null  || which > /dev/null  zenity  && DMSG_GUI_APP=kde     || DMSG_GUI_APP=generic ;; #  && echo "Warning: dialog programm for DE not found using xmessage as poor substitute" ;;
-		gnome|xfce) which zenity   > /dev/null   || which  kdialog  > /dev/null  && DMSG_GUI_APP=gnome   || DMSG_GUI_APP=generic ;; # && echo "Warning: dialog programm for DE not found using xmessage as poor substitute" ;;
-		*) which kdialog > /dev/null  && DMSG_GUI_APP=kde || need zenity && DMSG_GUI_APP=zenity  || DMSG_GUI_APP=generic ;; # && echo "Warning: dialog programm for DE not found using xmessage as poor substitute" ;;
+		kde)  
+		    which  kdialog  > /dev/null  || \
+			which > /dev/null  zenity  && DMSG_GUI_APP=gnome  || DMSG_GUI_APP=generic
+		    ;;
+		gnome|xfce) which zenity   > /dev/null   || \
+		    which  kdialog  > /dev/null  && DMSG_GUI_APP=kde || \
+		    DMSG_GUI_APP=generic ;;
+		*) which kdialog > /dev/null  && DMSG_GUI_APP=kde || which zenity > /dev/null && DMSG_GUI_APP=zenity \
+		    || DMSG_GUI_APP=generic
+		    ;; 
 	    esac 
 	fi
 	    
-	#DE=gnome
-	case $DMSG_GUI_APP in 
-	  kde)
-	    case $1 in 
-	      !) kdialog --icon ${DMSG_ICON:=xorg} --caption "${APPNAME:=$appname}" --title "$2" --error "$3" ; dmsg_return_status=${DMG_ERR_STAUS:=1}  ;;
-	      i) kdialog --icon ${DMSG_ICON:=xorg} --caption "${APPNAME:=$appname}" --title "$2" --inputbox "$3" ; dmsg_return_status=$? ;;
-	      l) kdialog --icon ${DMSG_ICON:=xorg} --caption "${APPNAME:=$appname}" --title "$2" --menu "$3" "$4" "$5" "$6" "$7" "$8" "$9" ; shift ; dmsg_return_status=$? ;;
-	      f) kdialog --icon ${DMSG_ICON:=xorg} --caption "${APPNAME:=$appname}"  --title "$2" --yesno "$3" ; dmsg_return_status=$? ;;
-	      *) kdialog --icon ${DMSG_ICON:=xorg} --caption "${APPNAME:=$appname}"  --title "$1" --msgbox "$2" ; dmsg_return_status=$? ;;
-	    esac
-	    ;;
-	 xfce|gnome) #nyi impleted
-	    case $1 in 
-	      !) zenity --window-icon=${DMSG_ICON:=xorg}  --title="$2 - ${APPNAME:=$appname}" --error  --text="$3" ;dmsg_return_status=${DMG_ERR_STAUS:=1}   ;;
-	      i) zenity --window-icon=${DMSG_ICON:=xorg}  --title="$2 - ${APPNAME:=$appname}" --entry --text="$3"  dmsg_return_status=$? ;;
-	      l) zenity --window-icon=${DMSG_ICON:=xorg}  --title="$2  -${APPNAME:=$appname}" --column='' --text="$3" --list ; dmsg_return_status=$? ;;
-	      f) zenity --window-icon=${DMSG_ICON:=xorg}  --title="$2  -${APPNAME:=$appname}" --question --text="$3" ; dmsg_return_status=$? ;;
-	      *) zenity --window-icon=${DMSG_ICON:=xorg}  --title="$1  -${APPNAME:=$appname}" --info --text="$2" ; dmsg_return_status=$? ;;
-	    esac
-	    ;;
-	 *)
-	  case $1 in
-	    !) xmessage -center -title "$2 - ${APPNAME:=$appname}" "err: "$3"" ;dmsg_return_status=${DMG_ERR_STAUS:=1}   ;;
-	    f) xmessage -center -title "$2  -${APPNAME:=$appname}" -buttons no:1,yes:0 "$3" ; dmsg_return_status=$? ;;	
-	    i) if [ -z $buttons ] ; then
-		buttons='not:1,set:2'
-	       fi
-	       xmessage -center -title "$appname - "$2"" -print -buttons $buttons "$3"
-               dmsg_return_status=$?
-	       ;;
-	    l) xmessage -center -title "$2 - ${APPNAME:=$appname}" -print -buttons "$3","$4","$5","$6","$7","$8","$9" ; dmsg_return_status=$? ;;
-	    *) xmessage -center -title "$1 - ${APPNAME:=$appname}" "$2" ; dmsg_return_status=$? ;;
-	  esac
-	 ;;
-	esac
-	else
-	  if [ -z $DMSG_APP ] ; then 
-	   if [ ! -z $DMSG_DIALOG_DISABLED ] ; then
-	     DMSG_APP=cgi_dialog 
-	   else 
-	     which dialog > /dev/null  && DMSG_APP=dialog 
-	   fi
-	  fi
-	  case $DMSG_APP in
-	    dialog)
-	      case "$1" in 
-	        !) dialog --title "$2 -${APPNAME:=$appname}" --infobox "error:$3" 0 0 ;;
-		#!) cgi_dialog ! "$3" ; dmsg_return_status=${DMG_ERR_STAUS:=1}  ;;
-		f) dialog --title "$2 - ${APPNAME:=$appname}" --yesno "$3"   0 0 
-		  dmsg_return_status=$?
+	    case $DMSG_GUI_APP in 
+		kde)
+		    case $1 in 
+		    !)  kdialog --icon ${DMSG_ICON:=xorg} --caption "${DMSG_APPNAME:=$appname}" --title "$2" --error "$3" 
+			dmsg_return_status=${DMG_ERR_STAUS:=1}  
+			;;
+		    i) kdialog --icon ${DMSG_ICON:=xorg} --caption "${DMSG_APPNAME:=$appname}" --title "$2" --inputbox "$3" 
+			dmsg_return_status=$?
+			;;
+		    l)  kdialog --icon ${DMSG_ICON:=xorg} --caption "${DMSG_APPNAME:=$appname}" --title "$2" --menu \
+			"$3" "$4" "$5" "$6" "$7" "$8" "$9" 
+			shift ; dmsg_return_status=$? ;;
+		    f)  kdialog --icon ${DMSG_ICON:=xorg} --caption "${DMSG_APPNAME:=$appname}"  --title "$2" --yesno "$3" 
+			dmsg_return_status=$? ;;
+		    *)  kdialog --icon ${DMSG_ICON:=xorg} --caption "${DMSG_APPNAME:=$appname}"  --title "$1" --msgbox "$2" 
+			dmsg_return_status=$? ;;
+		    esac
 		    ;;
-		i) dialog --title "$2 - ${APPNAME:=$appname}" --inputbox "$3" 0 0
-		  dmsg_return_status=$?		 
+	    xfce|gnome) #nyi impleted
+		    case $1 in 
+		    !) zenity --window-icon=${DMSG_ICON:=xorg}  --title="$2 - ${DMSG_APPNAME:=$appname}" --error --text="$3"
+			dmsg_return_status=${DMSG_ERR_STAUS:=1}   
+			;;
+		    i) zenity --window-icon=${DMSG_ICON:=xorg}  --title="$2 - ${DMSG_APPNAME:=$appname}" --entry --text="$3"
+			dmsg_return_status=$? 
+			;;
+		    l) zenity --window-icon=${DMSG_ICON:=xorg}  --title="$2  -${APPNAME:=$appname}" --column='' --text="$3"\
+                        --list 
+		       dmsg_return_status=$? 
+		       ;;
+		    f) zenity --window-icon=${DMSG_ICON:=xorg}  --title="$2  -${APPNAME:=$appname}" --question --text="$3" 
+			dmsg_return_status=$? 
+			;;
+		    *) zenity --window-icon=${DMSG_ICON:=xorg}  --title="$1  -${APPNAME:=$appname}" --info --text="$2" 
+			dmsg_return_status=$? ;;
+		esac
+		;;
+	 *)
+		    case $1 in
+		    !) xmessage -center -title "$2 - ${APPNAME:=$appname}" "err: "$3"" ;
+			dmsg_return_status=${DMG_ERR_STAUS:=1} 
+			;;
+		    f) xmessage -center -title "$2  -${APPNAME:=$appname}" -buttons no:1,yes:0 "$3" 
+			dmsg_return_status=$? 
+			;;	
+		    i) 
+			if [ -z $buttons ] ; then
+			    DMSG_XBUTTONS='not:1,set:2'
+			fi
+			xmessage -center -title "$appname - "$2"" -print -buttons $buttons "$3"
+			dmsg_return_status=$?
+			;;
+		    l) xmessage -center -title "$2 - ${APPNAME:=$appname}" -print -buttons "$3","$4","$5","$6","$7","$8","$9" ; dmsg_return_status=$? ;;
+		    *) xmessage -center -title "$1 - ${APPNAME:=$appname}" "$2" ; dmsg_return_status=$? ;;
+		    esac
+		    ;;
+	    esac
+	else
+	      case ${DMSG_APP:-native} in
+	      dialog)
+		  case "$1" in 
+	              !) dialog --title "$2 -${APPNAME:=$appname}" --infobox "error:$3" 0 0 ;;
+		      #!) cgi_dialog ! "$3" ; dmsg_return_status=${DMG_ERR_STAUS:=1}  ;;
+		      f) dialog --title "$2 - ${APPNAME:=$appname}" --yesno "$3"   0 0 
+			  dmsg_return_status=$?
+			  ;;
+		      i) dialog --title "$2 - ${APPNAME:=$appname}" --inputbox "$3" 0 0
+			  dmsg_return_status=$?		 
+			  ;;
+		      *) dialog --title "$1 -${APPNAME:=$appname}" --infobox "$2" 0 0  ;;
+		      #*) cgi_dialog "$2" ; dmsg_return_status=$? ;;
+		  esac
 		  ;;
-		*) dialog --title "$1 -${APPNAME:=$appname}" --infobox "$2" 0 0  ;;
-		#*) cgi_dialog "$2" ; dmsg_return_status=$? ;;
+	      native)
+		  case "$1" in
+		      !) echo  "$3" ; dmsg_return_status=${DMG_ERR_STAUS:=1}  ;;
+		      f)  echo ""$3" y|n"
+			  read a 
+			  if [ ! $a = y ] ; then
+			      dmsg_return_status=1;
+			  fi
+			  ;;
+		      i) 
+			  echo "$3"
+			  read  a 
+			  if [ -z "$a" ] ; then
+			      dmsg_return_status=1;
+			  fi
+			  ;;
+		      *)  echo "$2"   ; dsmg_return_status=$? ;;
+		  esac
+		  ;;
 	      esac
-	      ;;
-	    cgi_dialog)
-	      case "$1" in
-		!) echo  "$3" ; dmsg_return_status=${DMG_ERR_STAUS:=1}  ;;
-		f) echo ""$3" y|n"
-		   read a 
-		   if [ ! $a = y ] ; then
-		     dmsg_return_status=1;
-		   fi
-		   ;;
-		i) echo "$3"
-		   read  a 
-		   if [ -z "$a" ] ; then
-		    dmsg_return_status=1;
-		   fi
-		   ;;
-		*) echo "$2"   ; dsmg_return_status=$? ;;
-	      esac
-	      ;;
-	  esac
-	  
-      fi
-  fi
-return $dmsg_return_status
+	      
+	fi
+    fi
+    return $dmsg_return_status
 }
 
 
-test_input () { # test if input is right 
-# test_input with fake arrays instead of real arrays
-#   old_ifs=$IFS
-  i_p=$(( $# + 1 ))
-  current_err_msg="$( read_farray "$err_input_messages" $i_p )"
-   if [ -n "$current_err_msg" ] ; then
-    d_msg ! 'wrong input' "$current_err_msg"
-    if [   $# = 0   ]; then
-      return 1
-    else
-      return 
-    fi
+test_input () { 
+  DMSG_i_p=$(( $# + 1 ))
+  DMSG_current_err_msg="$( read_farray "$err_input_messages" $i_p )"
+  if [ -n "$DMSG_current_err_msg" ] ; then
+      d_msg ! 'wrong input' "$DMSG_current_err_msg"
+      if [   $# = 0   ]; then
+	return 1
+      else
+	  return 
+      fi
   fi
-#   IFS=$old_ifs
 }
 
 
@@ -286,101 +290,83 @@ test_input () { # test if input is right
 
 #\\ifdef DEBUG_FARRAY_LESS_OUTPUT 
 ifen_disable_option() { # if $1 is enabled disable it
-if set +o | grep -q "set -o $1" ; then
-  set +o "$1"
-  libsh_enabled_shell_options=$libsh_enabled_shell_options:$1
-  fi
+    if set +o | grep -q "set -o $1" ; then
+	set +o "$1"
+	libsh_enabled_shell_options=$libsh_enabled_shell_options:$1
+    fi
 }
 
 
 ifde_enable_option() {  # if $1 is disabled and was enabled before, enable it
-if echo $enabled_option | grep -q $1 && set +o | grep -q "set +o $1" ; then
-  set -o "$1"
-  libsh_enabled_shell_options=$( echo $libsh_enabled_shell_options | sed "s/:$1//" )
-  fi
+    if echo $libsh_enabled_options | grep -q $1 && set +o | grep -q "set +o $1" ; then
+	set -o "$1"
+	libsh_enabled_shell_options=$( echo $libsh_enabled_shell_options | sed "s/:$1//" )
+    fi
 }
 #\\endif
 get_farray_lenght() { # get lenght of fake array
-  if [ $# -ge 1 ] ; then 
-    old_ifs=$IFS
-    IFS=:
-    for var in $1 ; do
-	get_farry_lenght_count=$(( $get_farry_lenght_count + 1 ))
-    done
-    IFS=$old_ifs
-    echo  ${get_farry_lenght_count:-0}
-    unset get_farry_lenght_count var
-  else
-    echo 0
-  fi
+    if [ $# -ge 1 ] ; then 
+	old_ifs=$IFS
+	IFS=:
+	for var in $1 ; do
+	    get_farry_lenght_count=$(( $get_farry_lenght_count + 1 ))
+	done
+	IFS=$old_ifs
+	echo  ${get_farry_lenght_count:-0}
+	unset get_farry_lenght_count var
+    else
+	echo 0
+    fi
 }
 
 read_farray() { # read fake array
-
-  if [ $# = 2 ] ; then
-#\\ifdef DEBUG_FARRAY_LESS_OUTPUT
-		ifen_disable_option verbose
-		ifen_disable_option xtrace
-#\\endif
-  #  _read_farry_number=$2
-  #  _read_farry_lenght=`get_farray_lenght "$1"` || return 
-   # if [  $2 -le $_read_farry_lenght ] ; then
-		old_ifs=$IFS
-		IFS=:
-		for var in  $1 ; do
-			_read_farry_count=$(( $_read_farry_count + 1 ))
-			if [ $2 -eq  $_read_farry_count ] || [ $2 -eq 0 ] ; then
-				if [ ! -z $var ] ; then
-					echo $var
-				fi
-			fi
-		done
-		IFS=$old_ifs
-#\\ifdef DEBUG_FARRAY_LESS_OUTPUT
-			ifde_enable_option verbose
-			ifde_enable_option xtrace
-#\\endif
+    if [ $# = 2 ] ; then
+	#\\ifdef DEBUG_FARRAY_LESS_OUTPUT
+	ifen_disable_option verbose
+	ifen_disable_option xtrace
+	#\\endif
+	old_ifs=$IFS
+	IFS=:
+	for var in  $1 ; do
+	    _read_farry_count=$(( $_read_farry_count + 1 ))
+	    if [ $2 -eq  $_read_farry_count ] || [ $2 -eq 0 ] ; then
+		if [ ! -z $var ] ; then
+		    echo $var
+		fi
+	    fi
+	done
+	IFS=$old_ifs
+	#\\ifdef DEBUG_FARRAY_LESS_OUTPUT
+	ifde_enable_option verbose
+	ifde_enable_option xtrace
+	#\\endif
     fi
- # fi
-  unset _read_farry_count  var
+    unset _read_farry_count  var
 }
 
 write_farray() {  # write fake array   
-# write_farry farry 1 test
-	if [ $# -eq 3 ] ; then
-#\\ifdef DEBUG_FARRAY_LESS_OUTPUT
-		ifen_disable_option verbose
-		ifen_disable_option xtrace
-#\\endif
-		farry_content=$( eval echo \$$1)
-		if [ ! -z "$farry_content" ] ; then 
+    if [ $# -eq 3 ] ; then
+	#\\ifdef DEBUG_FARRAY_LESS_OUTPUT
+	ifen_disable_option verbose
+	ifen_disable_option xtrace
+	#\\endif
+	farry_content=$( eval echo \$$1)
+	if [ ! -z "$farry_content" ] ; then 
 		    if [ $( get_farray_lenght "$farry_content") = $(( $2 - 1 )) ] ; then
 			eval $1=$farry_content:$3
 		    else
 			eval $( echo $1)=$( echo $farry_content | sed "s/$(read_farray $farry_content $2 )/$3/")
 		    fi
-		elif [ $2 = 1 ] ; then
-			eval $1=$3
-		else
-			return 1
-		fi
-#\\ifdef DEBUG_FARRAY_LESS_OUTPUT
-		ifde_enable_option verbose
-		ifde_enable_option xtrace
-#\\endif
+	elif [ $2 = 1 ] ; then
+	    eval $1=$3
+	else
+	    return 1
 	fi
+	#\\ifdef DEBUG_FARRAY_LESS_OUTPUT
+	ifde_enable_option verbose
+	ifde_enable_option xtrace
+	#\\endif
+    fi
 }
 
 
-## function that help to handle temp dirs ##
-
-
-# _mk_temp_dir() { #obsolent
-#   temp=`mktemp -d `date +%s%t`XXXXXXXXXX`
-#   {
-#   trap "rm -rf $temp" SIGINT SIGTERM SIGKILL
-#   }
-#   
-#   readonly $temp
-#   return 
-# }

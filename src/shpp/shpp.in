@@ -154,12 +154,37 @@ cleanup() {
 
 var() {
     case $1 in 
-	*=) __var_part1=$( echo "$1" | cut -d '=' -f1) 
-	    __var_part2=$( echo "$1" | cut -d '=' -f2)
+	*=|*=*) 
+	    __var_part1=$( echo "$1" | cut -d '=' -f1 | sed -e 's/+$//' -e 's/-$//') 
+	    __var_part2=$( echo "$1" | cut -d '=' -f2 )
 	    mkdir -p $(dirname $tmp_dir/$__var_part1)
-	    echo $__var_part2 > $tmp_dir/$__var_part1 || return 666
-	    unset __var_part1 __var_part2
-	    ;;
+	    case $1 in 
+		*+=*)
+		    if [ -d $tmp_dir/$__var_part1 ] ; then
+			printf  $__var_part2 > $tmp_dir/$__var_part1/\  $(( 
+				$( echo $tmp_dir/$__var_part2/* \
+				    | tail  | basename )\ + 1 ))
+		    elif [ -e $tmp_dir/$__var_part1/.__INT ] ; then
+			echo $(( $( cat $tmp_dir/$__var_part1 ) \
+			    + $__var_part2 )) > $tmp_dir/$__var_part1
+		    else
+			case $__var_part2 in
+			    [0-9]) touch $(dirname $tmp_dir/$__var_part1)/.__INT ;;
+			esac
+			printf  "$__var_part2" >> $tmp_dir/$__var_part1  
+		    fi
+		    ;;
+ 		*-=*) 
+		    if [ -e $(dirname $tmp_dir/$__var_part1)/.__INT ] ; then
+		        echo  $(( $( cat $tmp_dir/$__var_part1 ) \
+			    - $__var_part2 )) > $tmp_dir/$__var_part1
+		    else
+		        return 1
+                    fi
+		    ;;
+                *)  printf  "$__var_part2" > $tmp_dir/$__var_part1 ;;
+	    esac
+	    ;;	
 	*) 
 	    if [ -d $tmp_dir/$1 ] ; then
 		ls $tmp_dir/$1
@@ -191,20 +216,27 @@ alias ifndef='If ! defined'
 find_commands() {
     erase_till_endif=false
     endif_notfound=false 
-    echo '0' > $tmp_dir/self/removed_stack
-    echo '0' >$tmp_dir/self/find_command_count
-    grep -hn \#\\\\\\\\$2 "$1"  | sed 's|:.*||' | tr '\n'  ':' | sed -e 's/\(.*\)./\1/' > "$tmp_dir/self/command_lines";
+    var self/command/removed_stack=0
     old_ifs=$IFS
     IFS='
 	'
+    for find_commands_line in $( grep -hn \#\\\\\\\\$2 "$1"  | sed 's|:.*||' ); do 
+	IFS=$old_ifs
+	var self/command/counter+=1
+	var self/command/lines/$(var self/command/counter)=$find_commands_line
+	IFS='
+            '
+    done
+    var self/command/counter=0 # reset counter after parsing lines
+    IFS='
+        '
     for _command in $( grep  \#\\\\\\\\$2 "$1" | sed -e 's/^#\\\\//' -e 's/^[ \t]*//' ) ; do
 	IFS=$old_ifs
-	echo $(( $( cat $tmp_dir/self/find_command_count) + 1 )) > \
-	    $tmp_dir/self/find_command_count
+	var self/command/counter+=1
+	current_command_no=$( var self/command/counter )
 	# current line with removeing deleted lines
-	current_line_ued=$( read_farray $(cat $tmp_dir/self/command_lines)  \
-	    $(cat $tmp_dir/self/find_command_count)  ) 
-	current_line=$(($current_line_ued-$(cat $tmp_dir/self/removed_stack))) 
+	current_line_ued=$( var self/command/lines/$current_command_no )
+	current_line=$(($current_line_ued-$( var self/command/removed_stack))) 
 	_command=$( echo "$_command" | sed -e 's|\ $||')
 	if [ $erase_till_endif = true ] ; then
 	    if [ $_command = endif ] || [ $_command = else ]  ; then
@@ -212,9 +244,7 @@ find_commands() {
 #\\!debug_if  cp "$1" "$tmp_dir/ifsteps/pc_file.stage.$_find_command_count"
 		erase_till_endif=false
 	        # save removed lines (difference between $current_line and $if_line + 1)
-		echo $(( ( $current_line - $if_line  + 1) +  \
-		    $(cat $tmp_dir/self/removed_stack) )) > \
-		    $tmp_dir/self/removed_stack 
+		var self/command/removed_stack+=$(( $current_line - $if_line  + 1)) 
 		[ $_command = else ] && found_if_or_else=true
 	    elif [ ! $endif_notfound = false ] ; then
 		false
@@ -270,10 +300,8 @@ $_command calling corresponding command"
 	'
     done
     IFS=$old_ifs
-    unset _command   current_command current_cleared_command  \
+    unset _command   current_command current_command_no current_cleared_command  \
         found_if_or_else    # unset runtime vars
-    rm -f $tmp_dir/self/removed_stack
-    rm -f $tmp_dir/self/find_command_count
 }
 
 
@@ -461,32 +489,36 @@ include() {
                                    $__cleaned_include not found"
 	   ;;
     esac
+    var self/include/counter+=1
+    current_include_no=$( var self/include/counter )
     __outputfile__cleaned_include=$( echo $__cleaned_include | \
 	sed -e 's|\/|_|g' -e 's|\.|_|g')
     case ${__parser:-SELF} in  
 	shpp)  $shpp   --tmp $tmp_dir/slaves --stdout \
 	    --stderr=$tmp_dir/logs/errors$__outputfile__cleaned_include.log \
 	    "$__cleaned_include"> \
-	    $tmp_dir/including/$__outputfile__cleaned_include  || \ 
+	    $tmp_dir/$IID/include/files/\ 
+	    ${current_include_no}${__outputfile__cleaned_include}  || \ 
 	    call_handler error:exit_stat \
 		"spawned copy of ourself: $appname returned $?, quiting" ;; 
 	noparse)  ln -s  $__cleaned_include \
-	    $tmp_dir/self/including/$__outputfile__cleaned_include 
+	    $tmp_dir/$IID/include/files/\ 
+	    ${current_include_no}${__outputfile__cleaned_include} 
 	    # no $parser is used
 	    ;;
 	SELF)
-	    stub_main $__cleaned_include $tmp_dir/$IID/including/$__outputfile__cleaned_include ;;
+	    stub_main $__cleaned_include $tmp_dir/$IID/include/files/\ 
+	    ${current_include_no}${__outputfile__cleaned_include} ;;
 	*) $__parser $__parser_args ;; # use $parser with $parser_args 
     esac
-    printf "$__outputfile__cleaned_include:" >> $tmp_dir/self/includes
-    printf  "$current_line:" >> $tmp_dir/self/include_lines
+    var  $tmp_dir/self/include/lines/$current_include_no=$current_line 
    
   
 # for us and run argument of #\\include with us and copy to temp file/stdout
 # copy content before #\\include to new file
 # copy include argument to new file
 # copy content past #\\include to new file 
-    unset __include_arg  __parser __parser_args __cleaned_include __outputfile__cleaned_include  __realy_cleaned_include __include_space
+    unset __include_arg  __parser __parser_args __cleaned_include __outputfile__cleaned_include  __realy_cleaned_include __include_space current_include_no
 }
 
 #\\define
@@ -524,13 +556,10 @@ write_shortifdefs() { # write #\\! flags to $2
 include_includes() { 
     # make backups before do include
     cp "$tmp_dir/self/pc_file.stage2" "$tmp_dir/self/pre_include" 
-    echo '0' > $tmp_dir/self/find_include_count
-    includes_lines=$( grep -hn \#\\\\\\\\include "$1"  | sed 's|:.*||' | tr '\n' ':')
-    old_ifs=$IFS
-    IFS='
-	'
-    for __include in $( grep  \#\\\\\\\\include "$1" | sed -e 's/^#\\\\//' -e 's/^[ \t]*//' -e  's/^ //' ) ; do
-	IFS=$old_ifs
+    var self/include/counter=1
+    var self/include/stack=0
+    current_include_no=$( var self/include/counter)
+    for current_include in $tmp_dir/self/include/files/* ; do
 	for __include_argument in $__include ; do
 	    case $__include_argument in 
 		# stub arguments that are only used by #\\include
@@ -538,9 +567,13 @@ include_includes() {
 		*) __include=$__include_argument ;;
 	    esac
 	done
-	case $__include in
+	current_include_stack=$( var self/include/stack )
+	current_include_no=$( var self/include/counter)
+	current_include_line=$(( $current_include_stack \ +
+		$( var self/include/lines/$current_include_no )))
+	case $current_include in
 	    \<*\>) 
-                __realy_cleaned_include=$(echo "$__include" | \
+                __realy_cleaned_include=$(echo "$current_include" | \
 		    sed -e 's/^<//' -e 's/>$//')
 		old_ifs=$IFS
                 IFS=:
@@ -548,43 +581,35 @@ include_includes() {
 		    IFS=$old_ifs
 		    if [ -e "$__include_space"/"$__realy_cleaned_include" ] 
 		    then
-			__include="$__include_space"/"$__realy_cleaned_include"
+			current_include="$__include_space"/"$__realy_cleaned_include"
 		    else
 			false
 		    fi
 		    IFS=:
 		done 
+		old_ifs=$IFS
 	   ;;
 	esac
-	__include=$( echo $__include | sed -e 's|\/|_|g' -e 's|\.|_|g')
-	old_ifs=$IFS
-	echo $(( $(cat $tmp_dir/self/find_include_count) + 1 )) > \
-	    $tmp_dir/self/find_include_count
-	current_include_line=$( read_farray $(cat $tmp_dir/self/include_lines) \
-            $(cat $tmp_dir/self/find_include_count) )
-	__tmp_include=$( read_farray $( cat $tmp_dir/self/includes) \
-	    ${current_include_no:-1}  )
-	if [ $__include = $__tmp_include ] ; then
-	    sed "$current_include_line,$ d" $1 >  \
-		"$tmp_dir/self/including/cut_source"
-	    sed "1,$current_include_line d" $1 > \
-		 "$tmp_dir/self/including/cut_source_end"
-	    cat "$tmp_dir/self/including/$__tmp_include" >> \
-		"$tmp_dir/self/including/cut_source"
-	    cat "$tmp_dir/self/including/cut_source_end" >> \
-		"$tmp_dir/self/including/cut_source"
-	    cp "$tmp_dir/self/including/cut_source" \
-		"$tmp_dir/self/pc_file.stage2"
-	    current_include_no=$(( ${current_include_no:-1}  + 1 ))
-	    continue
-	fi
-	current_include_no=$(( ${current_include_no:-1}  + 1 ))
+	current_include=$( echo $__include | sed -e 's|\/|_|g' -e 's|\.|_|g')
+	sed "$current_include_line,$ d" $1 >  \
+	    "$tmp_dir/self/include/cut_source"
+	sed "1,$current_include_line d" $1 > \
+	    "$tmp_dir/self/include/cut_source_end"
+	cat "$current_include" >> \
+		"$tmp_dir/self/include/cut_source"
+	cat "$tmp_dir/self/include/cut_source_end" >> \
+		"$tmp_dir/self/include/cut_source"
+	cp "$tmp_dir/self/include/cut_source" \
+	    "$tmp_dir/self/pc_file.stage2"
+	
+	var self/include/counter+=1
+	var self/include/stack+=$( wc -l < $current_include )
 	IFS='
 	'
     done
     unset include_lines __include include_argument \
-	current_include_line current_include_no    __tmp_include \
-	__realy_cleaned_include __include_space
+	current_include_line   __tmp_include \
+	__realy_cleaned_include __include_space 
 }
 
 replace_vars() {
@@ -639,7 +664,7 @@ stub_main()    {
     fi
     verbose "Entering instance $IID"
     touch $tmp_dir/self/clean_files
-    mkdir -p "$tmp_dir/self/including"
+    mkdir -p "$tmp_dir/self/include/files"
     mkdir -p "$tmp_dir/self/logs"
 
     # make a copy for our self
