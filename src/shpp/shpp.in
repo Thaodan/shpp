@@ -229,14 +229,14 @@ find_commands() {
     var self/command/counter=0 # reset counter after parsing lines
     IFS='
 '
-    for _command in $( grep  \#\\\\\\\\$2 "$1" | sed -e 's/^#\\\\//'  ) ; do
+    for _command in $( grep  \#\\\\\\\\$2 "$1" | sed -e 's/#\\\\//'  ) ; do
 	IFS=
 	count++  self/command/counter
 	current_command_no=$( var self/command/counter )
 	# current line with removeing deleted lines
 	current_line_ued=$( var self/command/lines/$current_command_no )
 	current_line=$(($current_line_ued-$( var self/command/removed_stack))) 
-	_command=$( echo "$_command" | sed -e 's/[ \t]*$//'  )
+	_command=$( echo "$_command" | sed -e 's/[ \t]*$//' -e 's/^[ \t]*//' )
 	if [ $erase_till_endif = true ] ; then
 	    if [ $_command = endif ] || [ $_command = else ]  ; then
 		sed -ie "$if_line,$current_line d" "$1" 
@@ -288,8 +288,8 @@ find_commands() {
 		        $current_command $_command
 		    else
 		        call_handler warning:unkown \
-			    "found '$current_command',\
-                             bug or unkown command, raw string is\ 
+			    "found '$current_command',
+                             bug or unkown command, raw string is
                              '$current_command_raw'"
 		    fi
 		    ;;
@@ -459,6 +459,8 @@ include() {
 
     verbose "L$current_line_ued:Opened $1 to parse,\
             call ourself to process file" 
+    touch $tmp_dir/self/include/counter
+
     for __include_arg in $@ ; do
 	case $__include_arg in  
 	    noparse)  __parser=noparse;;
@@ -507,11 +509,10 @@ include() {
 	    # no $parser is used
 	    ;;
 	SELF)
-	    stub_main $__cleaned_include $tmp_dir/$IID/include/files/\ 
-	    ${current_include_no}${__outputfile__cleaned_include} ;;
+	    stub_main $__cleaned_include $tmp_dir/$IID/include/files/${current_include_no}${__outputfile__cleaned_include} ;;
 	*) $__parser $__parser_args ;; # use $parser with $parser_args 
     esac
-    var  $tmp_dir/self/include/lines/$current_include_no=$current_line 
+    var  self/include/lines/$current_include_no="$current_line" 
    
   
 # for us and run argument of #\\include with us and copy to temp file/stdout
@@ -570,8 +571,7 @@ include_includes() {
 	done
 	current_include_stack=$( var self/include/stack )
 	current_include_no=$( var self/include/counter)
-	current_include_line=$(( $current_include_stack \ +
-		$( var self/include/lines/$current_include_no )))
+	current_include_line=$(( $current_include_stack + $( var self/include/lines/$current_include_no )))
 	case $current_include in
 	    \<*\>) 
                 __realy_cleaned_include=$(echo "$current_include" | \
@@ -591,12 +591,12 @@ include_includes() {
 		old_ifs=$IFS
 	   ;;
 	esac
-	current_include=$( echo $__include | sed -e 's|\/|_|g' -e 's|\.|_|g')
+	current_include=$( echo $current_include | xargs basename | sed -e 's|\/|_|g' -e 's|\.|_|g')
 	sed "$current_include_line,$ d" $1 >  \
 	    "$tmp_dir/self/include/cut_source"
 	sed "1,$current_include_line d" $1 > \
 	    "$tmp_dir/self/include/cut_source_end"
-	cat "$current_include" >> \
+	cat "$tmp_dir/self/include/files/$current_include" >> \
 		"$tmp_dir/self/include/cut_source"
 	cat "$tmp_dir/self/include/cut_source_end" >> \
 		"$tmp_dir/self/include/cut_source"
@@ -604,7 +604,7 @@ include_includes() {
 	    "$tmp_dir/self/pc_file.stage2"
 	
 	count++ self/include/counter
-	count + $( wc -l < $current_include ) self/include/stack
+	count + $( wc -l < $tmp_dir/self/include/files/$current_include ) self/include/stack
 	IFS='
 	'
     done
@@ -679,7 +679,7 @@ stub_main()    {
 	done
     fi
     # finaly include our $includes if $includes is not empty
-    test  -e "$tmp_dir/self/includes" && include_includes "$tmp_dir/self/pc_file.stage2"
+    test  ! -z $(  ls "$tmp_dir/self/include/files" ) && include_includes "$tmp_dir/self/pc_file.stage2"
     clear_flags "$tmp_dir/self/pc_file.stage2"
     if [ $2 = stdout ] ; then
 	cat "$tmp_dir/self/pc_file.stage2"
@@ -690,9 +690,12 @@ stub_main()    {
 	echo "$tmp_dir/$IID" > $tmp_dir/self/clean_files 
 	rm $tmp_dir/self
 	mv -f  $tmp_dir/$IID/.lastself $tmp_dir/self
+	cleanup
 	IID=`readlink $tmp_dir/self` # re init id from last instance
+    else
+	cleanup
     fi
-    cleanup
+    
 }
 
     stub_main $source_file $target_name

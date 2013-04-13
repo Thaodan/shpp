@@ -1,0 +1,12 @@
+test_input () { 
+  DMSG_i_p=$(( $# + 1 ))
+  DMSG_current_err_msg="$( read_farray "$err_input_messages" $i_p )"
+  if [ -n "$DMSG_current_err_msg" ] ; then
+      d_msg ! 'wrong input' "$DMSG_current_err_msg"
+      if [   $# = 0   ]; then
+	return 1
+      else
+	  return 
+      fi
+  fi
+}
