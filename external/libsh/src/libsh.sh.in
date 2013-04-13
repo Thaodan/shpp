@@ -41,22 +41,25 @@ shload()
 #################################################################    
 {
     unset __shl_error_status
-    if [ $(dirname $1) = . ] ; then	
-      old_ifs=$IFS
-      IFS=:
-      for __lib_dir in ${IMPORT_LIBRARY_PATH}:${SH_LIBRARY_PATH}; do
-	  old_ifs=$IFS
-	  if [ -e $__lib_dir/$1 ] && [ -f $__lib_dir/$1 ] ; then 
-	      . ${__lib_dir}/$1
-	      __shl_error_status=$?
-	      break
-	  fi
-	  IFS=:
-      done
-    else
-	. $1
+    case $1 in
+      /*)
+	    . $1
 	__shl_error_status=$?
-    fi
+	;;
+      *)
+	    old_ifs=$IFS
+	    IFS=:
+	    for __lib_dir in ${IMPORT_LIBRARY_PATH}:${SH_LIBRARY_PATH}; do
+		old_ifs=$IFS
+		if [ -e $__lib_dir/$1 ] && [ -f $__lib_dir/$1 ] ; then 
+		    . ${__lib_dir}/$1
+		    __shl_error_status=$?
+		    break
+		fi
+		IFS=:
+	    done
+	    ;;
+    esac
     unset  __lib __lib_dir
     return $__shl_error_status
 }

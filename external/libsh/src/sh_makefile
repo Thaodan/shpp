@@ -35,7 +35,7 @@ install()  {
 
 
 libsh() {
-	shpp LIBSH_VER=$LIBSH_VER LIBSH_REV=$LIBSH_REV libsh.sh.in -o libsh
+	shpp -DLIBSH_VER=$LIBSH_VER -DLIBSH_REV=$LIBSH_REV libsh.sh.in -o libsh
 }
 
 libsh_debug() {

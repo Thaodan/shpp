@@ -70,7 +70,7 @@ main() {
       SHMK_TEMP=$(mktemp -dt XX${appname}XXXXXXXX)
   else
      if  [ ! -z $(ls $SHMK_TEMP )  ] ; then
-	call_handler warning:dir "$tmp_dir already exits and is not clear, hmm"
+	call_handler warning:dir "$SHMK_TEMP already exits and is not clear, hmm"
       fi
   fi
 
@@ -104,7 +104,7 @@ fi
   "$used_shell"  -c$debug ". ${libdir:-@prefix@/lib}/sh_make/libsh_make; . ${libdir:-@prefix@/lib}/sh_make/modules/main_module; test ! -z $temp_sh_makefile_dir &&  cd $temp_sh_makefile_dir; . $sh_makefile;. $SHMK_TEMP/env; run_entry_point $entry_points"  || call_handler error:exit "got error $? while running $sh_makefile"  
 
 
-  files_to_remove=$tmp_dir
+  files_to_remove=$SHMK_TEMP
 
 
   cleanup
