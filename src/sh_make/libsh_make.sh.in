@@ -9,10 +9,7 @@ readonly SH_MAKE_REV SH_MAKE_VER
 
 
 
-. "${LIBSH:-${libdir:-@prefix@/lib}/libsh}"
-
-
-
+#\\include ../../external/libsh/src/farray.sh.in
 #\\include ../share/tools.sh.in
 
 #########################################################################
