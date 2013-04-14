@@ -14,9 +14,6 @@ The make replacement is simple written and most parts can used without it, in an
 See INSTALL.
 
 
-## NOT WORKING/ NOT FULLY WORKING ##
-
-Legacy mode for for files with sh_make 1.x syntax in shpp 	(not tested)
 
 
 
