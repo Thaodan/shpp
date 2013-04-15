@@ -542,12 +542,15 @@ warning() {
 ### runners ###
 
 write_shortifdefs() { # write #\\! flags to $2
-    local __write_shortifdef_defines=$( var defines)
-    if [ $? = 0 ] ; then  #if var defines returns 1 do nothing
-	for var1 in $__write_shortifdef_defines  ; do 
-	    sed -i "s/"^#\\\\\\\\\!$var1"//" $1
-	done
-    fi
+    old_ifs=$IFS
+    IFS='
+'
+    for var1 in $( var defines )  ; do 
+	IFS=$old_ifs
+	sed -i "s/"^#\\\\\\\\\!$var1"//" $1
+	IFS='
+'
+    done
 }
 
 
@@ -612,11 +615,17 @@ include_includes() {
 replace_vars() {
     verbose replace_vars "Opening $2"
     local replace_var replace_var_content
-    for replace_var in $( var  $1 ) ; do
-	replace_var_content=$(var $1/$replace_var)
+    old_ifs=$IFS
+    IFS='
+'
+    for replace_var in $( var  defines ) ; do
+	old_ifs=$IFS
+	replace_var_content=$(var defines/$replace_var)
 	verbose "replacing @$replace_var@ with $replace_var_content"
 	sed -ie "s|@$replace_var@|$replace_var_content|g" $2|| \
 	   call_handler error:exit_stat "replace_var: sed quit with $?"
+	IFS='
+'
     done 
 }
 
@@ -663,7 +672,7 @@ stub_main()    {
 	done
     fi
     # finaly include our $includes if $includes is not empty
-    test  ! -z $(  ls "$tmp_dir/self/include/files" ) && include_includes "$tmp_dir/self/pc_file.stage2"
+    test  ! -z "$(  ls "$tmp_dir/self/include/files" )" && include_includes "$tmp_dir/self/pc_file.stage2"
     clear_flags "$tmp_dir/self/pc_file.stage2"
     if [ $2 = stdout ] ; then
 	cat "$tmp_dir/self/pc_file.stage2"
