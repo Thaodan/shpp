@@ -142,10 +142,7 @@ call_handler() {
 
 cleanup() {
     if [ ! $keep ] ; then 
-	old_ifs="$IFS";
-	export IFS=":";
 	rm -rf `cat $tmp_dir/$IID/clean_files`; 
-	export IFS="$old_ifs"
     fi
 }
 
