@@ -1,10 +1,11 @@
 #!/bin/sh -e
+cd src
 (
-	cd src/shpp
+	cd shpp
 	sh ../sh_make/tools/simple_shmake -f sh_makefile shpp
 )
 (
-	cd src/sh_make
+	cd sh_make
 	sh tools/simple_shmake -f sh_makefile 
 )
 sh sh_make/tools/simple_shmake -f sh_makefile 

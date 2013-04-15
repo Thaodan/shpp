@@ -7,7 +7,7 @@ SH_MAKE_REV=@git_rev@
 readonly SH_MAKE_REV SH_MAKE_VER
 #####################################
 
-
+appname=$(basename $0)
 
 #\\include ../../external/libsh/src/farray.sh.in
 #\\include ../share/tools.sh.in
