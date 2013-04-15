@@ -6,5 +6,5 @@ SOURCE_DIR=src
 DIST_DIR=dist
 BUILD_FOLDER=sh-make-tools-$VER
 ARCHIVE_ENDING=.tar.gz
-DIST_FILES="dist dist_system src tools README INSTALL build_src.sh PROJECT_INFO"
+DIST_FILES="dist dist_system src external tools README INSTALL build_src.sh PROJECT_INFO"
 PROJECT_VER=2.1

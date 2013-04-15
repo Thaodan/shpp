@@ -1,7 +1,11 @@
 #!/bin/sh -e
-  
-  cd 	src/sh_make
-  sh 	tools/simple_shmake -f sh_makefile 
-  cd ..
-  sh sh_make/tools/simple_shmake -f sh_makefile 
-  sh sh_make/tools/simple_shmake -f sh_makefile install
+(
+	cd src/shpp
+	sh ../sh_make/tools/simple_shmake -f sh_makefile shpp
+)
+(
+	cd src/sh_make
+	sh tools/simple_shmake -f sh_makefile 
+)
+sh sh_make/tools/simple_shmake -f sh_makefile 
+sh sh_make/tools/simple_shmake -f sh_makefile install

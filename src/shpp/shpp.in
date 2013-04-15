@@ -234,8 +234,8 @@ find_commands() {
 	count++  self/command/counter
 	current_command_no=$( var self/command/counter )
 	# current line with removeing deleted lines
-	current_line_ued=$( var self/command/lines/$current_command_no )
-	current_line=$(($current_line_ued-$( var self/command/removed_stack))) 
+	local current_line_ued=$( var self/command/lines/$current_command_no )
+	local current_line=$(($current_line_ued-$( var self/command/removed_stack))) 
 	_command=$( echo "$_command" | sed -e 's/[ \t]*$//' -e 's/^[ \t]*//' )
 	if [ $erase_till_endif = true ] ; then
 	    if [ $_command = endif ] || [ $_command = else ]  ; then
@@ -604,7 +604,7 @@ include_includes() {
 	    "$tmp_dir/self/pc_file.stage2"
 	
 	count++ self/include/counter
-	count + $( wc -l < $tmp_dir/self/include/files/$current_include ) self/include/stack
+	count + $(( 1 + $( wc -l < $tmp_dir/self/include/files/$current_include ))) self/include/stack
 	IFS='
 	'
     done
