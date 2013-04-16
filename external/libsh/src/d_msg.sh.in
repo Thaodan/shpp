@@ -56,13 +56,13 @@ d_msg() # display msgs and get input
 	    case "$DMSG_GUI_APP" in 
 		kde)  
 		    which  kdialog  > /dev/null  || \
-			which > /dev/null  zenity  && DMSG_GUI_APP=gnome  || DMSG_GUI_APP=generic
+			{ which > /dev/null  zenity  && DMSG_GUI_APP=gnome  || DMSG_GUI_APP=generic; }
 		    ;;
 		gnome|xfce) which zenity   > /dev/null   || \
-		    which  kdialog  > /dev/null  && DMSG_GUI_APP=kde || \
-		    DMSG_GUI_APP=generic ;;
-		*) which kdialog > /dev/null  && DMSG_GUI_APP=kde || which zenity > /dev/null && DMSG_GUI_APP=zenity \
-		    || DMSG_GUI_APP=generic
+		   (  which  kdialog  > /dev/null  && DMSG_GUI_APP=kde || \
+		    DMSG_GUI_APP=generic );;
+		*)  which kdialog > /dev/null  && DMSG_GUI_APP=kde || { which zenity > /dev/null && DMSG_GUI_APP=zenity \
+		    || DMSG_GUI_APP=generic; }
 		    ;; 
 	    esac 
 	fi
