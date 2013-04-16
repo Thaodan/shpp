@@ -2,7 +2,7 @@ detectDE()
 # detect which DE is running
 # taken from xdg-email script 
 {
-    if [ x"$KDE_FULL_SESSION" = x"true" ]; then D
+    if [ x"$KDE_FULL_SESSION" = x"true" ]; then 
 	DE=kde;
     elif [ x"$GNOME_DESKTOP_SESSION_ID" != x"" ]; then 
 	DE=gnome;

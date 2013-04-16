@@ -163,7 +163,7 @@ case $1 in
 			chained_vars=$chained_vars:$( echo $var \
 			    | cut -d '=' -f1 )
 		    fi
-		    
+		    shift
 		    ;;
 	    esac
 	done
