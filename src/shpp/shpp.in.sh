@@ -522,7 +522,7 @@ define() {
     # use internal var function with defines as root space
     # NOTE: settings arrays like this curenntly not supported:
     # #\\define FRUITS { BANANA APPEL TOMATO }
-    var defines/${1}="$2"
+    var defines/${1}
 }
 
 #\\error
