@@ -28,27 +28,25 @@ MODULE_PATH=@prefix@/lib/sh_make/modules # default module path if no overwridden
 
 ### private tools ###
 cleanup() {
-  if [ ! $keep ] ; then
-    old_ifs=$IFS
-    export IFS=:;rm -rf $files_to_remove; 
-  
-    export IFS=$old_ifs
-  fi
+    if [ ! $keep ] ; then
+	old_ifs=$IFS
+	export IFS=:;rm -rf $files_to_remove; 
+	
+	export IFS=$old_ifs
+    fi
 }
 
-cleanup_die() {
-  cleanup
-}
+
 call_handler() {
-  case $1 in
-    error*) error "$@"; die=1 ;;
-    warning*) test ! -z  $WARNING_IS_ERROR = true && die=1; warning "$@";; 
-  esac
-  if [ $die ]  ; then
-    verbose 'got signal to die, dieing'
-    cleanup_die
-    exit ${assumed_err_status:-13}
-  fi
+    case $1 in
+	error*) error "$@"; die=1 ;;
+	warning*) test ! -z  $WARNING_IS_ERROR = true && die=1; warning "$@";; 
+    esac
+    if [ $die ]  ; then
+	verbose 'got signal to die, dieing'
+	cleanup
+	exit ${assumed_err_status:-13}
+    fi
 }
 
 list_entrys() {
@@ -56,27 +54,28 @@ list_entrys() {
 }
 ### main ###
 main() {
-  if [ ! $used_shell ] ; then 
-      first_line=$( sed -e '2,$ d' "$sh_makefile" ) 
-      if echo "$first_line" | grep -q '#!' ; then # if we found no shebang use /bin/sh as default shell
-	  used_shell=$( echo "$first_line" | sed -e 's|#\!||' ) || used_shell=/bin/sh 
-      else
-	  used_shell=/bin/sh
-      fi
-  fi
-  "${used_shell:-/bin/sh}" -n "$sh_makefile"  || call_handler error:syntax "$used_shell exited with $? syntax check for $sh_makefile"
+    if [ ! $shell ] ; then 
+	first_line=$( sed -e '2,$ d' "$sh_makefile" ) 
+	if echo "$first_line" | grep -q '#!' ; then # if we found no shebang use /bin/sh as default shell
+	    shell=$( echo "$first_line" | sed -e 's|#\!||' ) || \
+		shell=/bin/sh 
+	else
+	    shell=/bin/sh
+	fi
+    fi
+    "${used_shell:-/bin/sh}" -n "$sh_makefile"  || call_handler error:syntax "$used_shell exited with $? syntax check for $sh_makefile"
 
-  if [ -z $SHMK_TEMP ] ; then
-      SHMK_TEMP=$(mktemp -dt XX${appname}XXXXXXXX)
-  else
-     if  [ ! -z $(ls $SHMK_TEMP )  ] ; then
-	call_handler warning:dir "$SHMK_TEMP already exits and is not clear, hmm"
-      fi
-  fi
+    if [ -z $SHMK_TEMP ] ; then
+	SHMK_TEMP=$(mktemp -dt XX${appname}XXXXXXXX)
+    else
+	if  [ ! -z $(ls $SHMK_TEMP )  ] ; then
+	    call_handler warning:dir "$SHMK_TEMP already exits and is not clear, hmm"
+	fi
+    fi
 
 # gen dynamic config stuff and init basic stuff
-cat > "$SHMK_TEMP/env" <<_ENV
-USED_SHELL=$used_shell     
+    cat > "$SHMK_TEMP/env" <<_ENV
+SHELL=$shell     
 MODULE_PATH=$MODULE_PATH
 chained_vars=$chained_vars
 $( for chain in $chained_vars ; do \
@@ -90,9 +89,9 @@ USE_COLOR=$USE_COLOR
 init_stats
 _ENV
 
-if [ "$debug_options" ] && [ ! $debug ] ; then
-   echo "set -o $debug_options" >> "$SHMK_TEMP/env"
-fi
+    if [ "$debug_options" ] && [ ! $debug ] ; then
+	echo "set -o $debug_options" >> "$SHMK_TEMP/env"
+    fi
 
 
 
@@ -101,13 +100,13 @@ fi
 
 #
   # run used shell give it our main functions that we have, load the generated env file, load the main_module while inits module handling and such and than load the sh_makefile so that it can run with the given functions
-  "$used_shell"  -c$debug ". ${libdir:-@prefix@/lib}/sh_make/libsh_make; . ${libdir:-@prefix@/lib}/sh_make/modules/main_module; test ! -z $temp_sh_makefile_dir &&  cd $temp_sh_makefile_dir; . $sh_makefile;. $SHMK_TEMP/env; run_entry_point $entry_points"  || call_handler error:exit "got error $? while running $sh_makefile"  
+    "$used_shell"  -c$debug ". ${libdir:-@prefix@/lib}/sh_make/libsh_make; . ${libdir:-@prefix@/lib}/sh_make/modules/main_module; test ! -z $temp_sh_makefile_dir &&  cd $temp_sh_makefile_dir; . $sh_makefile;. $SHMK_TEMP/env; run_entry_point $entry_points"  || call_handler error:exit "got error $? while running $sh_makefile"  
 
 
-  files_to_remove=$SHMK_TEMP
-
-
-  cleanup
+    files_to_remove=$SHMK_TEMP
+    
+    
+    cleanup
 
 
 }
@@ -129,66 +128,65 @@ EOF
 ### input parser ###
 init_stats
 case $1 in 
-  --help|-H|-h)	print_help ;; 
-  --revision) 	echo $SH_MAKE_REV ;;
-  --version)	echo $SH_MAKE_VER:$SH_MAKE_REV  ;;
-#   #-*)		echo `read_farray "$err_input_messages" 1`;;
-  --*|*)
-    optspec=s:f: # b:dp # short options
-    optspec_long=shell:,make:,keep,debug,verbose,debug-full,verbose-full,mod-path:,list-entrys # long options
-    PROCESSED_OPTSPEC=`getopt -q --options $optspec --long $optspec_long \
+    --help|-H|-h)	print_help ;; 
+    --revision) 	echo $SH_MAKE_REV ;;
+    --version)	echo $SH_MAKE_VER:$SH_MAKE_REV  ;;
+    #   #-*)		echo `read_farray "$err_input_messages" 1`;;
+    --*|*)
+	optspec=s:f: # b:dp # short options
+	optspec_long=shell:,make:,keep,debug,verbose,debug-full,verbose-full,mod-path:,list-entrys # long options
+	PROCESSED_OPTSPEC=`getopt -q --options $optspec --long $optspec_long \
     -n $appname --  "$@"` ||  error  "Wrong or to less  input given!" || exit 1 # parsed optspec
-    eval set -- "$PROCESSED_OPTSPEC"
-    while [ ! $# = 0 ] ; do
-      case $1 in 
-	-s|--shell) used_shell="$2"; readonly used_shell ; shift 2;;
-	--list-entrys) main_runner=list_entrys; break ;shift;;
-	--debug-full) debug=xv ; USE_COLOR=n;  shift ;;
-        --verbose-full) debug=v ;USE_COLOR=n;  shift ;;
-	--debug) debug_options='xtrace verbose' ; shift ;;
-	--verbose) debug_options='verbose' ; shift ;;
-	-f|--make) sh_makefile="$2" ; shift 2 ;;
-	--mod-path) MODULE_PATH="$2"; shift 2 ;;
-	--keep) keep=true; shift ;; # dont remove tmp dir
-	--color|-C) USE_COLOR=y ; shift ;;
-	--) shift ; break
-      esac
-    done
-  	  for var in $1 ; do
-	    case $1 in
-	      	      *=*)
-		eval my_$1
-		if [ -z $chained_vars ] ; then
-		  chained_vars=$( echo $1 | cut -d '=' -f1 )
-		else
-		  chained_vars=$chained_vars:$( echo $1 | cut -d '=' -f1 )
-		fi
-		shift
-		;;
+	eval set -- "$PROCESSED_OPTSPEC"
+	while [ ! $# = 0 ] ; do
+	    case $1 in 
+		-s|--shell) shell="$2"; readonly used_shell ; shift 2;;
+		--list-entrys) main_runner=list_entrys; break ;shift;;
+		--debug-full) debug=xv ; USE_COLOR=n;  shift ;;
+		--verbose-full) debug=v ;USE_COLOR=n;  shift ;;
+		--debug) debug_options='xtrace verbose' ; shift ;;
+		--verbose) debug_options='verbose' ; shift ;;
+		-f|--make) sh_makefile="$2" ; shift 2 ;;
+		--mod-path) MODULE_PATH="$2"; shift 2 ;;
+		--keep) keep=true; shift ;; # dont remove tmp dir
+		--color|-C) USE_COLOR=y ; shift ;;
+		--) shift ; break
 	    esac
-	  done
-    
-    if [ ! -z "$sh_makefile" ]  ; then
-      temp_sh_makefile_dir=$( dirname $sh_makefile )
-      sh_makefile=$PWD/$sh_makefile
-      
-
-     # sh_makefile=${temp_sh_makefile_dir}$sh_makefile
-     
-  
-    elif [ -e "$PWD/sh_makefile" ] ; then # if input is less $1  input given and sh_makefile exists in $PWD use it 
-      sh_makefile=$PWD/sh_makefile
-#       [ ! -z "$1" ]  && entry_point="$1" || true
-#     elif [ "$1" = --make ] || [ "$1" = -f ] ; then # if input has option to use another sh_makefile use it 
-#       sh_makefile="$2"
-#       shift 2
-    else
-      echo "No input given or sh_makefile found"
-      false 
-    fi && \
-    entry_points="${@:-default}" && \
-    ${main_runner:-main}
-  ;;
+	done
+  	for var in $@ ; do
+	    case $var in
+	      	*=*)
+		    eval my_$var
+		    if [ -z $chained_vars ] ; then
+			chained_vars=$( echo $var | cut -d '=' -f1 )
+		    else
+			chained_vars=$chained_vars:$( echo $var \
+			    | cut -d '=' -f1 )
+		    fi
+		    
+		    ;;
+	    esac
+	done
+	
+	if [ ! -z "$sh_makefile" ]  ; then
+	    temp_sh_makefile_dir=$( dirname $sh_makefile )
+	    sh_makefile=$PWD/$sh_makefile
+	    
+	    
+	    # sh_makefile=${temp_sh_makefile_dir}$sh_makefile
+	    
+	    # if input is less $1  input given and sh_makefile exists 
+	    # in $PWD use it     
+	elif [ -e "$PWD/sh_makefile" ] ; then 
+	    sh_makefile=$PWD/sh_makefile
+	    
+	else
+	    echo "No input given or sh_makefile found"
+	    false 
+	fi && \
+	    entry_points="${@:-default}" && \
+	    ${main_runner:-main}
+	;;
 esac 
 
 
