@@ -207,7 +207,7 @@ alias ifndef='If ! defined'
 
 
 find_commands() {
-    local _command   current_command current_command_no  current_cleared_command
+    local _command   command command_no  command_raw
     erase_till_endif=false
     endif_notfound=false 
     var self/command/removed_stack=0
@@ -228,41 +228,41 @@ find_commands() {
     for _command in $( grep  \#\\\\\\\\$2 "$1" | sed -e 's/#\\\\//'  ) ; do
 	IFS=
 	count++  self/command/counter
-	current_command_no=$( var self/command/counter )
+	command_no=$( var self/command/counter )
 	# current line with removeing deleted lines
-	local current_line_ued=$( var self/command/lines/$current_command_no )
-	local current_line=$(($current_line_ued-$( var self/command/removed_stack))) 
+	local line_ued=$( var self/command/lines/$current_command_no )
+	local line=$(($current_line_ued-$( var self/command/removed_stack))) 
 	_command=$( echo "$_command" | sed -e 's/[ \t]*$//' -e 's/^[ \t]*//' )
 	if [ $erase_till_endif = true ] ; then
 	    if [ $_command = endif ] || [ $_command = else ]  ; then
-		sed -ie "$if_line,$current_line d" "$1" 
+		sed -ie "$if_line,$line d" "$1" 
 #\\!debug_if  cp "$1" "$tmp_dir/ifsteps/pc_file.stage.$_find_command_count"
 		erase_till_endif=false
 	        # save removed lines (difference between $current_line and $if_line + 1)
-		count + $(( $current_line - $if_line  + 1)) \
+		count + $(( $line - $if_line  + 1)) \
 		    self/command/removed_stack
 		[ $_command = else ] && found_if_or_else=true
 	    elif [ ! $endif_notfound = false ] ; then
 		false
 	    fi
 	else
-	    verbose "L$current_line_ued:Found  $_command calling corresponding command"
+	    verbose "L$line_ued:Found  $_command calling corresponding command"
             # if command wants the raw $_command it can use it
-	    current_command_raw="$_command"
+	    command_raw="$_command"
             # we clear $0 from $_command now, the commands don't need to do it
 	    case $_command in 
 		#if $_command has space, clear  it and give 
 		# the commands still the ability to   know who they are
 		*\ * ) 	        
-		    current_command=$( echo $_command | \
+		    command=$( echo $_command | \
 			sed -e "s| .*||" -e  "s|^\ ||" -e 's|\ $||') 
 		    _command=$( echo $_command | \
 			sed -e "s|$current_command ||" -e  "s|^\ ||")
   		    ;;
 		# else $_command is already clear
-		*) current_command=$_command ;;	       		 
+		*) command=$_command ;;	       		 
 	    esac					      			
-	    case "$current_command" in
+	    case "$command" in
 		define) 	define $_command ;;
 		include) 	include $_command ;;
 		macro) macro $_command;;
@@ -279,9 +279,9 @@ find_commands() {
 		error)	error "$_command"   ;;
 		warning)	warning "$_command" ;;
 		![a-z]*|rem) : ;; # ignore stubs for ignored functions
-		*)  if echo $registed_commands | grep -q $current_command ; then
+		*)  if echo $registed_commands | grep -q $command ; then
 		        verbose "running external $current_command"
-		        $current_command $_command
+		        $command $_command
 		    else
 		        call_handler warning:unkown \
 			    "found '$current_command',
@@ -402,9 +402,9 @@ If() {
     done
     # check result
     if [ $unsuccesfull = true ] ; then
-	verbose "L$current_line_ued:Condition was not true,\
+	verbose "L$line_ued:Condition was not true,\
             remove content till endif, erase_till_endif ist set to true"
-	if_line=$current_line # save $current_line for find_commands 
+	if_line=$line # save $line for find_commands 
 	erase_till_endif=true # say find_commands it has to erase fill from $if_line till next found endif
     fi
 }
@@ -416,7 +416,7 @@ defined() {
     if [ -e $tmp_dir/defines/$1 ] ;  then
 	echo 1
     else
-	verbose "L$current_line_ued:$1 was not defined" 
+	verbose "L$line_ued:$1 was not defined" 
 	echo 0
     fi
 }
@@ -427,7 +427,7 @@ defined() {
 endif() { 
     # just a stub that calls call_handler with error to handle if endif is before if/ifdef
     if [ ! $found_if_or_else ] ; then
-	verbose "L$current_line_ued:Found endif before if, calling for error"
+	verbose "L$line_ued:Found endif before if, calling for error"
 	call_handler  error:syntax 'no if before endif' 
     fi
     unset found_if_or_else
@@ -436,13 +436,13 @@ endif() {
 #\\else
 Else() {
     if [ "$unsuccesfull" = false ] ; then
-	verbose "L$current_line_ued:Last if was succesfull,\
+	verbose "L$line_ued:Last if was succesfull,\
                 removing content from last if till" 
 	if_line=$current_line # save $current_line for find_commands 
 	erase_till_endif=true # say find_commands it has to erase fill from 
 	                      # $if_line till next found endif
     else
-	verbose "L$current_line_ued:Found else before if, calling for error"
+	verbose "L$line_ued:Found else before if, calling for error"
 	call_handler  error:syntax 'no if before else'
     fi
 }
@@ -453,7 +453,7 @@ include() {
 	__outputfile__cleaned_include  __realy_cleaned_include \
 	__include_space current_include_no
 
-    verbose "L$current_line_ued:Opened $1 to parse,\
+    verbose "L$line_ued:Opened $1 to parse,\
             call ourself to process file" 
     touch $tmp_dir/self/include/counter
 
@@ -483,7 +483,7 @@ include() {
 	       fi
 	       IFS=:
 	   done || \
-	   call_handler error:file "L$current_line_ued:$current_command:\
+	   call_handler error:file "L$line_ued:$command:\
                                    $__cleaned_include not found"
 	   ;;
     esac
@@ -508,7 +508,7 @@ include() {
 	    stub_main $__cleaned_include $tmp_dir/$IID/include/files/${current_include_no}${__outputfile__cleaned_include} ;;
 	*) $__parser $__parser_args ;; # use $parser with $parser_args 
     esac
-    var  self/include/lines/$current_include_no="$current_line" 
+    var  self/include/lines/$current_include_no="$line" 
    
   
 # for us and run argument of #\\include with us and copy to temp file/stdout
@@ -527,12 +527,12 @@ define() {
 
 #\\error
 error() {  
-    call_handler error:called "L$current_line_ued:$1"
+    call_handler error:called "L$line_ued:$1"
 }
 
 #\\warning
 warning() {
-    call_handler warning "L$current_line_ued:$1"
+    call_handler warning "L$line_ued:$1"
 }
 ### commands end ### 
 
