@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 ## ## ## ## ## ## GitHub highlight hack
 
 # shpp shell script preprocessor
@@ -263,30 +263,27 @@ find_commands() {
 		*) command=$_command ;;	       		 
 	    esac					      			
 	    case "$command" in
-		define) 	define $_command ;;
+		define) 	define $_command  ;;
 		include) 	include $_command ;;
-		macro) macro $_command;;
-		ifdef)	ifdef "$_command" ;;
-		ifndef) ifndef "$_command" ;;
-		if)       If $_command    ;;
-		else)	Else "$_command"  ;;
+		macro)          macro $_command   ;;
+		ifdef)	        ifdef "$_command" ;;
+		ifndef)        ifndef "$_command" ;;
+		if)            If $_command       ;;
+		else)	       Else               ;;
 		endif)	
 		    # just a stub call for syntax error 
 		    # cause endif was used before if/ifdef#
 		    endif 
 		    ;; 
 		break)  verbose 'found break abort parsing'; break ;;
-		error)	error "$_command"   ;;
+		error)	        error "$_command"           ;;
 		warning)	warning "$_command" ;;
 		![a-z]*|rem) : ;; # ignore stubs for ignored functions
 		*)  if echo $registed_commands | grep -q $command ; then
-		        verbose "running external $command"
 		        $command $_command
 		    else
 		        call_handler warning:unkown \
-			    "found '$command',
-                             bug or unkown command, raw string is
-                             '$command_raw'"
+			    "found '$command',bug or unkown command, raw string is '$command_raw'"
 		    fi
 		    ;;
 	    esac
@@ -382,7 +379,6 @@ If() {
 	    esac
 	done
 	if [ ` echo "$__condition" | bc ` = $__logic_number ] ; then
-	  verbose "$__condition was true"
 	  # if condition was true and we found && (and) go and parse the rest of condition
 	    if [ $__break_true ] ; then 
 		unset __condition
@@ -402,8 +398,7 @@ If() {
     done
     # check result
     if [ $unsuccesfull = true ] ; then
-	verbose "L$line_ued:Condition was not true,\
-            remove content till endif, erase_till_endif ist set to true"
+	verbose "L$line_ued:Condition was not true, remove content till next endif/else, erase_till_endif ist set to true"
 	if_line=$line # save $line for find_commands 
 	erase_till_endif=true # say find_commands it has to erase fill from $if_line till next found endif
     fi
@@ -427,8 +422,7 @@ defined() {
 endif() { 
     # just a stub that calls call_handler with error to handle if endif is before if/ifdef
     if [ ! $found_if_or_else ] ; then
-	verbose "L$line_ued:Found endif before if, calling for error"
-	call_handler  error:syntax 'no if before endif' 
+	call_handler  error:syntax "L$line_ued:Found endif before if, error"
     fi
     unset found_if_or_else
 }
@@ -437,13 +431,12 @@ endif() {
 Else() {
     if [ "$unsuccesfull" = false ] ; then
 	verbose "L$line_ued:Last if was succesfull,\
-                removing content from last if till" 
+                removing content from this else till next endif" 
 	if_line=$line # save $current_line for find_commands 
 	erase_till_endif=true # say find_commands it has to erase fill from 
 	                      # $if_line till next found endif
     else
-	verbose "L$line_ued:Found else before if, calling for error"
-	call_handler  error:syntax 'no if before else'
+	call_handler  error:syntax "L$line_ued:Found else before if, error"
     fi
 }
 
