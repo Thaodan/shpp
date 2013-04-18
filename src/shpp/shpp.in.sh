@@ -230,8 +230,8 @@ find_commands() {
 	count++  self/command/counter
 	command_no=$( var self/command/counter )
 	# current line with removeing deleted lines
-	local line_ued=$( var self/command/lines/$current_command_no )
-	local line=$(($current_line_ued-$( var self/command/removed_stack))) 
+	local line_ued=$( var self/command/lines/$command_no )
+	local line=$(($line_ued-$( var self/command/removed_stack))) 
 	_command=$( echo "$_command" | sed -e 's/[ \t]*$//' -e 's/^[ \t]*//' )
 	if [ $erase_till_endif = true ] ; then
 	    if [ $_command = endif ] || [ $_command = else ]  ; then
@@ -257,7 +257,7 @@ find_commands() {
 		    command=$( echo $_command | \
 			sed -e "s| .*||" -e  "s|^\ ||" -e 's|\ $||') 
 		    _command=$( echo $_command | \
-			sed -e "s|$current_command ||" -e  "s|^\ ||")
+			sed -e "s|$command ||" -e  "s|^\ ||")
   		    ;;
 		# else $_command is already clear
 		*) command=$_command ;;	       		 
@@ -280,13 +280,13 @@ find_commands() {
 		warning)	warning "$_command" ;;
 		![a-z]*|rem) : ;; # ignore stubs for ignored functions
 		*)  if echo $registed_commands | grep -q $command ; then
-		        verbose "running external $current_command"
+		        verbose "running external $command"
 		        $command $_command
 		    else
 		        call_handler warning:unkown \
-			    "found '$current_command',
+			    "found '$command',
                              bug or unkown command, raw string is
-                             '$current_command_raw'"
+                             '$command_raw'"
 		    fi
 		    ;;
 	    esac
@@ -343,7 +343,7 @@ macro() {
 	       fi
 	       IFS=:
 	   done || \
-	   call_handler error:file "L$current_line_ued:$current_command: \
+	   call_handler error:file "L$line_ued:$current_command: \
                $__cleaned_include not found"
 	   ;;
 	   *) __cleaned_macro=$1;;
@@ -438,7 +438,7 @@ Else() {
     if [ "$unsuccesfull" = false ] ; then
 	verbose "L$line_ued:Last if was succesfull,\
                 removing content from last if till" 
-	if_line=$current_line # save $current_line for find_commands 
+	if_line=$line # save $current_line for find_commands 
 	erase_till_endif=true # say find_commands it has to erase fill from 
 	                      # $if_line till next found endif
     else
