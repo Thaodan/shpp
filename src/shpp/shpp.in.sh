@@ -324,33 +324,36 @@ register_external() {
 
 #\\macro
 macro() {
-  local  __cleaned_macro __macro_space 
-  verbose "found macro: $1, doing syntax check"
-  case $1 in
+    local  __cleaned_macro __macro_space __not_found=false
+    verbose "found macro: $1, doing syntax check"
+    case $1 in
 	\<*\>) 
-           __cleaned_macro=$(echo "$1" | sed -e 's/^<//' -e 's/>$//')
-	   old_ifs=$IFS
-	   IFS=:
-	   for __macro_space in $MACRO_SPACES ; do
-	       IFS=$old_ifs
-	       if [ -e "$__macro_space"/"$__cleaned_macro" ] ; then
-		   __cleaned_macro="$__macro_space"/"$__cleaned_macro"
-	       else
-		   false
-	       fi
-	       IFS=:
-	   done || \
-	   call_handler error:file "L$line_ued:$current_command: \
-               $__cleaned_include not found"
-	   ;;
-	   *) __cleaned_macro=$1;;
+            __cleaned_macro=$(echo "$1" | sed -e 's/^<//' -e 's/>$//')
+	    old_ifs=$IFS
+	    IFS=:
+	    for __macro_space in $MACRO_SPACES ; do
+		IFS=$old_ifs
+		if [ -e "$__macro_space"/"$__cleaned_macro" ] ; then
+		    __cleaned_macro="$__macro_space"/"$__cleaned_macro"
+		else
+		   __not_found=true
+		fi
+		IFS=:
+	    done 
+	    ;;
+	*) if [ ! -e $1 ] ; then
+	    __not_found=true
+	    fi
+	    __cleaned_macro=$1
+	    ;;
     esac
-    
-  if sh -n $__cleaned_macro ; then
-      . $__cleaned_macro
-  else
-    call_handler error:syntax "$cleaned_macro don't passed syntax check, quiting"
-  fi  
+    [ $__not_found = true ] && call_handler error:file \
+	"L$line_ued:$__cleaned_macro not found"
+    if sh -n $__cleaned_macro ; then
+	. $__cleaned_macro
+    else
+	call_handler error:syntax "$cleaned_macro don't passed syntax check, quiting"
+    fi  
 }
 
 #### built im commands ###
