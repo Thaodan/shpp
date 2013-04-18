@@ -710,12 +710,11 @@ if [ ! $# = 0 ] ; then
 	case $1 in 
 	    --help|-H|-h)	print_help ; shift ;; 
 	    --revision) 	echo $SHPP_REV ; shift ;;
-	    --verbose|-v) 	verbose_output=true ; shift  ;;
 	    -V|--version)	echo $SHPP_VER:$SHPP_REV  ; shift ;;
             #   #-*)		echo `read_farray "$err_input_messages" 1`;;
 	    --*|*)
 		optspec=o:O:Cc:D:I:M: # b:dp #-: # short options
-		optspec_long=output:,option:,config:,color,,legacy,stdout,critical-warning,tmp:,stderr:,keep,debug,errexit,\*=\* #,binpath:,desktop,prefix # long options
+		optspec_long=output:,option:,config:,color,,legacy,stdout,critical-warning,tmp:,stderr:,keep,debug,verbose,errexit,\*=\* #,binpath:,desktop,prefix # long options
 		PROCESSED_OPTSPEC=$( getopt -qo $optspec --long $optspec_long \
 		    -n $appname -- "$@" ) || error_msg input "Wrong or to less  input given!" ||  exit 1 
 		eval set -- "$PROCESSED_OPTSPEC"; 
@@ -728,6 +727,7 @@ if [ ! $# = 0 ] ; then
 			    set -o xtrace
 			    shift
 			    ;;
+			--verbose|-v) verbose_output=true ; shift  ;;
 			--errexit) set -o errexit ; shift ;;
 			-C|--color) USE_COLOR=true ; shift 1 ;;
 			-c|--config) . "$2"  ;shift 2;;
