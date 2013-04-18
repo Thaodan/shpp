@@ -713,7 +713,7 @@ if [ ! $# = 0 ] ; then
 	    -V|--version)	echo $SHPP_VER:$SHPP_REV  ; shift ;;
             #   #-*)		echo `read_farray "$err_input_messages" 1`;;
 	    --*|*)
-		optspec=o:O:Cc:D:I:M: # b:dp #-: # short options
+		optspec=o:O:Cc:D:I:M:v # b:dp #-: # short options
 		optspec_long=output:,option:,config:,color,,legacy,stdout,critical-warning,tmp:,stderr:,keep,debug,verbose,errexit,\*=\* #,binpath:,desktop,prefix # long options
 		PROCESSED_OPTSPEC=$( getopt -qo $optspec --long $optspec_long \
 		    -n $appname -- "$@" ) || error_msg input "Wrong or to less  input given!" ||  exit 1 
