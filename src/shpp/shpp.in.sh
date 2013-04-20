@@ -1,6 +1,4 @@
 #!/bin/sh
-## ## ## ## ## ## GitHub highlight hack
-
 # shpp shell script preprocessor
 # Copyright (C) 2012  Björn Bidar
 #
@@ -33,6 +31,7 @@ registed_commands=stub
 INCLUDE_SPACES=.
 MACRO_SPACES=.
 appname=$( basename $0 )
+tmp_dir=$PWD/${appname}tmp  
 
 ################################################################
 
@@ -46,37 +45,6 @@ fi
 stub() {
     echo stub
 }
-#########################################################################
-
-
-init_stats(){
-    if [  -t 1 ] || ( [ $FORCE_COLOR ] && [ ! $FORCE_COLOR = n ] ) ; then
-    # use only colored out if enabled and if output goes to the terminal
-	if  [ $USE_COLOR ] && [ ! $USE_COLOR = [Nn] ] || ( [ $FORCE_COLOR ] && [ ! $FORCE_COLOR = n ]  ) ; then 
-	# prefer terminal safe colored and bold text when tput is supported [ ! -t 1 ]  && 
-	    if tput setaf 0 > /dev/null 2>&1 ; then
-		ALL_OFF="$(tput sgr0)"
-		BOLD="$(tput bold)"
-		BLUE="${BOLD}$(tput setaf 4)"
-		GREEN="${BOLD}$(tput setaf 2)"
-		RED="${BOLD}$(tput setaf 1)"
-		YELLOW="${BOLD}$(tput setaf 3)"
-	    else
-		ALL_OFF="\e[1;0m"
-		BOLD="\e[1;1m"
-		BLUE="${BOLD}\e[1;34m"
-		GREEN="${BOLD}\e[1;32m"
-		RED="${BOLD}\e[1;31m"
-		YELLOW="${BOLD}\e[1;33m"
-	    fi
-	fi
-    fi
-    
-    tmp_dir=$PWD/${appname}tmp  
-}
-
-
-
 
 #####################################################################
 
@@ -729,7 +697,7 @@ if [ ! $# = 0 ] ; then
 		init_stats
 		while [ !  $#  =  1  ]  ; do
 		    case $1 in 
-                       # config stuff
+			# config stuff
 			--debug)
 			    set -o verbose
 			    set -o xtrace
@@ -737,7 +705,7 @@ if [ ! $# = 0 ] ; then
 			    ;;
 			--verbose|-v) verbose_output=true ; shift  ;;
 			--errexit) set -o errexit ; shift ;;
-			-C|--color) USE_COLOR=true ; shift 1 ;;
+			-C|--color) USE_COLOR=true ; enable_color ; shift 1 ;;
 			-c|--config) . "$2"  ;shift 2;;
 			-O|--option) # pass options to shpp or enable options
 			    case $2 in 
@@ -763,21 +731,44 @@ if [ ! $# = 0 ] ; then
 			--stderr) exec 2> $2 ; shift  2;;
 			--) shift; break ;;
 		    esac
-		done 	  
+		done
+		if [  -t 1 ] || ( [ $FORCE_COLOR ] && \
+		    [ ! $FORCE_COLOR = n ] ) ; then
+		    # use only colored out if enabled and 
+		    # if output goes to the terminal
+		    if  [ $USE_COLOR ] && [ ! $USE_COLOR = [Nn] ] || \
+			( [ $FORCE_COLOR ] && [ ! $FORCE_COLOR = n ]  ) ; then 
+			
+ 			if tput setaf 0 > /dev/null 2>&1 ; then
+			    ALL_OFF="$(tput sgr0)"
+			    BOLD="$(tput bold)"
+			    BLUE="${BOLD}$(tput setaf 4)"
+			    GREEN="${BOLD}$(tput setaf 2)"
+			    RED="${BOLD}$(tput setaf 1)"
+			    YELLOW="${BOLD}$(tput setaf 3)"
+			else
+			    ALL_OFF="\e[1;0m"
+			    BOLD="\e[1;1m"
+			    BLUE="${BOLD}\e[1;34m"
+			    GREEN="${BOLD}\e[1;32m"
+			    RED="${BOLD}\e[1;31m"
+			    YELLOW="${BOLD}\e[1;33m"
+			fi
+			
+		    fi
+		fi
      		if [ -z "$target_name" ] ; then
 		    readonly target_name=stdout
 		    warning_msg warning "using /dev/stdout as default output"
-		fi && \
-		readonly source_file="$1" && \
-		if [ ! -e "$source_file" ] ; then
+		fi 
+		if [ ! -e "$1" ] ; then
 		    error_msg error  "$source_file not found" 
 		    false
 		    shift
-		fi && \
-		shift && \
-		{
-		    stub_main $source_file $target_name
-		}
+		else
+		    stub_main $1 $target_name
+		    shift
+		fi
 		;;
 	esac 
     done
