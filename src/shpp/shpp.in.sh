@@ -694,7 +694,6 @@ if [ ! $# = 0 ] ; then
 		PROCESSED_OPTSPEC=$( getopt -qo $optspec --long $optspec_long \
 		    -n $appname -- "$@" ) || error_msg input "Wrong or to less  input given!" ||  exit 1 
 		eval set -- "$PROCESSED_OPTSPEC"; 
-		init_stats
 		while [ !  $#  =  1  ]  ; do
 		    case $1 in 
 			# config stuff
