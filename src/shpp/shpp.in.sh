@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 ## ## ## ## ## ## GitHub highlight hack
 
 # shpp shell script preprocessor
@@ -746,7 +746,7 @@ if [ ! $# = 0 ] ; then
 				# if its no var 
 				# (options can be paased as var too) 
 				# threat it as option and enable it
-				*) $2=true;; 
+				*) eval $2=true;; 
 			    esac
  			    shift 2 
 			    ;;
