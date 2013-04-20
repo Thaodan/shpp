@@ -696,14 +696,19 @@ $appname usage:
   --help	-H -h			print this help
   --version	-V			print version
   --color	-C			enable colored output
+  --verbose     -v                      tell us what we do
 		
   --output	  -o	<file>		places output in file
   --option	  -O	<option>	give $appname <option>
-  --stdout				all output goes to stdout
+  --stdout				output result goes to stdout
+  --stderr=<destination>                stderr goes to destination
   --critical-warning    		warnings are threated as errors
+                   -D<var=var>          define var
+                                        ( same as '#\\define var=var') 
+                   -I<path>             add path so search for includes
+                   -M<path>             same just for macros
   --tmp=<tmp_dir>			set temp directory
   --keep 				don't delete tmp files after running
-  --stderr=<file>   			stderr goes to file
 HELP
 }
 
