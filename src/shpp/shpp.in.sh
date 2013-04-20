@@ -705,7 +705,7 @@ if [ ! $# = 0 ] ; then
 			    ;;
 			--verbose|-v) verbose_output=true ; shift  ;;
 			--errexit) set -o errexit ; shift ;;
-			-C|--color) USE_COLOR=true ; enable_color ; shift 1 ;;
+			-C|--color) USE_COLOR=true ; shift 1 ;;
 			-c|--config) . "$2"  ;shift 2;;
 			-O|--option) # pass options to shpp or enable options
 			    case $2 in 
