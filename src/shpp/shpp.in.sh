@@ -175,26 +175,22 @@ alias ifndef='If ! defined'
 
 
 find_commands() {
-    local _command   command command_no  command_raw
+    local _command   command command_no  command_raw IFS
     erase_till_endif=false
     endif_notfound=false 
     var self/command/removed_stack=0
     var self/command/counter=0
-    old_ifs=
+    local old_ifs=$IFS
     IFS='
 '
     for find_commands_line in $( grep -hn \#\\\\\\\\$2 "$1"  | sed 's|:.*||' ); do 
-	IFS=
+  
 	count++ self/command/counter
 	var self/command/lines/$(var self/command/counter)=$find_commands_line
-	IFS='
-'
     done
     var self/command/counter=0 # reset counter after parsing lines
-    IFS='
-'
     for _command in $( grep  \#\\\\\\\\$2 "$1" | sed -e 's/#\\\\//'  ) ; do
-	IFS=
+	IFS=$old_ifs
 	count++  self/command/counter
 	command_no=$( var self/command/counter )
 	# current line with removeing deleted lines
@@ -297,17 +293,14 @@ macro() {
     case $1 in
 	\<*\>) 
             __cleaned_macro=$(echo "$1" | sed -e 's/^<//' -e 's/>$//')
-	    old_ifs=$IFS
-	    IFS=:
+	    local IFS=:
 	    for __macro_space in $MACRO_SPACES ; do
-		IFS=$old_ifs
 		if [ -e "$__macro_space"/"$__cleaned_macro" ] ; then
 		    __cleaned_macro="$__macro_space"/"$__cleaned_macro"
 		    __not_found=false
 		else
 		   __not_found=true
 		fi
-		IFS=:
 	    done 
 	    ;;
 	*)  if [ ! -e $1 ] ; then
@@ -437,8 +430,7 @@ include() {
 	\<*\>) 
            __realy_cleaned_include=$(echo "$__cleaned_include" | \
 	       sed -e 's/^<//' -e 's/>$//')
-	   old_ifs=$IFS
-	   IFS=:
+	   local IFS=:
 	   for __include_space in $INCLUDE_SPACES ; do
                IFS=$old_ifs
 	       if [ -e "$__include_space"/"$__realy_cleaned_include" ] ; then
@@ -447,7 +439,6 @@ include() {
 	       else
 		   __not_found=true
 	       fi
-	       IFS=:
 	   done 
 	   ;;
 	*)  if [ ! -e $__cleaned_include ] ; then
@@ -509,14 +500,10 @@ warning() {
 ### runners ###
 
 write_shortifdefs() { # write #\\! flags to $2
-    old_ifs=$IFS
-    IFS='
+    local IFS='
 '
     for var1 in $( var defines )  ; do 
-	IFS=$old_ifs
 	sed -i "s/"^#\\\\\\\\\!$var1"//" $1
-	IFS='
-'
     done
 }
 
@@ -545,19 +532,13 @@ include_includes() {
 	    \<*\>) 
                 __realy_cleaned_include=$(echo "$current_include" | \
 		    sed -e 's/^<//' -e 's/>$//')
-		old_ifs=$IFS
-                IFS=:
+                local IFS=:
 		for __include_space in $INCLUDE_SPACES ; do
-		    IFS=$old_ifs
 		    if [ -e "$__include_space"/"$__realy_cleaned_include" ] 
 		    then
 			current_include="$__include_space"/"$__realy_cleaned_include"
-		    else
-			false
 		    fi
-		    IFS=:
 		done 
-		old_ifs=$IFS
 	   ;;
 	esac
 	current_include=$( echo $current_include | xargs basename | sed -e 's|\/|_|g' -e 's|\.|_|g')
