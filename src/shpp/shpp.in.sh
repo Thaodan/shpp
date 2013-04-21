@@ -93,7 +93,7 @@ verbose() {
 call_handler() {
     case $1 in
 	error*) error_msg "$@"; die=1 ;;
-	warning*) test "$WARNING_IS_ERROR" = true && die=1; warning_msg "$@";; 
+	warning*) [ "$WARNING_IS_ERROR" = true ] && die=1; warning_msg "$@";; 
     esac
     if [ $die ]  ; then
 	verbose 'got signal to die, dieing'
@@ -303,14 +303,15 @@ macro() {
 		IFS=$old_ifs
 		if [ -e "$__macro_space"/"$__cleaned_macro" ] ; then
 		    __cleaned_macro="$__macro_space"/"$__cleaned_macro"
+		    __not_found=false
 		else
 		   __not_found=true
 		fi
 		IFS=:
 	    done 
 	    ;;
-	*) if [ ! -e $1 ] ; then
-	    __not_found=true
+	*)  if [ ! -e $1 ] ; then
+		_not_found=true
 	    fi
 	    __cleaned_macro=$1
 	    ;;
@@ -415,7 +416,7 @@ Else() {
 include() {
     local  __include_arg  __parser __parser_args __cleaned_include \
 	__outputfile__cleaned_include  __realy_cleaned_include \
-	__include_space current_include_no
+	__include_space current_include_no __not_found=false
 
     verbose "L$line_ued:Opened $1 to parse,\
             call ourself to process file" 
@@ -442,15 +443,20 @@ include() {
                IFS=$old_ifs
 	       if [ -e "$__include_space"/"$__realy_cleaned_include" ] ; then
 		   __cleaned_include="$__include_space"/"$__realy_cleaned_include"
+		   __not_found=false
 	       else
-		   false
+		   __not_found=true
 	       fi
 	       IFS=:
-	   done || \
-	   call_handler error:file "L$line_ued:$command:\
-                                   $__cleaned_include not found"
+	   done 
 	   ;;
+	*)  if [ ! -e $__cleaned_include ] ; then
+		__not_found=true
+	    fi
+            ;;
     esac
+    [ $__not_found = true ] && call_handler error:file \
+	"L$line_ued:$command: $__cleaned_include not found"
     count++ self/include/counter
     current_include_no=$( var self/include/counter )
     __outputfile__cleaned_include=$( echo $__cleaned_include | \
@@ -635,11 +641,7 @@ stub_main()    {
     # finaly include our $includes if $includes is not empty
     test  ! -z "$(  ls "$tmp_dir/self/include/files" )" && include_includes "$tmp_dir/self/pc_file.stage2"
     clear_flags "$tmp_dir/self/pc_file.stage2"
-    if [ $2 = stdout ] ; then
-	cat "$tmp_dir/self/pc_file.stage2"
-    else
-	cp "$tmp_dir/self/pc_file.stage2" "$2"
-    fi
+    cp "$tmp_dir/self/pc_file.stage2" "$2"
     if  [ ! $IID = 1 ] ; then 
 	echo "$tmp_dir/$IID" > $tmp_dir/self/clean_files 
 	rm $tmp_dir/self
@@ -725,7 +727,7 @@ if [ ! $# = 0 ] ; then
 			-I) INCLUDE_SPACES=$2:$INCLUDE_SPACES; shift 2;;
 			-M) MACRO_SPACES=$2:$MACRO_SPACES; shift 2;;
 			-o|--output) target_name="$2"; shift 2 ;;
-			--stdout) target_name="stdout" ; shift ;;
+			--stdout) target_name="/dev/stdout" ; shift ;;
 			 # tells shpp to pass stder to $2
 			--stderr) exec 2> $2 ; shift  2;;
 			--) shift; break ;;
@@ -757,11 +759,12 @@ if [ ! $# = 0 ] ; then
 		    fi
 		fi
      		if [ -z "$target_name" ] ; then
-		    readonly target_name=stdout
-		    warning_msg warning "using /dev/stdout as default output"
+		    readonly target_name=/dev/stdout
+		    warning_msg warning:target \
+			"using /dev/stdout as default output"
 		fi 
 		if [ ! -e "$1" ] ; then
-		    error_msg error  "$source_file not found" 
+		    error_msg error:file  "$source_file not found" 
 		    false
 		    shift
 		else
