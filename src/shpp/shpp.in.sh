@@ -1,6 +1,6 @@
 #!/bin/sh
 # shpp shell script preprocessor
-# Copyright (C) 2012  Björn Bidar
+# Copyright (C) 2013  Björn Bidar
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -41,15 +41,8 @@ else
     shpp=$( dirname $0 )/shpp
 fi
 
-
-stub() {
-    echo stub
-}
-
 #####################################################################
-
 # tools.sh.in
-
 
 ### communication ###
 plain() {
@@ -163,7 +156,6 @@ alias count++='count + 1'
 
 ############################################################
 
-
 ###  alias commands ### 
 # this are commands that are only provided as alias, as workaround these alias are before commands 
 # (alias must be known before use, instead before call unlike functions)
@@ -172,7 +164,6 @@ alias count++='count + 1'
 alias ifdef='If defined'
 #\\ifndef
 alias ifndef='If ! defined' 
-
 
 find_commands() {
     local _command   command command_no  command_raw IFS
@@ -236,7 +227,7 @@ find_commands() {
 		else)	       Else               ;;
 		endif)	
 		    # just a stub call for syntax error 
-		    # cause endif was used before if/ifdef#
+		    # cause endif was used before if/ifdef/else
 		    endif 
 		    ;; 
 		break)  verbose 'found break abort parsing'; break ;;
@@ -258,7 +249,6 @@ find_commands() {
     IFS=$old_ifs
 }
 
-
 ### commands ### 
 # description:	this are commands that can be executed in $source_file (#\\*)
 # 		commands can be builtin or suplied by macro files
@@ -266,25 +256,23 @@ find_commands() {
 # 		external commands shoud do their write part with a runner that is executed after find_commands()
 
 register_external() { 
-# usage:  register externa
-# usage:  register externals in macro files
+# usage:  register_external  <__mode> file
 # description: this command (#\\macro) register externals to shpp either commands (#\\*) or runners
-  local __mode
-  case $1 in  # set component to register
-    -c|--command) __mode=add_command;;
-    -R|--runner)  __mode=add_runner;;
-    *) return 1;;
-  esac
-  shift 
-  while [ ! $# = 0 ] ; do
-    case $__mode in
-      add_command) registed_commands=$register_commands:$1 ;;
-      add_runner) registed_runners="$registed_runners $1";;
+    local __mode
+    case $1 in  # set component to register
+	-c|--command) __mode=add_command;;
+	-R|--runner)  __mode=add_runner;;
+	*) return 1;;
     esac
-    shift
-  done
+    shift 
+    while [ ! $# = 0 ] ; do
+	case $__mode in
+	    add_command) registed_commands=$register_commands:$1 ;;
+	    add_runner) registed_runners="$registed_runners $1";;
+	esac
+	shift
+    done
 }
-
 
 #\\macro
 macro() {
@@ -314,7 +302,8 @@ macro() {
     if sh -n $__cleaned_macro ; then
 	. $__cleaned_macro
     else
-	call_handler error:syntax "$cleaned_macro don't passed syntax check, quiting"
+	call_handler error:syntax \
+	    "$cleaned_macro don't passed syntax check, quiting"
     fi  
 }
 
@@ -355,7 +344,9 @@ If() {
 		unset __condition
 		continue 
 	    else
-		unsuccesfull=true # no chance left that condition can be true, everything is lost we're unsuccesfull
+		# no chance left that condition can be true, 
+		# everything is lost we're unsuccesfull
+		unsuccesfull=true 
 	    fi
 	fi
 	__condition_done=true
@@ -368,8 +359,6 @@ If() {
 	erase_till_endif=true # say find_commands it has to erase fill from $if_line till next found endif
     fi
 }
-
-
 
 #### if conditions ###
 defined() {
@@ -385,7 +374,8 @@ defined() {
 
 #\\endif
 endif() { 
-    # just a stub that calls call_handler with error to handle if endif is before if/ifdef
+    # just a stub that calls call_handler with error to handle if endif 
+    # is before if/ifdef/else
     if [ ! $found_if_or_else ] ; then
 	call_handler  error:syntax "L$line_ued:Found endif before if, error"
     fi
@@ -470,12 +460,6 @@ include() {
 	*) $__parser $__parser_args ;; # use $parser with $parser_args 
     esac
     var  self/include/lines/$current_include_no="$line" 
-   
-  
-# for us and run argument of #\\include with us and copy to temp file/stdout
-# copy content before #\\include to new file
-# copy include argument to new file
-# copy content past #\\include to new file 
 }
 
 #\\define
@@ -507,7 +491,6 @@ write_shortifdefs() { # write #\\! flags to $2
     done
 }
 
-
 include_includes() { 
     local include_lines __include include_argument \
 	current_include_line   __tmp_include \
@@ -516,7 +499,6 @@ include_includes() {
     cp "$tmp_dir/self/pc_file.stage2" "$tmp_dir/self/pre_include" 
     var self/include/counter=1
     var self/include/stack=0
-    current_include_no=$( var self/include/counter)
     for current_include in $tmp_dir/self/include/files/* ; do
 	for __include_argument in $__include ; do
 	    case $__include_argument in 
@@ -635,9 +617,6 @@ stub_main()    {
     
 }
 
-    
-
-
 print_help() {
 cat <<HELP
 $appname usage: 
@@ -662,7 +641,6 @@ $appname usage:
   --keep 				don't delete tmp files after running
 HELP
 }
-
 
 if [ ! $# = 0 ] ; then 
     while [ ! $# = 0 ] ; do
