@@ -7,15 +7,6 @@ arch=('any')
 license=('GPL2')
 depends=('sh' 'coreutils' 'sed' 'libsh')
 source=("${pkgname}-${pkgver}.tar.gz")
-md5sums=('9291fa51b291da8b8a330dc8d82ec4c7')
-
-
-
-
-
-
-
-
 
 package() {
   cd $srcdir/$pkgname-$pkgver
