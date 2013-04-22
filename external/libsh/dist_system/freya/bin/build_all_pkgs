@@ -1,24 +1,25 @@
 #!/bin/sh
 
-if [ $( dirname $0 ) = . ]  ; then
-  . ../../$( which $0 | xargs dirname)/PROJECT_INFO 
-elif [ -e $( dirname $0)/PROJECT_INFO ] ; then 
-   ../../$( dirname $0)/PROJECT_INFO
-else
-    . $PWD/dist_system/etc/PROJECT_INFO
-fi
+while true ; do 
+  if [ -e dist_system/$DIST_CONV ] ;then 
+    break
+  else
+    cd ..
+  fi
+done
+. $PWD/dist_system/etc/PROJECT_INFO
+. $PWD/dist_system/etc/rc.conf
+. $PWD/dist_system/usr/lib/dist_func/tools.sh
 
-if [ ! -e "$SOURCE_DIR" ] ; then
-  cd ../..
-fi
+init_stats 
 
-
-for dists in $DIST_DIR/* ; do
-  if [ -e $dists/build_pkg ] && [ -x $dists/update_pkg_ressources ] ; then
-    cd $dists
-    ( ./update_pkg_ressources
-    sh build_pkg ) || echo "got error while building $dists" 
-    cd $OLDPWD
+for dist in $DIST_DIR/* ; do
+  if [ -e $dist/build_pkg ] && [ -x $dist/update_pkg_ressources ] ; then
+    ( cd $dist
+	./update_pkg_ressources
+	sh build_pkg   
+   ) || error error:return_stat  \
+	    "got error while building $dist"
   fi
 done
 

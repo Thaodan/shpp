@@ -1,6 +1,6 @@
 #!/bin/sh -e
 
-DIST_BIN=bin
+DIST_BIN=etc
 
 while true ; do 
   if [ -e dist_system/$DIST_CONV ] ;then 
@@ -26,8 +26,8 @@ for init_file in $INIT_FILES ; do
     ln -s dist_system/usr/lib/$(basename $init_file ) $init_file
     msg2 "updated symlink $init_file"
   else 
-		msg2 "$init_file was modifed, skipping"
-	fi
+    msg2 "$init_file was modifed, skipping"
+  fi
 	
 done
 
