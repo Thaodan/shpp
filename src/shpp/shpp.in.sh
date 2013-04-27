@@ -166,26 +166,23 @@ alias ifdef='If defined'
 alias ifndef='If ! defined' 
 
 find_commands() {
-    local _command   command command_no  command_raw IFS
+    local _command   command command_no  command_raw IFS counter
     erase_till_endif=false
     endif_notfound=false 
     var self/command/removed_stack=0
-    var self/command/counter=0
     local old_ifs=$IFS
     IFS='
 '
     for find_commands_line in $( grep -hn \#\\\\\\\\$2 "$1"  | sed 's|:.*||' ); do 
-  
-	count++ self/command/counter
-	var self/command/lines/$(var self/command/counter)=$find_commands_line
+	counter=$(( $counter + 1))
+	var self/command/lines/$counter=$find_commands_line
     done
-    var self/command/counter=0 # reset counter after parsing lines
+    counter=0 # reset counter after parsing lines
     for _command in $( grep  \#\\\\\\\\$2 "$1" | sed -e 's/#\\\\//'  ) ; do
 	IFS=$old_ifs
-	count++  self/command/counter
-	command_no=$( var self/command/counter )
+	counter=$(( $counter + 1))
 	# current line with removeing deleted lines
-	local line_ued=$( var self/command/lines/$command_no )
+	local line_ued=$( var self/command/lines/$counter )
 	local line=$(($line_ued-$( var self/command/removed_stack))) 
 	_command=$( echo "$_command" | sed -e 's/[ \t]*$//' -e 's/^[ \t]*//' )
 	if [ $erase_till_endif = true ] ; then
@@ -204,7 +201,6 @@ find_commands() {
 	    verbose "L$line_ued:Found  $_command calling corresponding command"
             # if command wants the raw $_command it can use it
 	    command_raw="$_command"
-            # we clear $0 from $_command now, the commands don't need to do it
 	    case $_command in 
 		#if $_command has space, clear  it and give 
 		# the commands still the ability to   know who they are
@@ -399,7 +395,7 @@ Else() {
 include() {
     local  __include_arg  __parser __parser_args __cleaned_include \
 	__outputfile__cleaned_include  __realy_cleaned_include \
-	__include_space current_include_no __not_found=false
+	__include_space current_include_no __not_found=false 
 
     verbose "L$line_ued:Opened $1 to parse,\
             call ourself to process file" 
@@ -493,13 +489,12 @@ write_shortifdefs() { # write #\\! flags to $2
 
 include_includes() { 
     local include_lines __include include_argument \
-	current_include_line   __tmp_include \
-	__realy_cleaned_include __include_space 
+	include_line   __tmp_include \
+	__realy_cleaned_include __include_space \
+	include_no=0  include_stack=0
     # make backups before do include
     cp "$tmp_dir/self/pc_file.stage2" "$tmp_dir/self/pre_include" 
-    var self/include/counter=1
-    var self/include/stack=0
-    for current_include in $tmp_dir/self/include/files/* ; do
+    for include in $tmp_dir/self/include/files/* ; do
 	for __include_argument in $__include ; do
 	    case $__include_argument in 
 		# stub arguments that are only used by #\\include
@@ -507,10 +502,9 @@ include_includes() {
 		*) __include=$__include_argument ;;
 	    esac
 	done
-	current_include_stack=$( var self/include/stack )
-	current_include_no=$( var self/include/counter)
-	current_include_line=$(( $current_include_stack + $( var self/include/lines/$current_include_no )))
-	case $current_include in
+	include_no=$(( $include_no + 1 ))
+        include_line=$(( $include_stack + $( var self/include/lines/$include_no )))
+	case $include in
 	    \<*\>) 
                 __realy_cleaned_include=$(echo "$current_include" | \
 		    sed -e 's/^<//' -e 's/>$//')
@@ -518,25 +512,23 @@ include_includes() {
 		for __include_space in $INCLUDE_SPACES ; do
 		    if [ -e "$__include_space"/"$__realy_cleaned_include" ] 
 		    then
-			current_include="$__include_space"/"$__realy_cleaned_include"
+			include="$__include_space"/"$__realy_cleaned_include"
 		    fi
 		done 
 	   ;;
 	esac
-	current_include=$( echo $current_include | xargs basename | sed -e 's|\/|_|g' -e 's|\.|_|g')
-	sed "$current_include_line,$ d" $1 >  \
+	include=$( echo $include | xargs basename | sed -e 's|\/|_|g' -e 's|\.|_|g')
+	sed "$include_line,$ d" $1 >  \
 	    "$tmp_dir/self/include/cut_source"
-	sed "1,$current_include_line d" $1 > \
+	sed "1,$include_line d" $1 > \
 	    "$tmp_dir/self/include/cut_source_end"
-	cat "$tmp_dir/self/include/files/$current_include" >> \
+	cat "$tmp_dir/self/include/files/$include" >> \
 		"$tmp_dir/self/include/cut_source"
 	cat "$tmp_dir/self/include/cut_source_end" >> \
 		"$tmp_dir/self/include/cut_source"
 	cp "$tmp_dir/self/include/cut_source" \
 	    "$tmp_dir/self/pc_file.stage2"
-	
-	count++ self/include/counter
-	count + $(( 1 + $( wc -l < $tmp_dir/self/include/files/$current_include ))) self/include/stack
+	include_stack=$(( $include_stack + 1 + $( wc -l < $tmp_dir/self/include/files/$include )))
 	IFS='
 	'
     done
@@ -596,7 +588,7 @@ stub_main()    {
     test -e $tmp_dir/defines  && \
 	replace_vars "defines"  "$tmp_dir/self/pc_file.stage2"
     # do runners only in main instance
-    if [ $( readlink $tmp_dir/self )  = 1 ] ; then
+    if [ $IID = 1 ] ; then
 	for __runner in $registed_runners ; do
 	    $__runner
 	done
