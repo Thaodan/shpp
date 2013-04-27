@@ -398,9 +398,9 @@ include() {
 	__include_space current_include_no __not_found=false 
 
     verbose "L$line_ued:Opened $1 to parse,\
-            call ourself to process file" 
-    touch $tmp_dir/self/include/counter
+            call ourself to process file"
     mkdir -p $tmp_dir/self/include/files
+    touch $tmp_dir/self/include/counter
     for __include_arg in $@ ; do
 	case $__include_arg in  
 	    noparse)  __parser=noparse;;
@@ -590,7 +590,7 @@ stub_main()    {
 	done
     fi
     # finaly include our $includes if $includes is not empty
-    [ !  -e  "$tmp_dir/self/include/files"  ] && include_includes "$tmp_dir/self/pc_file.stage2"
+    [ -e  "$tmp_dir/self/include/files"  ] && include_includes "$tmp_dir/self/pc_file.stage2"
     clear_flags "$tmp_dir/self/pc_file.stage2"
     cp "$tmp_dir/self/pc_file.stage2" "$2"
     if  [ ! $IID = 1 ] ; then 
