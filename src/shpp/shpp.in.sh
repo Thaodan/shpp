@@ -440,7 +440,6 @@ include() {
 	sed -e 's|\/|_|g' -e 's|\.|_|g')
     case ${__parser:-SELF} in  
 	shpp)  $shpp   --tmp $tmp_dir/slaves --stdout \
-	    --stderr=$tmp_dir/logs/errors$__outputfile__cleaned_include.log \
 	    "$__cleaned_include"> \
 	    $tmp_dir/$IID/include/files/\ 
 	    ${current_include_no}${__outputfile__cleaned_include}  || \ 
@@ -577,9 +576,6 @@ stub_main()    {
 	ln -s $IID $tmp_dir/self
     fi
     verbose "Entering instance $IID"
-    mkdir -p "$tmp_dir/self/include/files"
-    mkdir -p "$tmp_dir/self/logs"
-
     # make a copy for our self
     cp "$1" "$tmp_dir/self/pc_file.stage1"
     find_commands "$tmp_dir/self/pc_file.stage1"
