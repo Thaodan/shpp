@@ -77,7 +77,6 @@ main() {
     cat > "$SHMK_TEMP/env" <<_ENV
 SHELL=$shell     
 MODULE_PATH=$MODULE_PATH
-chained_vars=$chained_vars
 USE_COLOR=$USE_COLOR
 init_stats
 _ENV
