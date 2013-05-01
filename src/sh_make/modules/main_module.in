@@ -1,29 +1,29 @@
 #!/bin/sh
-loaded_modules=main_module
+SHMK_loaded=main_module
 
-run_entry_point() {
+run() {
   while [ ! $# = 0 ] ; do
     $1
     shift
   done
 }
 
-load_module(){
-  if echo $loaded_modules | grep -vq $( basename $1 ) ; then
-    case "$1" in
-    */*)
-      . "$1"
-      ;;
-    *)
-      if [ -e $MODULE_PATH/$1 ] ; then
-	  . $MODULE_PATH/$1
-      else
-	return 1
-      fi
-      ;;
-    esac 
-    loaded_modules=$loaded_modules:$( basename $1 )
+load(){
+  if echo $SHMK_loaded | grep -vq $( basename $1 ) ; then
+      case "$1" in
+	  */*)
+	      . "$1"
+	      ;;
+	  *)
+	      if [ -e $MODULE_PATH/$1 ] ; then
+		  . $MODULE_PATH/$1
+	      else
+		  return 1
+	      fi
+	      ;;
+      esac 
+      SHMK_loaded=$SHMK_loaded:$( basename $1 )
   else
-    return 1
+      return 1
   fi
 }
