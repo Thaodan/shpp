@@ -78,17 +78,13 @@ main() {
 SHELL=$shell     
 MODULE_PATH=$MODULE_PATH
 chained_vars=$chained_vars
-$( for chain in $chained_vars ; do \
-echo "$chain=$( eval echo \$my_$chain)"; done)
-old_ifs=\$IFS
-IFS=:
-for chain in \$chained_vars ; do
-  eval \$chain=\$( eval echo \\\$\$chain )
-done
 USE_COLOR=$USE_COLOR
 init_stats
 _ENV
-
+    for chain in $chainedvars ; do
+	echo "$chain=$(eval echo $\my_$chain)" >> "$SHMK_TEMP/env"
+    done
+    
     if [ "$debug_options" ] && [ ! $debug ] ; then
 	echo "set -o $debug_options" >> "$SHMK_TEMP/env"
     fi
@@ -157,10 +153,10 @@ case $1 in
 	    case $var in
 	      	*=*)
 		    eval my_$var
-		    if [ -z $chained_vars ] ; then
-			chained_vars=$( echo $var | cut -d '=' -f1 )
+		    if [ -z $chained_ars ] ; then
+			chainedvars=$( echo $var | cut -d '=' -f1 )
 		    else
-			chained_vars=$chained_vars:$( echo $var \
+			chained_vars=$chainedvars:$( echo $var \
 			    | cut -d '=' -f1 )
 		    fi
 		    shift
