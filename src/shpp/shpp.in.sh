@@ -117,15 +117,15 @@ var() {
 	    case $1 in 
 		*+=*)
 		    if [ -d $tmp_dir/$__var_part1 ] ; then
-			printf  $__var_part2 > $tmp_dir/$__var_part1/\  $(( 
+			printf  -- $__var_part2 > $tmp_dir/$__var_part1/\  $(( 
 				$( echo $tmp_dir/$__var_part2/* \
 				    | tail  | basename )\ + 1 ))
 		    else
-			printf  "$__var_part2" >> $tmp_dir/$__var_part1  
+			printf -- "$__var_part2" >> $tmp_dir/$__var_part1  
 		    fi
 		    ;;
  		*-=*) false ;;
-                *)  printf  "$__var_part2" > $tmp_dir/$__var_part1 ;;
+                *)  printf  -- "$__var_part2" > $tmp_dir/$__var_part1 ;;
 	    esac
 	    ;;	
 	*) 
@@ -166,7 +166,7 @@ alias ifdef='If defined'
 alias ifndef='If ! defined' 
 
 find_commands() {
-    local _command   command command_no  command_raw IFS counter
+    local _command   command command_no  command_raw IFS counter=0 arg_counter=0 arg_string
     erase_till_endif=false
     endif_notfound=false 
     var self/command/removed_stack=0
@@ -184,9 +184,9 @@ find_commands() {
 	# current line with removeing deleted lines
 	local line_ued=$( var self/command/lines/$counter )
 	local line=$(($line_ued-$( var self/command/removed_stack))) 
-	_command=$( echo "$_command" | sed -e 's/[ \t]*$//' -e 's/^[ \t]*//' )
+	_command=$( echo "$_command" | sed -e 's/[ \t]*$//' -e 's/^[ \t]*//' -e  "s|^\ ||" -e 's|\ $||')
 	if [ $erase_till_endif = true ] ; then
-	    if [ $_command = endif ] || [ $_command = else ]  ; then
+	    if [ "$_command" = endif ] || [ "$_command" = else  ]  ; then
 		sed -ie "$if_line,$line d" "$1" 
 #\\!debug_if  cp "$1" "$tmp_dir/ifsteps/pc_file.stage.$_find_command_count"
 		erase_till_endif=false
@@ -200,23 +200,61 @@ find_commands() {
 	else
 	    verbose "L$line_ued:Found  $_command calling corresponding command"
             # if command wants the raw $_command it can use it
-	    command_raw="$_command"
+	    command_raw="$_command" 
 	    case $_command in 
 		#if $_command has space, clear  it and give 
 		# the commands still the ability to   know who they are
 		*\ * ) 	        
-		    command=$( echo $_command | \
-			sed -e "s| .*||" -e  "s|^\ ||" -e 's|\ $||') 
-		    _command=$( echo $_command | \
-			sed -e "s|$command ||" -e  "s|^\ ||")
+		    #command=$( echo $_command | \
+			#sed -e "s| .*||" -e  "s|^\ ||" -e 's|\ $||') 
+		    #_command=$( echo $_command | \
+			#sed -e "s|$command ||" -e  "s|^\ ||")
+		    IFS=" "
+		    for __arg__ in $command_raw ; do
+			# test if we got string last time
+			if [ ! "$arg_string" ] ; then
+			    arg_counter=$(( $arg_counter + 1 )) 
+			    case $__arg__ in
+				\'*|\"*) arg_string=$__arg__ ;;
+				*)
+				    case $arg_counter in 
+					1)
+					    command=$__arg__ 
+					    # these commands don't need adiotional args so quit arg parsing
+					    if [ "$command" = rem ] ; then
+						break
+					    fi
+					    ;;
+					2) _command=$__arg__ ;;
+					3) arg2=$__arg__;;
+					4) arg3=$__arg__;;
+					5) arg4=$__arg__;;
+					6) arg5=$__arg__;;
+					7) arg6=$__arg__;;
+					8) arg7=$__arg__;;
+					9) arg8=$__arg__;;
+					10) break ;;
+				    esac	
+				    ;;
+			    esac
+			else
+			    case $__arg__ in
+				# arg string ends
+				*\"|*\') eval arg$(($arg_counter-1))="${arg_string} ${__arg__}"; arg_string= ;;
+				*) arg_string="${arg_string} ${__arg__}" ;;
+			    esac	   
+			fi
+		    done
+		    IFS=$old_ifs
+		    arg_counter=0
   		    ;;
 		# else $_command is already clear
 		*) command=$_command ;;	       		 
 	    esac					      			
 	    case "$command" in
 		define) 	define $_command  ;;
-		include) 	include $_command ;;
-		macro)          macro $_command   ;;
+		include) 	include $_command $arg3 $arg4 ;;
+		macro)          macro $_command   $arg3 ;;
 		ifdef)	        ifdef "$_command" ;;
 		ifndef)        ifndef "$_command" ;;
 		if)            If $_command       ;;
@@ -231,7 +269,7 @@ find_commands() {
 		warning)	warning "$_command" ;;
 		![a-z]*|rem) : ;; # ignore stubs for ignored functions
 		*)  if echo $registed_commands | grep -q $command ; then
-		        $command $_command
+		        $command "$_command"  "$arg2" "$arg3" "$arg4" "$arg5" "$arg6" "$arg7" "$arg8"
 		    else
 		        call_handler warning:unkown \
 			    "found '$command',bug or unkown command, raw string is '$command_raw'"
@@ -585,9 +623,11 @@ stub_main()    {
 	replace_vars "defines"  "$tmp_dir/self/pc_file.stage2"
     # do runners only in main instance
     if [ $IID = 1 ] ; then
+	IFS=" "
 	for __runner in $registed_runners ; do
 	    $__runner
 	done
+	unset IFS
     fi
     # finaly include our $includes if $includes is not empty
     [ -e  "$tmp_dir/self/include/files"  ] && include_includes "$tmp_dir/self/pc_file.stage2"
