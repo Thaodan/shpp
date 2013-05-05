@@ -15,7 +15,9 @@ load(){
 	      . "$1"
 	      ;;
 	  *)
-	      if [ -e $MODULE_PATH/$1 ] ; then
+	      if [ -e $PWD/$1 ] ; then
+		  . $PWD/$1
+	      elif [ -e $MODULE_PATH/$1 ] ; then
 		  . $MODULE_PATH/$1
 	      else
 		  return 1
