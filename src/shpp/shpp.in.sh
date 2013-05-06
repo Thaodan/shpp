@@ -78,7 +78,7 @@ error_msg() {
 
 verbose() {
     if [ $verbose_output ] ; then
-	warning_msg $@
+	echo "${YELLOW}==>${ALL_OFF}${BOLD}${ALL_OFF} $@" >&2
     fi
 }
 
@@ -111,8 +111,8 @@ cleanup() {
 var() {
     case $1 in 
 	*=|*=*) 
-	    __var_part1=$( echo "$1" | sed -e 's/=.*//' -e 's/[+,-]//' )
-	    __var_part2=$( echo "$1" | sed -e 's/.*.=//' )
+	    local __var_part1=$( echo "$1" | sed -e 's/=.*//' -e 's/[+,-]//' )
+	    local __var_part2=$( echo "$1" | sed -e 's/.*.=//' )
 	    mkdir -p $(dirname $tmp_dir/$__var_part1)
 	    case $1 in 
 		*+=*)
@@ -166,7 +166,7 @@ alias ifdef='If defined'
 alias ifndef='If ! defined' 
 
 find_commands() {
-    local _command   command command_no  command_raw IFS counter=0 arg_counter=0 arg_string
+    local _command   command command_no  command_raw IFS counter=0 arg_counter=0 arg_string __arg__ 
     erase_till_endif=false
     endif_notfound=false 
     var self/command/removed_stack=0
@@ -198,51 +198,51 @@ find_commands() {
 		false
 	    fi
 	else
-	    verbose "L$line_ued:Found  $_command calling corresponding command"
-            # if command wants the raw $_command it can use it
-	    command_raw="$_command" 
+	    verbose "L$line_ued: Found $_command calling corresponding command"
 	    case $_command in 
 		#if $_command has space, clear  it and give 
 		# the commands still the ability to   know who they are
 		*\ * ) 	        
-		    #command=$( echo $_command | \
-			#sed -e "s| .*||" -e  "s|^\ ||" -e 's|\ $||') 
-		    #_command=$( echo $_command | \
-			#sed -e "s|$command ||" -e  "s|^\ ||")
 		    IFS=" "
-		    for __arg__ in $command_raw ; do
-			# test if we got string last time
-			if [ ! "$arg_string" ] ; then
-			    arg_counter=$(( $arg_counter + 1 )) 
+		    for __arg__ in $_command ; do
+			# test if we got/get now arg_string and test our new arg is a string
+			if [ ! "$arg_string" ] && case $__arg__ in  
+				\'*\'|\"*\") false;; 
+				\'*|\"*) true;;
+				 *)false ;;
+			     esac
+			then
+			     # if true, open our arg_string
+			     arg_string=$__arg__ 
+                        # if we got string last try to end it or add our __arg__ to arg_string
+			elif [ $arg_string ] ; then
 			    case $__arg__ in
-				\'*|\"*) arg_string=$__arg__ ;;
-				*)
-				    case $arg_counter in 
-					1)
-					    command=$__arg__ 
-					    # these commands don't need adiotional args so quit arg parsing
-					    if [ "$command" = rem ] ; then
-						break
-					    fi
-					    ;;
-					2) _command=$__arg__ ;;
-					3) arg2=$__arg__;;
-					4) arg3=$__arg__;;
-					5) arg4=$__arg__;;
-					6) arg5=$__arg__;;
-					7) arg6=$__arg__;;
-					8) arg7=$__arg__;;
-					9) arg8=$__arg__;;
-					10) break ;;
-				    esac	
-				    ;;
-			    esac
-			else
-			    case $__arg__ in
-				# arg string ends
-				*\"|*\') eval arg$(($arg_counter-1))="${arg_string} ${__arg__}"; arg_string= ;;
+				# arg string ends, reset arg_string
+				*\"|*\') __arg__="${arg_string} ${__arg__}" ; arg_string=  ;;
 				*) arg_string="${arg_string} ${__arg__}" ;;
-			    esac	   
+			    esac
+			fi
+			# if we got no arg string set arg<n>
+			if [ ! "$arg_string" ] ; then
+			    case $arg_counter in 
+				0)
+				    command=$__arg__ 
+				    # these commands don't need adiotional args so quit arg parsing
+				    if [ "$command" = rem ] ; then
+					break
+				    fi
+				    ;;
+				1) arg1=$__arg__ ;;
+				2) arg2=$__arg__;;
+				3) arg3=$__arg__;;
+				4) arg4=$__arg__;;
+				5) arg5=$__arg__;;
+				6) arg6=$__arg__;;
+				7) arg7=$__arg__;;
+				8) arg8=$__arg__;;
+				9) break ;;
+			    esac	
+			    arg_counter=$(( $arg_counter + 1))
 			fi
 		    done
 		    IFS=$old_ifs
@@ -252,24 +252,24 @@ find_commands() {
 		*) command=$_command ;;	       		 
 	    esac					      			
 	    case "$command" in
-		define) 	define $_command  ;;
-		include) 	include $_command $arg3 $arg4 ;;
-		macro)          macro $_command   $arg3 ;;
-		ifdef)	        ifdef "$_command" ;;
-		ifndef)        ifndef "$_command" ;;
-		if)            If $_command       ;;
-		else)	       Else               ;;
+		define) 	define $arg1  ;;
+		include) 	include $arg1 $arg2 $arg3 ;;
+		macro)          macro $arg1 $arg2  $arg3 ;;
+		ifdef)	        ifdef "$arg1" ;;
+		ifndef)         ifndef "$arg1" ;;
+		if)             If $arg1       ;;
+		else)	        Else               ;;
 		endif)	
 		    # just a stub call for syntax error 
 		    # cause endif was used before if/ifdef/else
 		    endif 
 		    ;; 
-		break)  verbose 'found break abort parsing'; break ;;
-		error)	        error "$_command"           ;;
-		warning)	warning "$_command" ;;
+		break)          verbose 'found break abort parsing'; break ;;
+		error)	        error "$arg1"    ;;
+		warning)	warning "$arg1" ;;
 		![a-z]*|rem) : ;; # ignore stubs for ignored functions
 		*)  if echo $registed_commands | grep -q $command ; then
-		        $command "$_command"  "$arg2" "$arg3" "$arg4" "$arg5" "$arg6" "$arg7" "$arg8"
+		        $command "$arg1"  "$arg2" "$arg3" "$arg4" "$arg5" "$arg6" "$arg7" "$arg8"
 		    else
 		        call_handler warning:unkown \
 			    "found '$command',bug or unkown command, raw string is '$command_raw'"
@@ -332,7 +332,7 @@ macro() {
 	    ;;
     esac
     [ $__not_found = true ] && call_handler error:file \
-	"L$line_ued:$__cleaned_macro not found"
+	"L$line_ued: $__cleaned_macro not found"
     if sh -n $__cleaned_macro ; then
 	. $__cleaned_macro
     else
@@ -388,7 +388,7 @@ If() {
     done
     # check result
     if [ $unsuccesfull = true ] ; then
-	verbose "L$line_ued:Condition was not true, remove content till next endif/else, erase_till_endif ist set to true"
+	verbose "L$line_ued: Condition was not true, remove content till next endif/else, erase_till_endif ist set to true"
 	if_line=$line # save $line for find_commands 
 	erase_till_endif=true # say find_commands it has to erase fill from $if_line till next found endif
     fi
@@ -399,7 +399,7 @@ defined() {
     if [ -e $tmp_dir/defines/$1 ] ;  then
 	echo 1
     else
-	verbose "L$line_ued:$1 was not defined" 
+	verbose "L$line_ued: $1 was not defined" 
 	echo 0
     fi
 }
@@ -411,7 +411,7 @@ endif() {
     # just a stub that calls call_handler with error to handle if endif 
     # is before if/ifdef/else
     if [ ! $found_if_or_else ] ; then
-	call_handler  error:syntax "L$line_ued:Found endif before if, error"
+	call_handler  error:syntax "L$line_ued: Found endif before if, error"
     fi
     unset found_if_or_else
 }
@@ -425,7 +425,7 @@ Else() {
 	erase_till_endif=true # say find_commands it has to erase fill from 
 	                      # $if_line till next found endif
     else
-	call_handler  error:syntax "L$line_ued:Found else before if, error"
+	call_handler  error:syntax "L$line_ued: Found else before if, error"
     fi
 }
 
@@ -435,7 +435,7 @@ include() {
 	__outputfile__cleaned_include  __realy_cleaned_include \
 	__include_space current_include_no __not_found=false 
 
-    verbose "L$line_ued:Opened $1 to parse,\
+    verbose "L$line_ued: Opened $1 to parse,\
             call ourself to process file"
     mkdir -p $tmp_dir/self/include/files
     touch $tmp_dir/self/include/counter
@@ -471,7 +471,7 @@ include() {
             ;;
     esac
     [ $__not_found = true ] && call_handler error:file \
-	"L$line_ued:$command: $__cleaned_include not found"
+	"L$line_ued: $command: $__cleaned_include not found"
     count++ self/include/counter
     current_include_no=$( var self/include/counter )
     __outputfile__cleaned_include=$( echo $__cleaned_include | \
