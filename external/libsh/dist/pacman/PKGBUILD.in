@@ -13,10 +13,13 @@ source=("${pkgname}-${pkgver}.tar.gz")
 
 makedepends=('sh-make-tools')
 
-
+build() {
+  cd $pkgname-$pkgver/src
+  make PREFIX=/usr
+}
 
 package() {
-  cd $srcdir/$pkgname-$pkgver
-  sh dist/build_app
-  mv pkg/* $pkgdir/.
+  cd $pkgname-$pkgver/src
+  make install PREFIX=$pkgdir/usr
+
 }
