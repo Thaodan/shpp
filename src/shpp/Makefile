@@ -1,14 +1,6 @@
-# general stuff
-SHPP		= shpp
-DESTDIR 	=
-PREFIX 		= /usr/local
-INSTALL 	= /usr/bin/install -D
-MSGFMT 		= /usr/bin/msgfmtSED = /bin/sed
-bindir 		= $(PREFIX)/bin
-libdir 		= $(PREFIX)/lib
-sysconfdir 	= $(PREFIX)/etc
+include ../../rules.mk
 # app specific  stuff
-TARGET		= $(SHPP)
+TARGET		= shpp
 SHPP_VER	= 1.8
 GIT_REV		= $(shell ../../tools/git_revgen)
 
