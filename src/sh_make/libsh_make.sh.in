@@ -9,7 +9,7 @@ readonly SH_MAKE_REV SH_MAKE_VER
 
 appname=$(basename $0)
 
-#\\include ../../external/libsh/src/farray.sh.in
+#\\include ../../external/libsh/src/farray.in.sh
 #\\include ../share/tools.sh.in
 
 #########################################################################
