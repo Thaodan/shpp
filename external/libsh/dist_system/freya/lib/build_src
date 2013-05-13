@@ -22,6 +22,11 @@ BUILD_FILE=$PROJECT_NAME-$PROJECT_VER${ARCHIVE_ENDING} # use projekt $VER when b
 ### excute part ###
 
 mkdir $BUILD_FOLDER
+(
+  cd dist
+  sh dist_clean
+
+)
 if ls $DIST_SYSTEM/etc/source_clean.d/*.sh > /dev/null 2>&1 ; then
         for script in $DIST_SYSTEM/etc/source_clean.d/*.sh ; do
                 sh $script
