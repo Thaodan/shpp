@@ -26,14 +26,14 @@ sh -c "cd $DIST_DIR; . \$PWD/dist_clean"
 # only list  directorys and files that are in root to copy them in to $BUILD_TMP and exclude backups (files with ~ at the end) #  -e 's/^.//' -e  's/^\///'
 for DIST_FILE in $DIST_FILES ; do  
   if [ -d $DIST_FILE ] ; then
-    for file in $( find $DIST_FILE ! -iname '*~' ! -name  '*.tar.*' ! -name 'dist/pacman/{src,pkg}' | sed -e '1 d' -e 's/^.\///') ; do 
+    for file in $( find $DIST_FILE ! -iname '*~' ! -name  '*.tar.*'  | sed -e '1 d' -e 's/^.\///') ; do 
       mkdir -p $BUILD_FOLDER/$( dirname $file ); 
       if [ ! -d $file ] ; then
-	cp $file $BUILD_FOLDER/$file ;
+	cp -P $file $BUILD_FOLDER/$file ;
       fi 
     done
   else
-    cp $DIST_FILE $BUILD_FOLDER/.
+    cp -P $DIST_FILE $BUILD_FOLDER/.
   fi
 
 done
