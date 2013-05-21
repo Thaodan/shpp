@@ -30,15 +30,15 @@ defined_all=true
 registed_commands=stub
 INCLUDE_SPACES=.
 MACRO_SPACES=.
-appname=$( basename $0 )
+appname=${0##*/}
 tmp_dir=$(mktemp -u --suffix=${appname}XXXXXXXX)
 
 ################################################################
 
-if [ $( dirname $0 ) = . ] ; then
-    shpp=$(which $0 2>/dev/null ) || shpp=$( dirname $0 )/shpp
+if [ ${0%/*} = . ] ; then
+    shpp=$(which $0 2>/dev/null ) || shpp=${0%/*}/shpp
 else
-    shpp=$( dirname $0 )/shpp
+    shpp=$${0%/*}/shpp
 fi
 
 #####################################################################
@@ -107,7 +107,8 @@ var() {
 	*=|*=*) 
 	    local __var_part1=$( echo "$1" | sed -e 's/=.*//' -e 's/[+,-]//' )
 	    local __var_part2=$( echo "$1" | sed -e 's/.*.=//' )
-	    mkdir -p $(dirname $tmp_dir/$__var_part1)
+	    local __var12=$tmp_dir/$__var_part1
+	    mkdir -p ${__var12%/*}
 	    case $1 in 
 		*+=*)
 		    if [ -d $tmp_dir/$__var_part1 ] ; then
