@@ -45,32 +45,32 @@ fi
 # tools.sh.in
 
 ### communication ###
-plain() {
+__plain() {
     local first="$1"
     shift
     echo "${ALL_OFF}${BOLD} $first:${ALL_OFF} "$@""
 }
 
-msg() {
+__msg() {
     local first="$1"
     shift
     echo "${GREEN}==>${ALL_OFF}${BOLD} $first:${ALL_OFF} "$@"" 
 }
 
-msg2() {
+__msg2() {
     first="$1"
     shift
     echo "${BLUE} ->${ALL_OFF}${BOLD} $first:${ALL_OFF} "$@""
 }
 
-warning_msg() {
-    local first="$1"
+__warning() {
+    local first=$1
     shift
     echo "${YELLOW}==>${ALL_OFF}${BOLD} $first:${ALL_OFF} "$@"" >&2
 }
 
-error_msg() {
-    local first="$1"
+__error() {
+    local first=$1
     shift
     echo "${RED}==>${ALL_OFF}${BOLD} $first:${ALL_OFF} "$@"" >&2
     return 1
@@ -82,18 +82,12 @@ verbose() {
     fi
 }
 
-
-call_handler() {
-    case $1 in
-	error*) error_msg "$@"; die=1 ;;
-	warning*) [ "$WARNING_IS_ERROR" = true ] && die=1; warning_msg "$@";; 
-    esac
-    if [ $die ]  ; then
-	verbose 'got signal to die, dieing'
-	IID=1 cleanup
-	exit ${assumed_err_status:-13}
-    fi
+die() {
+    verbose 'got signal to die, dieing'
+    IID=1 cleanup
+    exit $1
 }
+
 
 
 # tools.sh.in end 
@@ -166,7 +160,8 @@ alias ifdef='If defined'
 alias ifndef='If ! defined' 
 
 find_commands() {
-    local _command   command command_no  command_raw IFS counter=0 arg_counter=0 arg_string __arg__ 
+    local _command   command command_no  command_raw IFS \
+	counter=0 arg_counter=0 arg_string __arg__ 
     erase_till_endif=false
     endif_notfound=false 
     var self/command/removed_stack=0
@@ -265,14 +260,12 @@ find_commands() {
 		    endif 
 		    ;; 
 		break)          verbose 'found break abort parsing'; break ;;
-		error)	        error "$arg1"    ;;
-		warning)	warning "$arg1" ;;
+		error|warning|msg)	$command  "$arg1" ;;
 		![a-z]*|rem) : ;; # ignore stubs for ignored functions
 		*)  if echo $registed_commands | grep -q $command ; then
 		        $command "$arg1"  "$arg2" "$arg3" "$arg4" "$arg5" "$arg6" "$arg7" "$arg8"
 		    else
-		        call_handler warning:unkown \
-			    "found '$command',bug or unkown command, raw string is '$command_raw'"
+		        warning "found '$command',bug or unkown command, raw string is '$command_raw'"
 		    fi
 		    ;;
 	    esac
@@ -331,17 +324,33 @@ macro() {
 	    __cleaned_macro=$1
 	    ;;
     esac
-    [ $__not_found = true ] && call_handler error:file \
-	"L$line_ued: $__cleaned_macro not found"
+    [ $__not_found = true ] && error "$__cleaned_macro not found"
     if sh -n $__cleaned_macro ; then
 	. $__cleaned_macro
     else
-	call_handler error:syntax \
-	    "$cleaned_macro don't passed syntax check, quiting"
+	error "$cleaned_macro don't passed syntax check, quiting"
     fi  
 }
 
 #### built im commands ###
+#\\error
+error() {  
+   __error "L$line_ued:error" "$@"
+   die
+}
+
+#\\warning
+warning() {
+    __warning L$line_ued:warning:$command "$@"
+    if [ $WARNING_IS_ERROR ] ; then
+	__msg2 '' 'warnings are error set, dieing'
+	die 
+    fi
+}
+#\\msg
+msg() {
+    __msg "$L$line_ued" "$@"
+}
 
 #!\\if
 If() {
@@ -408,10 +417,10 @@ defined() {
 
 #\\endif
 endif() { 
-    # just a stub that calls call_handler with error to handle if endif 
+    # just a stub that calls error to handle if endif 
     # is before if/ifdef/else
     if [ ! $found_if_or_else ] ; then
-	call_handler  error:syntax "L$line_ued: Found endif before if, error"
+        error "Found endif before if, error"
     fi
     unset found_if_or_else
 }
@@ -425,7 +434,7 @@ Else() {
 	erase_till_endif=true # say find_commands it has to erase fill from 
 	                      # $if_line till next found endif
     else
-	call_handler  error:syntax "L$line_ued: Found else before if, error"
+	error "Found else before if, error"
     fi
 }
 
@@ -470,8 +479,7 @@ include() {
 	    fi
             ;;
     esac
-    [ $__not_found = true ] && call_handler error:file \
-	"L$line_ued: $command: $__cleaned_include not found"
+    [ $__not_found = true ] && error "$__cleaned_include not found"
     count++ self/include/counter
     current_include_no=$( var self/include/counter )
     __outputfile__cleaned_include=$( echo $__cleaned_include | \
@@ -481,8 +489,7 @@ include() {
 	    "$__cleaned_include"> \
 	    $tmp_dir/$IID/include/files/\ 
 	    ${current_include_no}${__outputfile__cleaned_include}  || \ 
-	    call_handler error:exit_stat \
-		"spawned copy of ourself: $appname returned $?, quiting" ;; 
+	     error "spawned copy of ourself: $appname returned $?, quiting" ;; 
 	noparse)  ln -s  $__cleaned_include \
 	    $tmp_dir/$IID/include/files/\ 
 	    ${current_include_no}${__outputfile__cleaned_include} 
@@ -503,15 +510,7 @@ define() {
     var defines/${1}
 }
 
-#\\error
-error() {  
-    call_handler error:called "L$line_ued:$1"
-}
 
-#\\warning
-warning() {
-    call_handler warning "L$line_ued:$1"
-}
 ### commands end ### 
 
 ### runners ###
@@ -582,7 +581,7 @@ replace_vars() {
 	replace_var_content=$(var defines/$replace_var)
 	verbose "replacing @$replace_var@ with $replace_var_content"
 	sed -ie "s|@$replace_var@|$replace_var_content|g" $2|| \
-	   call_handler error:exit_stat "replace_var: sed quit with $?"
+	    error "replace_var: sed quit with $?"
 	IFS='
 '
     done 
@@ -747,11 +746,11 @@ if [ ! $# = 0 ] ; then
 		fi
      		if [ -z "$target_name" ] ; then
 		    readonly target_name=/dev/stdout
-		    warning_msg warning:target \
+		    __warning warning\
 			"using /dev/stdout as default output"
 		fi 
 		if [ ! -e "$1" ] ; then
-		    error_msg error:file  "$source_file not found" 
+		    __error error "$source_file not found" 
 		    false
 		    shift
 		else
