@@ -25,8 +25,6 @@ SHPP_REV=@GITREV@
 # base config 
 
 # init defined_vars
-defined_vars=all
-defined_all=true
 registed_commands=stub
 INCLUDE_SPACES=.
 MACRO_SPACES=.
@@ -158,6 +156,7 @@ find_commands() {
     erase_till_endif=false
     endif_notfound=false 
     var self/command/removed_stack=0
+
     local old_ifs=$IFS
     IFS='
 '
@@ -520,6 +519,7 @@ include_includes() {
 	include_line   __tmp_include \
 	__realy_cleaned_include __include_space \
 	include_no=0  include_stack=0
+
     # make backups before do include
     cp "$tmp_dir/self/pc_file.stage2" "$tmp_dir/self/pre_include" 
     for include in $tmp_dir/self/include/files/* ; do
@@ -633,7 +633,6 @@ stub_main()    {
     else
 	cleanup
     fi
-    
 }
 
 print_help() {
@@ -667,7 +666,6 @@ if [ ! $# = 0 ] ; then
 	    --help|-H|-h)	print_help ; shift ;; 
 	    --revision) 	echo $SHPP_REV ; shift ;;
 	    -V|--version)	echo $SHPP_VER:$SHPP_REV  ; shift ;;
-            #   #-*)		echo `read_farray "$err_input_messages" 1`;;
 	    --*|*)
 		optspec=o:O:Cc:D:I:M:v # b:dp #-: # short options
 		optspec_long=output:,option:,config:,color,,legacy,stdout,critical-warning,tmp:,stderr:,keep,debug,verbose,errexit,\*=\* #,binpath:,desktop,prefix # long options
