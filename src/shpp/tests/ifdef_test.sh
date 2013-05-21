@@ -1,12 +1,6 @@
-#\\ifdef tet
-
-echo tet
-
-
-
+#\\define SUCCES=true
+#\\ifdef SUCCES
+Erfolgreich
 #\\endif
-
-
-tet
 
 

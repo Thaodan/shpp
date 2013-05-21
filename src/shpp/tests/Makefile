@@ -1,9 +1,9 @@
-TESTFILES	= $(shell find  ! -iname "*~" -type f -iname \*.sh)
-TARGET		= ../shpp
-
+TESTFILES	        =  $(shell find  ! -iname "*~" -type f -iname \*.sh)
+TARGET		        =  ../shpp
+override TARGET_ARGS    += --stdout --errexit
 all: $(TESTFILES)
 $(TESTFILES): $(TARGET) 
-	./$(TARGET) --stdout --errexit $(@) 
+	./$(TARGET) $(TARGET_ARGS) $(@) 
 
 $(TARGET): 
 	$(MAKE) -C .. 

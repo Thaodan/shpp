@@ -1,6 +1,6 @@
 #\\rem testing new else function
 #\\ifdef Else
-  echo 'Die Else ist da.'
+#\\error "nicht erfolgreich"
 #\\else	
-  echo 'elsetest erfolgreich'
+erfolgreich
 #\\endif
