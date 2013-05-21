@@ -71,7 +71,7 @@ d_msg() # display msgs and get input
 		kde)
 		    case $1 in 
 		    !)  kdialog --icon ${DMSG_ICON:=xorg} --caption "${DMSG_APPNAME:=$appname}" --title "$2" --error "$3" 
-			dmsg_return_status=${DMG_ERR_STAUS:=1}  
+			dmsg_return_status=${DMSG_ERR_STAUS:=1}  
 			;;
 		    i) kdialog --icon ${DMSG_ICON:=xorg} --caption "${DMSG_APPNAME:=$appname}" --title "$2" --inputbox "$3" 
 			dmsg_return_status=$?
@@ -107,7 +107,7 @@ d_msg() # display msgs and get input
 	 *)
 		    case $1 in
 		    !) xmessage -center -title "$2 - ${APPNAME:=$appname}" "err: "$3"" ;
-			dmsg_return_status=${DMG_ERR_STAUS:=1} 
+			dmsg_return_status=${DMSG_ERR_STAUS:=1} 
 			;;
 		    f) xmessage -center -title "$2  -${APPNAME:=$appname}" -buttons no:1,yes:0 "$3" 
 			dmsg_return_status=$? 
@@ -128,7 +128,7 @@ d_msg() # display msgs and get input
 	      case ${DMSG_APP:-native} in
 	      dialog)
 		  case "$1" in 
-	              !) dialog --title "$2 -${APPNAME:=$appname}" --infobox "error:$3" 0 0 ;;
+	              !) dialog --title "$2 -${APPNAME:=$appname}" --infobox "error:$3" 0 0 ; dmsg_return_status=${DMSG_ERR_STAUS:=1};;
 		      #!) cgi_dialog ! "$3" ; dmsg_return_status=${DMG_ERR_STAUS:=1}  ;;
 		      f) dialog --title "$2 - ${APPNAME:=$appname}" --yesno "$3"   0 0 
 			  dmsg_return_status=$?
@@ -142,7 +142,7 @@ d_msg() # display msgs and get input
 		  ;;
 	      native)
 		  case "$1" in
-		      !) echo  "$3" ; dmsg_return_status=${DMG_ERR_STAUS:=1}  ;;
+		      !) echo  "$3" ; dmsg_return_status=${DMSG_ERR_STAUS:=1} ;;
 		      f)  echo ""$3" y|n"
 			  read a 
 			  if [ ! $a = y ] ; then
