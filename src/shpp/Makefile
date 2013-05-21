@@ -12,7 +12,7 @@ $(TARGET): ${TARGET:=.in.sh}
 		shpp.in.sh > shpp
 	chmod +x shpp
 
-tests: 
+tests: $(TARGET)
 	$(MAKE) -C $(@)
 install: $(TARGET)
 	$(INSTALL) -m755 $(<) $(bindir)/$(<)
