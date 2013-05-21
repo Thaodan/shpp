@@ -680,7 +680,7 @@ if [ ! $# = 0 ] ; then
 		optspec=o:O:Cc:D:I:M:v # b:dp #-: # short options
 		optspec_long=output:,option:,config:,color,,legacy,stdout,critical-warning,tmp:,stderr:,keep,debug,verbose,errexit,\*=\* #,binpath:,desktop,prefix # long options
 		PROCESSED_OPTSPEC=$( getopt -qo $optspec --long $optspec_long \
-		    -n $appname -- "$@" ) || error_msg input "Wrong or to less  input given!" ||  exit 1 
+		    -n $appname -- "$@" ) || __error error "Wrong or to less  input given!" ||  exit 1 
 		eval set -- "$PROCESSED_OPTSPEC"; 
 		while [ !  $#  =  1  ]  ; do
 		    case $1 in 
