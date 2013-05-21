@@ -42,7 +42,6 @@ else
 fi
 
 #####################################################################
-# tools.sh.in
 
 ### communication ###
 __plain() {
@@ -88,19 +87,11 @@ die() {
     exit $1
 }
 
-
-
-# tools.sh.in end 
-
-##################################
-
-
 cleanup() {
     if [ ! $keep ] ; then 
-	rm -rf `cat $tmp_dir/$IID/clean_files`; 
+	rm -rf $( cat $tmp_dir/$IID/clean_files); 
     fi
 }
-
 
 var() {
     case $1 in 
@@ -146,6 +137,7 @@ count() {
 	+)  echo $(( $( cat $tmp_dir/$COUNTER ) + $2 )) > $tmp_dir/$COUNTER ;;
     esac
 }
+
 alias count--='count - 1'
 alias count++='count + 1'
 
@@ -248,13 +240,13 @@ find_commands() {
 		*) command=$_command ;;	       		 
 	    esac					      			
 	    case "$command" in
-		define) 	define $arg1  ;;
-		include) 	include $arg1 $arg2 $arg3 ;;
-		macro)          macro $arg1 $arg2  $arg3 ;;
-		ifdef)	        ifdef "$arg1" ;;
-		ifndef)         ifndef "$arg1" ;;
-		if)             If $arg1       ;;
-		else)	        Else               ;;
+		define) 	define   $arg1                             ;;
+		include) 	include  $arg1   $arg2  $arg3              ;;
+		macro)          macro    $arg1   $arg2  $arg3              ;;
+		ifdef)          ifdef    "$arg1"                           ;;
+		ifndef)         ifndef   "$arg1"                           ;;
+		if)             If       $arg1                             ;;
+		else)	        Else                                       ;;
 		endif)	
 		    # just a stub call for syntax error 
 		    # cause endif was used before if/ifdef/else
@@ -376,7 +368,7 @@ If() {
 		*) __condition="$1 $__condition" ; shift;;
 	    esac
 	done
-	if [ ` echo "$__condition" | bc ` = $__logic_number ] ; then
+	if [ $( echo "$__condition" | bc ) = $__logic_number ] ; then
 	  # if condition was true and we found && (and) go and parse the rest of condition
 	    if [ $__break_true ] ; then 
 		unset __condition
@@ -511,7 +503,6 @@ define() {
     var defines/${1}
 }
 
-
 ### commands end ### 
 
 ### runners ###
@@ -608,7 +599,7 @@ stub_main()    {
     # else gen rnd var and move old self to new instance and create new self
     else
 	# same here: init InstanceID
-	IID=`tr -dc 1-9 < /dev/urandom | head -c5`
+	IID=$(tr -dc 1-9 < /dev/urandom | head -c5)
         mkdir -p "$tmp_dir/$IID"
 	mv "$tmp_dir/self" "$tmp_dir/$IID/.lastself"
 	ln -s $IID $tmp_dir/self
@@ -638,7 +629,7 @@ stub_main()    {
 	rm $tmp_dir/self
 	mv -f  $tmp_dir/$IID/.lastself $tmp_dir/self
 	cleanup
-	IID=`readlink $tmp_dir/self` # re init id from last instance
+	IID=$(readlink $tmp_dir/self) # re init id from last instance
     else
 	cleanup
     fi
@@ -714,7 +705,7 @@ if [ ! $# = 0 ] ; then
 			-I) INCLUDE_SPACES=$2:$INCLUDE_SPACES; shift 2;;
 			-M) MACRO_SPACES=$2:$MACRO_SPACES; shift 2;;
 			-o|--output) target_name="$2"; shift 2 ;;
-			--stdout) target_name="/dev/stdout" ; shift ;;
+d			--stdout) target_name="/dev/stdout" ; shift ;;
 			 # tells shpp to pass stder to $2
 			--stderr) exec 2> $2 ; shift  2;;
 			--) shift; break ;;
