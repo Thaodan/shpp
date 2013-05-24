@@ -1,4 +1,4 @@
 #\\define SUCCES=true
 #\\ifdef SUCCES
-Erfolgreich
+#\\msg Erfolgreich
 #\\endif

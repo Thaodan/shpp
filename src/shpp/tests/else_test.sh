@@ -2,5 +2,5 @@
 #\\ifdef Else
 #\\error "nicht erfolgreich"
 #\\else	
-erfolgreich
+#\\msg Erfolgreich
 #\\endif
