@@ -703,7 +703,7 @@ if [ ! $# = 0 ] ; then
 			-I) INCLUDE_SPACES=$2:$INCLUDE_SPACES; shift 2;;
 			-M) MACRO_SPACES=$2:$MACRO_SPACES; shift 2;;
 			-o|--output) target_name="$2"; shift 2 ;;
-d			--stdout) target_name="/dev/stdout" ; shift ;;
+			--stdout) target_name="/dev/stdout" ; shift ;;
 			 # tells shpp to pass stder to $2
 			--stderr) exec 2> $2 ; shift  2;;
 			--) shift; break ;;
