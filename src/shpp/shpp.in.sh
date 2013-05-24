@@ -451,7 +451,7 @@ include() {
 	    *) __cleaned_include=$1; shift;;
 	esac
     done
-        verbose "L$line_ued: Opened $__cleaned_include to parse,\
+    verbose "L$line_ued: Opened $__cleaned_include to parse,\
 call a new instance ${parser+of} ${parser}to process file"
     case $__cleaned_include in
 	\<*\>) 
@@ -745,6 +745,11 @@ if [ ! $# = 0 ] ; then
 		    false
 		    shift
 		else
+		    for signal in TERM HUP QUIT; do
+			trap "IID=1 cleanup; exit 1" $signal
+		    done
+		    unset signal
+		    trap "IID=1 cleanup; exit 130" INT
 		    stub_main $1 $target_name
 		    shift
 		fi
