@@ -440,17 +440,19 @@ include() {
             call ourself to process file"
     mkdir -p $tmp_dir/self/include/files
     touch $tmp_dir/self/include/counter
-    for __include_arg in $@ ; do
-	case $__include_arg in  
-	    noparse)  __parser=noparse;;
+    while [ ! $# = 0 ] ; do
+	case $1 in  
+	    noparse)  __parser=noparse; shift;;
 	    parser=*) 
 		# set parser to use another parser than shpp 
 		__parser=$( echo $1 | sed 's|parser=||' )
-		;; 
-	    parser_args=*)__parser_args=$( echo $1 | sed 's|parser_args=||' );; 
-	    *) __cleaned_include="$__include_arg" ;;
+		shift;; 
+	    parser_args=*)__parser_args=$( echo $1 | sed 's|parser_args=||' )
+		shift;; 
+	    *) non_arg=$1; shift;;
 	esac
     done
+    __cleaned_include="$non_arg"
     case $__cleaned_include in
 	\<*\>) 
            __realy_cleaned_include=$(echo "$__cleaned_include" | \
@@ -482,9 +484,8 @@ include() {
 	    $tmp_dir/$IID/include/files/\ 
 	    ${current_include_no}${__outputfile__cleaned_include}  || \ 
 	     error "spawned copy of ourself: $appname returned $?, quiting" ;; 
-	noparse)  ln -s  $__cleaned_include \
-	    $tmp_dir/$IID/include/files/\ 
-	    ${current_include_no}${__outputfile__cleaned_include} 
+	noparse)  ln -s  $PWD/$__cleaned_include \
+	    $tmp_dir/$IID/include/files/${current_include_no}${__outputfile__cleaned_include} 
 	    # no $parser is used
 	    ;;
 	SELF)
