@@ -452,7 +452,6 @@ include() {
 	    *) __cleaned_include=$1; shift;;
 	esac
     done
-    __cleaned_include="$non_arg"
     case $__cleaned_include in
 	\<*\>) 
            __realy_cleaned_include=$(echo "$__cleaned_include" | \
