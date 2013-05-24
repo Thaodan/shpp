@@ -185,7 +185,7 @@ find_commands() {
 		false
 	    fi
 	else
-	    verbose "L$line_ued: Found $_command calling corresponding command"
+	    verbose "L$line_ued: Found '$_command' calling corresponding command"
 	    case $_command in 
 		#if $_command has space, clear  it and give 
 		# the commands still the ability to   know who they are
@@ -436,8 +436,7 @@ include() {
 	__outputfile__cleaned_include  __realy_cleaned_include \
 	__include_space current_include_no __not_found=false 
 
-    verbose "L$line_ued: Opened $1 to parse,\
-            call ourself to process file"
+
     mkdir -p $tmp_dir/self/include/files
     touch $tmp_dir/self/include/counter
     while [ ! $# = 0 ] ; do
@@ -452,6 +451,8 @@ include() {
 	    *) __cleaned_include=$1; shift;;
 	esac
     done
+        verbose "L$line_ued: Opened $__cleaned_include to parse,\
+call a new instance ${parser+of} ${parser}to process file"
     case $__cleaned_include in
 	\<*\>) 
            __realy_cleaned_include=$(echo "$__cleaned_include" | \
