@@ -2,5 +2,3 @@
 #\\ifdef SUCCES
 Erfolgreich
 #\\endif
-
-
