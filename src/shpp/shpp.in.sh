@@ -449,7 +449,7 @@ include() {
 		shift;; 
 	    parser_args=*)__parser_args=$( echo $1 | sed 's|parser_args=||' )
 		shift;; 
-	    *) non_arg=$1; shift;;
+	    *) __cleaned_include=$1; shift;;
 	esac
     done
     __cleaned_include="$non_arg"
