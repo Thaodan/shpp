@@ -296,7 +296,6 @@ register_external() {
 #\\macro
 macro() {
     local  __cleaned_macro __macro_space __not_found=false
-    verbose "found macro: $1, doing syntax check"
     case $1 in
 	\<*\>) 
             __cleaned_macro=$(echo "$1" | sed -e 's/^<//' -e 's/>$//')
@@ -316,11 +315,12 @@ macro() {
 	    __cleaned_macro=$1
 	    ;;
     esac
-    [ $__not_found = true ] && error "$__cleaned_macro not found"
+    [ $__not_found = true ] && error "'$__cleaned_macro' not found"
+    verbose "found macro: '$__cleaned_macro', doing syntax check"
     if sh -n $__cleaned_macro ; then
 	. $__cleaned_macro
     else
-	error "$cleaned_macro don't passed syntax check, quiting"
+	error "'__$cleaned_macro' don't passed syntax check, quiting"
     fi  
 }
 
@@ -421,7 +421,7 @@ endif() {
 Else() {
     if [ "$unsuccesfull" = false ] ; then
 	verbose "L$line_ued:Last if was succesfull,\
-                removing content from this else till next endif" 
+removing content from this else till next endif" 
 	if_line=$line # save $current_line for find_commands 
 	erase_till_endif=true # say find_commands it has to erase fill from 
 	                      # $if_line till next found endif
@@ -451,7 +451,7 @@ include() {
 	    *) __cleaned_include=$1; shift;;
 	esac
     done
-    verbose "L$line_ued: Opened $__cleaned_include to parse,\
+    verbose "L$line_ued: Opened '$__cleaned_include' to parse,\
 call a new instance ${parser+of} ${parser}to process file"
     case $__cleaned_include in
 	\<*\>) 
@@ -473,7 +473,7 @@ call a new instance ${parser+of} ${parser}to process file"
 	    fi
             ;;
     esac
-    [ $__not_found = true ] && error "$__cleaned_include not found"
+    [ $__not_found = true ] && error "'$__cleaned_include' not found"
     count++ self/include/counter
     current_include_no=$( var self/include/counter )
     __outputfile__cleaned_include=$( echo $__cleaned_include | \
@@ -564,7 +564,7 @@ include_includes() {
 }
 
 replace_vars() {
-    verbose replace_vars "Opening $2"
+    verbose replace_vars "Opening '$2'"
     local replace_var replace_var_content
     old_ifs=$IFS
     IFS='
@@ -605,7 +605,7 @@ stub_main()    {
 	mv "$tmp_dir/self" "$tmp_dir/$IID/.lastself"
 	ln -s $IID $tmp_dir/self
     fi
-    verbose "Entering instance $IID"
+    verbose "Entering instance '$IID'"
     # make a copy for our self
     cp "$1" "$tmp_dir/self/pc_file.stage1"
     find_commands "$tmp_dir/self/pc_file.stage1"
@@ -738,7 +738,7 @@ if [ ! $# = 0 ] ; then
      		if [ -z "$target_name" ] ; then
 		    readonly target_name=/dev/stdout
 		    __warning warning\
-			"using /dev/stdout as default output"
+			"using '/dev/stdout' as default output"
 		fi 
 		if [ ! -e "$1" ] ; then
 		    __error error "$source_file not found" 
