@@ -500,7 +500,10 @@ define() {
     # use internal var function with defines as root space
     # NOTE: settings arrays like this curenntly not supported:
     # #\\define FRUITS { BANANA APPEL TOMATO }
-    var defines/${1}
+    case $1 in
+	*=*) var defines/${1}      ;;
+        *)   var defines/${1}=${2} ;;
+    esac
 }
 
 ### commands end ### 
@@ -700,7 +703,7 @@ if [ ! $# = 0 ] ; then
 			--keep) keep=true; shift ;; # keep temp files
 			# all warnings are critical
 			--critical-warning) WARNING_IS_ERROR=true ; shift ;; 
-			-D) var defines/$2; shift 2 ;;
+			-D) define $2; shift 2 ;;
 			-I) INCLUDE_SPACES=$2:$INCLUDE_SPACES; shift 2;;
 			-M) MACRO_SPACES=$2:$MACRO_SPACES; shift 2;;
 			-o|--output) target_name="$2"; shift 2 ;;
