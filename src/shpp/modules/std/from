@@ -1,0 +1,11 @@
+#!/bin/sh
+# from <file> <command> <args>
+# example:
+# from test  import __test
+from() {
+    var self/from=$1
+    shift 
+    $@
+}
+
+register_external --command from 
