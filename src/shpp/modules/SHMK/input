@@ -1,70 +1,137 @@
 #!/bin/sh
 
-add_input_action() {
-        argument="$1"
-    shift
-    #old_ifs=$IFS
-   # IFS=:
-    #for arg in $argument ; do
-      tmp_action="$(read_farray "$argument" 1 )"
-      tmp_command="$(read_farray "$argument" 2)"
-      tmp_help="$(read_farray "$argument" 3 )"
-      if [ -z "$input_actions" ] ; then 
-	input_actions="${tmp_action:-\:}"
-      else
-	input_actions="$input_actions:${tmp_action:-\:}"
-      fi
-      if [ -z "$input_commands" ] ; then
-	input_commands="${tmp_command:-\:}"
-      else
-	input_commands="$input_commands:${tmp_command:-\:}"
-      fi
 
-      if [ -z "$input_help" ] ; then
-	input_help="${tmp_help:-\-}"
-      else
-	input_help="$input_help:${tmp_help:-\-}"
-      fi
-#       input_commands="$input_commands:
-#       input_help="$input_help:
-  #  done
-   # IFS=$old_ifs
-  done
+add_input_action() {
+    local help_msg help long short run action
+    while [ ! $# = 0 ] ; do
+ case $1 in 
+     --help) help_msg=$2; shift 2;;
+     --long) long=$2; shift 2;;
+     --short)short=$2; shift 2;;
+     --run)  run=$2; shift 2;;
+     '') shift $# ;;
+     *) error "$command unkown option" ;;
+ esac
+    done
+    # set action name. prefer long option as name 
+    if [ $long ] ; then
+ action=$( echo $long | sed 's|^--||' )
+    elif [ $short ] ; then
+       action=$( echo $short | sed 's|^⁻||' )
+    else
+ error "$command need either --long or --short option"
+    fi
+    if [ "$run" ] ; then 
+ var SHMK/input/actions/$action/run="$run"
+    else
+ error "$command need --run"
+    fi
+    if [ $long ] ; then
+ var SHMK/input/actions/$action/long=$long
+ help_msg="$long"
+    fi
+    if [ $short ] ; then
+ var SHMK/input/actions/$action/short=$short
+ help_msg="$help_msg${help_msg:+ }$short"
+    fi
+    if [ "$help" ] ; then
+ $help_msg="${help_msg:+ }$help"
+    fi
+    var SHMK/input/actions/$action/help_msg="$help_msg\\n"
 }
 
 
 SHMK_generate_help() {
-    echo "echo "\$INSTALL_APPNAME - help ""
-    if [  -z $defined_SHMK_INPUT_HELP_NODEFAULTS ] ; then
-	cat <<SHMK_INPUT_STD_HELP_TEXT
-    printf 'standart options:\n'
-    printf '\t--help\tshow this message\n' 
-    printf '\t--version -v\t show version of $appname\n'
-    printf '\n'
-SHMK_INPUT_STD_HELP_TEXT
-    fi
-    __input_actions_count=$( get_farray_lenght "$defined_input_actions" )
-    cat <<SHMK_INPUT_HELP_TEXT
-  printf 'cat <<SHMK_INPUT_HELP_TEXT\n'
-  printf 'options:\n'
-SHMK_INPUT_HELP_TEXT
-    while [  ! ${__counter:-1} = $__input_actions_count ] ; do
-	__counter=$(( $__counter + 1 ))
-	printf "\t$(read_farray "$input_actions" $counter )\t$(read_farray "$input_help" $counter)" >> "$tmp_dir/shmk_input_help.shpp"
-    done
-    SHMK_INPUT_HELP_TEXT
-
-
-
-
-    current_line_ued=$(( $current_line_ued + 1 ))
-    current_line=$(( $current_line + 1 ))
-    include noparse "$tmp_dir/shmk_input_help.shpp"
+   local action
+   echo "cat <<__HELP_MSG__" > $tmp_dir/SHMK/input/help_msg
+   for action in $tmp_dir/SHMK/input/actions/* ; do
+       cat $action/help_msg >> $tmp_dir/SHMK/input/help_msg
+   done
+   echo "--help -h show this help" >> $tmp_dir/SHMK/input/help_msg
+   echo "__HELP_MSG__"  >> $tmp_dir/SHMK/input/help_msg
 }
 SHMK_generate_input_parser() {
+ #   if defined SHMK/input/getopt ; then
+#    printf "eval set -- \$(getopt -o $(cat $tmp_dir/SHMK/input/actions/*/short) \
+#--long $(cat $tmp_dir/SHMK/input/actions/*/long)) -- "\$@"\n" \          
+#    > $tmp_dir/SHMK/input/parser
+ #   fi
+    echo "while [ \$ = 0 ] ; do"
+    for action in $( var $tmp_dir/SHMK/input/actions ) ; do
+ if defined SHMK/input/$action/long ; then
+     printf "$(cat $tmp_dir/SHMK/input/$action/long)|" >> $tmp_dir/SHMK/input/parser
+ fi
+ help_msg="$long"
+    fi
+    if [ $short ] ; then
+ var SHMK/input/actions/$action/short=$short
+ help_msg="$help_msg${help_msg:+ }$short"
+    fi
+    if [ "$help" ] ; then
+ $help_msg="${help_msg:+ }$help"
+    fi
+    var SHMK/input/actions/$action/help_msg="$help_msg\\n"
+}
 
-    current_line_ued=$(( $current_line_ued + 1 ))
-    current_line=$(( $current_line + 1 ))
+
+SHMK_generate_help() {
+   local action
+   echo "cat <<__HELP_MSG__" > $tmp_dir/SHMK/input/help_msg
+   for action in $tmp_dir/SHMK/input/actions/* ; do
+       cat $action/help_msg >> $tmp_dir/SHMK/input/help_msg
+   done
+   echo "--help -h show this help" >> $tmp_dir/SHMK/input/help_msg
+   echo "__HELP_MSG__"  >> $tmp_dir/SHMK/input/help_msg
+}
+SHMK_generate_input_parser() {
+ #   if defined SHMK/input/getopt ; then
+#    printf "eval set -- \$(getopt -o $(cat $tmp_dir/SHMK/input/actions/*/short) \
+#--long $(cat $tmp_dir/SHMK/input/actions/*/long)) -- "\$@"\n" \          
+#    > $tmp_dir/SHMK/input/parser
+ #   fi
+    echo "while [ \$ = 0 ] ; do"
+    for action in $( var $tmp_dir/SHMK/input/actions ) ; do
+ if defined SHMK/input/$action/long ; then
+     printf "$(cat $tmp_dir/SHMK/input/$action/long)|" >> $tmp_dir/SHMK/input/parser
+ fi
+ help_msg="$long"
+    fi
+    if [ $short ] ; then
+ var SHMK/input/actions/$action/short=$short
+ help_msg="$help_msg${help_msg:+ }$short"
+    fi
+    if [ "$help" ] ; then
+ $help_msg="${help_msg:+ }$help"
+    fi
+    var SHMK/input/actions/$action/help_msg="$help_msg\\n"
+}
+
+
+SHMK_generate_help() {
+   local action
+   echo "cat <<__HELP_MSG__" > $tmp_dir/SHMK/input/help_msg
+   for action in $tmp_dir/SHMK/input/actions/* ; do
+       cat $action/help_msg >> $tmp_dir/SHMK/input/help_msg
+   done
+   echo "--help -h show this help" >> $tmp_dir/SHMK/input/help_msg
+   echo "__HELP_MSG__"  >> $tmp_dir/SHMK/input/help_msg
+}
+SHMK_generate_input_parser() {
+ #   if defined SHMK/input/getopt ; then
+#    printf "eval set -- \$(getopt -o $(cat $tmp_dir/SHMK/input/actions/*/short) \
+#--long $(cat $tmp_dir/SHMK/input/actions/*/long)) -- "\$@"\n" \          
+#    > $tmp_dir/SHMK/input/parser
+ #   fi
+    echo "while [ \$ = 0 ] ; do"
+    for action in $( var $tmp_dir/SHMK/input/actions ) ; do
+ if defined SHMK/input/$action/long ; then
+     printf "$(cat $tmp_dir/SHMK/input/$action/long)|" >> $tmp_dir/SHMK/input/parser
+ fi
+     
+ printf "$(cat $tmp_dir/SHMK/input/$action/short)"
+    done
+    printf '--) break;;\n esac\ndone\n' >> $tmp_dir/SHMK/input/parser
+    
 }
 
 register_external --command add_input_action
