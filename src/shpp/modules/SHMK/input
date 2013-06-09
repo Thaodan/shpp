@@ -4,40 +4,73 @@
 add_input_action() {
     local help_msg help long short run action
     while [ ! $# = 0 ] ; do
- case $1 in 
-     --help) help_msg=$2; shift 2;;
-     --long) long=$2; shift 2;;
-     --short)short=$2; shift 2;;
-     --run)  run=$2; shift 2;;
-     '') shift $# ;;
-     *) error "$command unkown option" ;;
- esac
+	case $1 in 
+	    --help) help_msg=$2; shift 2;;
+	    --long) long=$2; shift 2;;
+	    --short)short=$2; shift 2;;
+	    --run)  run=$2; shift 2;;
+	    '') shift $# ;;
+	    *) error "$command unkown option" ;;
+	esac
     done
     # set action name. prefer long option as name 
     if [ $long ] ; then
- action=$( echo $long | sed 's|^--||' )
+	action=$( echo $long | sed 's|^--||' )
     elif [ $short ] ; then
-       action=$( echo $short | sed 's|^⁻||' )
+	action=$( echo $short | sed 's|^⁻||' )
     else
- error "$command need either --long or --short option"
+	error "$command need either --long or --short option"
     fi
     if [ "$run" ] ; then 
- var SHMK/input/actions/$action/run="$run"
+	var SHMK/input/actions/$action/run="$run"
     else
- error "$command need --run"
+	error "$command need --run"
     fi
     if [ $long ] ; then
- var SHMK/input/actions/$action/long=$long
- help_msg="$long"
+	var SHMK/input/actions/$action/long=$long
+	help_msg="$long"
     fi
     if [ $short ] ; then
- var SHMK/input/actions/$action/short=$short
- help_msg="$help_msg${help_msg:+ }$short"
+	var SHMK/input/actions/$action/short=$short
+	help_msg="$help_msg${help_msg:+ }$short"
     fi
     if [ "$help" ] ; then
- $help_msg="${help_msg:+ }$help"
+	$help_msg="${help_msg:+ }$help"
     fi
     var SHMK/input/actions/$action/help_msg="$help_msg\\n"
+}
+
+
+SHMK_generate_help() {
+    local action
+    echo "cat <<__HELP_MSG__" > $tmp_dir/SHMK/input/help_msg
+    for action in $tmp_dir/SHMK/input/actions/* ; do
+	cat $action/help_msg >> $tmp_dir/SHMK/input/help_msg
+    done
+    echo "--help -h show this help" >> $tmp_dir/SHMK/input/help_msg
+    echo "__HELP_MSG__"  >> $tmp_dir/SHMK/input/help_msg
+}
+SHMK_generate_input_parser() {
+    #   if defined SHMK/input/getopt ; then
+    #    printf "eval set -- \$(getopt -o $(cat $tmp_dir/SHMK/input/actions/*/short) \
+    #--long $(cat $tmp_dir/SHMK/input/actions/*/long)) -- "\$@"\n" \          
+    #    > $tmp_dir/SHMK/input/parser
+    #   fi
+    echo "while [ \$ = 0 ] ; do"
+    for action in $( var $tmp_dir/SHMK/input/actions ) ; do
+	if defined SHMK/input/$action/long ; then
+	    printf "$(cat $tmp_dir/SHMK/input/$action/long)|" >> $tmp_dir/SHMK/input/parser
+	fi
+	help_msg="$long"
+	fi
+	if [ $short ] ; then
+	    var SHMK/input/actions/$action/short=$short
+	    help_msg="$help_msg${help_msg:+ }$short"
+	fi
+	if [ "$help" ] ; then
+	    $help_msg="${help_msg:+ }$help"
+	fi
+	var SHMK/input/actions/$action/help_msg="$help_msg\\n"
 }
 
 
@@ -58,24 +91,24 @@ SHMK_generate_input_parser() {
  #   fi
     echo "while [ \$ = 0 ] ; do"
     for action in $( var $tmp_dir/SHMK/input/actions ) ; do
- if defined SHMK/input/$action/long ; then
-     printf "$(cat $tmp_dir/SHMK/input/$action/long)|" >> $tmp_dir/SHMK/input/parser
- fi
- help_msg="$long"
+	if defined SHMK/input/$action/long ; then
+	    printf "$(cat $tmp_dir/SHMK/input/$action/long)|" >> $tmp_dir/SHMK/input/parser
+	fi
+	help_msg="$long"
     fi
     if [ $short ] ; then
- var SHMK/input/actions/$action/short=$short
- help_msg="$help_msg${help_msg:+ }$short"
+	var SHMK/input/actions/$action/short=$short
+	help_msg="$help_msg${help_msg:+ }$short"
     fi
     if [ "$help" ] ; then
- $help_msg="${help_msg:+ }$help"
+	$help_msg="${help_msg:+ }$help"
     fi
     var SHMK/input/actions/$action/help_msg="$help_msg\\n"
 }
 
 
 SHMK_generate_help() {
-   local action
+    local action
    echo "cat <<__HELP_MSG__" > $tmp_dir/SHMK/input/help_msg
    for action in $tmp_dir/SHMK/input/actions/* ; do
        cat $action/help_msg >> $tmp_dir/SHMK/input/help_msg
@@ -88,47 +121,14 @@ SHMK_generate_input_parser() {
 #    printf "eval set -- \$(getopt -o $(cat $tmp_dir/SHMK/input/actions/*/short) \
 #--long $(cat $tmp_dir/SHMK/input/actions/*/long)) -- "\$@"\n" \          
 #    > $tmp_dir/SHMK/input/parser
- #   fi
+    #   fi
     echo "while [ \$ = 0 ] ; do"
     for action in $( var $tmp_dir/SHMK/input/actions ) ; do
- if defined SHMK/input/$action/long ; then
-     printf "$(cat $tmp_dir/SHMK/input/$action/long)|" >> $tmp_dir/SHMK/input/parser
- fi
- help_msg="$long"
-    fi
-    if [ $short ] ; then
- var SHMK/input/actions/$action/short=$short
- help_msg="$help_msg${help_msg:+ }$short"
-    fi
-    if [ "$help" ] ; then
- $help_msg="${help_msg:+ }$help"
-    fi
-    var SHMK/input/actions/$action/help_msg="$help_msg\\n"
-}
-
-
-SHMK_generate_help() {
-   local action
-   echo "cat <<__HELP_MSG__" > $tmp_dir/SHMK/input/help_msg
-   for action in $tmp_dir/SHMK/input/actions/* ; do
-       cat $action/help_msg >> $tmp_dir/SHMK/input/help_msg
-   done
-   echo "--help -h show this help" >> $tmp_dir/SHMK/input/help_msg
-   echo "__HELP_MSG__"  >> $tmp_dir/SHMK/input/help_msg
-}
-SHMK_generate_input_parser() {
- #   if defined SHMK/input/getopt ; then
-#    printf "eval set -- \$(getopt -o $(cat $tmp_dir/SHMK/input/actions/*/short) \
-#--long $(cat $tmp_dir/SHMK/input/actions/*/long)) -- "\$@"\n" \          
-#    > $tmp_dir/SHMK/input/parser
- #   fi
-    echo "while [ \$ = 0 ] ; do"
-    for action in $( var $tmp_dir/SHMK/input/actions ) ; do
- if defined SHMK/input/$action/long ; then
-     printf "$(cat $tmp_dir/SHMK/input/$action/long)|" >> $tmp_dir/SHMK/input/parser
- fi
-     
- printf "$(cat $tmp_dir/SHMK/input/$action/short)"
+	if defined SHMK/input/$action/long ; then
+	    printf "$(cat $tmp_dir/SHMK/input/$action/long)|" >> $tmp_dir/SHMK/input/parser
+	fi
+	
+	printf "$(cat $tmp_dir/SHMK/input/$action/short)"
     done
     printf '--) break;;\n esac\ndone\n' >> $tmp_dir/SHMK/input/parser
     
