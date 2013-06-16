@@ -593,12 +593,14 @@ clear_flags() { # cleas #\\ flags in
 
 stub_main()    {
 #\\!debug_if	mkdir -p "$tmp_dir/ifsteps"
-    # if we are the first instance our id is 1
+    # if we got no $tmp_dir/self we are at main instance, so init it
     if [ ! -e $tmp_dir/self ] ; then
-	# init InstanceID if we can't use $tmp_dir/self
+	# init InstanceID to use if we can't use $tmp_dir/self
+	# if we are the first instance our id is 1
 	IID=1
 	mkdir -p "$tmp_dir/1"
 	ln -s 1 "$tmp_dir/self"
+	# add our whole $tmp_dir to our clean_files list
 	echo "$tmp_dir" > $tmp_dir/self/clean_files 
     # else gen rnd var and move old self to new instance and create new self
     else
