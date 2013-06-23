@@ -8,9 +8,17 @@ depends=('sh' 'coreutils' 'sed' 'bc')
 source=("${pkgname}-${pkgver}.tar.gz")
 conlicts=('sh-make-tools')
 
+build() 
+{
+  cd $srcdir/$pkgname-$pkgver/src
+  make 
+}
 
-
+check() {
+  cd $srcdir/$pkgname-$pkgver/src
+  make tests
+}
 package() {
-  cd $srcdir/$pkgname-$pkgver
-  make install
+  cd $srcdir/$pkgname-$pkgver/src
+  make PREFIX=$pkgdir/usr install
 }

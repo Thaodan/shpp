@@ -1,10 +1,10 @@
 # for info see dist_system/doc/README
 
 PROJECT_NAME=shpp
+PROJECT_VER=2.1
 SOURCE_DIST=dist/source
 SOURCE_DIR=src
 DIST_DIR=dist
-BUILD_FOLDER=sh-make-tools-$VER
+BUILD_FOLDER=${PROJECT_NAME}-${PROJECT_VER}
 ARCHIVE_ENDING=.tar.gz
-DIST_FILES="dist dist_system src external tools README INSTALL build_src.sh PROJECT_INFO"
-PROJECT_VER=2.1
+DIST_FILES="dist dist_system rules.mk src external tools README INSTALL build_src.sh PROJECT_INFO"
