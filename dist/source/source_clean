@@ -1,3 +1,1 @@
-#!/bin/sh -e
-
-sh -c  'cd src; . $PWD/sh_makefile; clean'
+make clean

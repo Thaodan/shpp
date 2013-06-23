@@ -8,7 +8,6 @@ SOURCE_PATH=src
 if [ ! -e $SOURCE_PATH ] ; then 
   cd ../.. # cd to source dir
 fi
-. $PWD/src/sh_makefile
 
 
 . $PWD/PROJECT_INFO
@@ -16,7 +15,7 @@ fi
 
 
 
-BUILD_FILE=$PROJECT_NAME-$VER${ARCHIVE_ENDING} # use projekt $VER when build src archive 
+BUILD_FILE=$PROJECT_NAME-$PROJECT_VER${ARCHIVE_ENDING} # use projekt $VER when build src archive 
 ######################
 ### excute part ###
 
