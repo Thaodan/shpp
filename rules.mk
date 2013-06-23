@@ -1,6 +1,6 @@
 SHPP	      = shpp
 DESTDIR       =
-PREFIX        = /usr/local 
+PREFIX        = /usr/local
 INSTALL       = /usr/bin/install -D
 MSGFMT        = /usr/bin/msgfmt
 SED           = /bin/sed
