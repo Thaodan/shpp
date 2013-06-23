@@ -1,18 +1,26 @@
 include ../rules.mk
-DISTDIRS=shpp
+# app specific  stuff
+TARGET		= shpp
+SHPP_VER	= 1.8
+GIT_REV		= $(shell ../../tools/git_revgen)
 
+all: $(TARGET)
 
-all: $(DISTDIRS)
+$(TARGET): ${TARGET:=.in.sh}
+	sed -e "s|@GITREV@|$(GIT_REV)|" \
+		-e "s|@VER@|$(SHPP_VER)|"\
+		shpp.in.sh > shpp
+	chmod +x shpp
 
-$(DISTDIRS):
+tests: $(TARGET)
 	$(MAKE) -C $(@)
+install: $(TARGET)
+	$(INSTALL) -m755 $(<) $(bindir)/$(<)
 
-clean: 
-	$(MAKE) -C shpp $(@)
-
-
-install: $(DISTDIRS)
-	$(MAKE) -C $(<) $(@)
+clean:
+	rm -f $(TARGET)
 
 
-.PHONY: all install clean $(DISTDIRS)
+.PHONY: all install clean tests
+
+

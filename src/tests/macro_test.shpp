@@ -1,0 +1,12 @@
+# 
+verbose "Testing #\\macro"
+warning "This is a test"
+count() {
+     n=$1
+     while [ ${n:-0} -gt 0 ] ; do
+     	   echo $n
+	   n=$(($n - 1 ))
+     done 
+}
+register_external --command  count
+
