@@ -1,58 +1,45 @@
-DESTDIR=../pkg
-PREFIX=usr
-APPNAME=sh_make_tools
-VER=2.1
-SHPP=shpp/shpp
+#!/bin/sh
+install=/usr/bin/install
+DESTDIR=pkg
+prefix=/usr
+PREFIX=$prefix
 install_prefix=/usr
-SHMAKE="LIBSH=/usr/lib/libsh libdir=$PWD sh_make/sh_make --mod-path=$PWD/sh_make/modules"
+SHPP=./../shpp
+APPNAME=shpp
+VER=1.8
+# if no sh_make instslled run it with tools/simple_shmake, just make shure that shpp is in $PATH
 
 default() {
-	sh_make_tools
+ shpp
 }
 
 prepare() {
- 	ln -fs /usr/lib/libsh libsh
+ mkdir -p $DESTDIR/$PREFIX/bin
 }
-
-sh_make_tools() {
-	prepare
-	sh_make 
-	shpp
-}
-
 
 shpp() {
-	eval $SHMAKE -f shpp/sh_makefile DESTDIR=../$DESTDIR
+	sed -e "s|@GITREV@|$(../../tools/git_revgen)|" \
+		-e "s|@VER@|$VER|"\
+		shpp.in.sh > shpp
+	chmod +x shpp
 }
-
-sh_make() {
- 	eval $SHMAKE -f sh_make/sh_makefile DESTDIR=../$DESTDIR
-}
-
-sh_make_install() {
-	eval $SHMAKE -f sh_make/sh_makefile DESTDIR=../$DESTDIR install	
-}
-
-shpp_install() {
-	eval $SHMAKE -f shpp/sh_makefile DESTDIR=../$DESTDIR install
-}
-
 install() {
-	mkdir -p $DESTDIR/$PREFIX	
-	shpp_install
-	sh_make_install
-	
-}
-clean()  {
-	sh  -c 'cd sh_make; . $PWD/sh_makefile; clean'
-	rm -f sh_make_pkg \
-	      pkg \
-	      ../install.sh \
-	      libsh
+  prepare
+  install_shpp
+
 }
 
+tests() {
+	load_module shmk_local/do_tests
+	cd tests
+	TESTFILES=$(find ! -iname "*~" -type f -iname \*.sh| tr '\n ' " ")
+	do_tests "$SHPP  %f --stdout --errexit"
+}
+install_shpp() {
+	$install shpp $DESTDIR/$PREFIX/bin/shpp
+}
 installer() {
-	load_module configure
-	load_module make_installer
-	gen_installer > ../install.sh
+  load_module configure
+  load_module make_installer
+  gen_installer > install.sh
 }
