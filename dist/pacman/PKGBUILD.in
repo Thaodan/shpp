@@ -6,7 +6,7 @@ arch=('any')
 license=('GPL2')
 depends=('sh' 'coreutils' 'sed' 'bc')
 source=("${pkgname}-${pkgver}.tar.gz")
-conlicts=('sh-make-tools')
+conflicts=('sh-make-tools')
 
 build() 
 {
