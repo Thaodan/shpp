@@ -1,0 +1,23 @@
+#!/bin/sh 
+
+####################################
+SH_MAKE_VER=@sh_make_ver@
+SH_MAKE_REV=@git_rev@
+#####################################
+readonly SH_MAKE_REV SH_MAKE_VER
+#####################################
+
+appname=$(basename $0)
+
+#\\include ../../external/libsh/src/farray.in.sh
+#\\include ../share/tools.sh.in
+
+#########################################################################
+
+stub() {
+  echo stub
+}
+
+
+
+

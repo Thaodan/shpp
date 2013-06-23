@@ -1,0 +1,103 @@
+#!/bin/sh
+
+### gen_depency_install -	copy depencys to $INSTALLER_DEPENCY_DIR and gen handle_depency for install.sh ###
+# depency_dir			# dir with depency files
+# INSTALLER_DEPENCY_DIR		# set destination dir for depency files
+#
+# handle files:
+# <depency_name>.list 		# list with depency files
+# <depency_name>-install	# file with depency instal handle
+#
+############################################################################
+gen_depency_install() {
+  cd $depency_dir || return 1
+  for depency in *.list ; do
+    for file in $( cat $depency ) ; do
+      cp $file ${INSTALLER_DEPENCY_DIR:-depends}/$file
+    done
+  done
+  
+  add_custom_install() {
+     gen_depency_install_func
+  }
+}
+
+
+gen_depency_install_func() {
+  cat <<_HAMDLE_DEPENCY_  
+  handle_depency() {
+    cd \$INSTALLER_DEPENCY_DIR # cd to depency_dir run *.install files and return for error if unsuccesfull
+      for depency_install in *.install ; do
+	sh -ce ". \$depency_install" || return 1
+      done
+    cd ..
+  }
+   
+_HAMDLE_DEPENCY_
+
+}
+
+
+# stub for custom instal function that can used in instal.shx
+add_custom_install() {
+  true
+}
+### gen_installer --		gen install.sh 						  ###
+# install_prefix 		# set default install prefix if prefix was not given 	- default /usr/local
+# install_config_prefix 	# set prefix for system config files 			- default /etc
+# INSTALL_FILES  		# set directory for installed files 			- default pkg
+# installer_actions		# actions that are prosssed before gen install.sh 
+# installer_actions_text	# actions that are prosssed while gen instal.sh that add new text
+######################################################################################
+gen_installer() {
+add_input_action '--info:display_info:display info about installed application'
+ add_input_action '--prefix:prefix=$2;shift:set install prefix'
+ add_input_action '--config-prefix:config_prefix=$2:set config prefix'
+add_input_action '--list-files:list_files:list applications files'
+
+for installer_action in $( read_farray ${installer_actions:-$(break)} 0 ) ; do
+  $installer_action
+done
+
+
+input_parser=true
+input_not_required=true
+  cat <<_MY_INSTALLER
+#!/bin/sh
+$(add_std_license_header)
+install_sh_ver=1.04
+build_sh_make_ver=$SH_MAKE_VER:$SH_MAKE_REV
+INSTALL_APPNAME="$APPNAME"
+INSTALL_APPNAME_VER=$VER
+prefix=${install_prefix:-/usr/local}
+config_prefix=${install_config_prefix:-/etc} # to add computability for unixes like OS X with /Library
+INSTALL_FILES=${INSTALL_FILES:-pkg}
+
+install_sh() {
+  cp -a \${INSTALL_FILES}/usr/* \$prefix
+  cp -a \${INSTALL_FILES}/etc/* \$config_prefix
+  $(add_custom_install)
+}
+
+display_info() {
+  cat << INFO_MSG
+
+appname: \$INSTALL_APPNAME
+version: \$INSTALL_APPNAME_VER
+sh_make version: \$build_sh_make_ver
+
+enabled flags: $flags
+INFO_MSG
+}
+
+list_files() {
+  ls -RU -1 \$INSTALL_FILES | sed 's/://' | sed '/^$/d'
+}
+
+
+
+$(after_parse)
+install_sh
+_MY_INSTALLER
+
+}

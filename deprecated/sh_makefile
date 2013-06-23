@@ -1,0 +1,69 @@
+#!/bin/sh
+INSTALL=/usr/bin/install
+DESTDIR=pkg
+PREFIX=/usr
+install_prefix=/usr
+LIBPREFIX=lib
+SHPP=../shpp/shpp
+APPNAME=sh_make
+VER=2.1
+git_rev=$(./../../tools/git_revgen)
+# if no sh_make instslled run it with tools/simple_shmake, just make shure that shpp is in $PATH
+
+default() {
+    sh_make
+    modules 
+}
+
+prepare() {
+    mkdir -p $DESTDIR/$PREFIX/bin
+    mkdir -p $DESTDIR/$PREFIX/lib/sh_make/modules
+}
+
+sh_make() {
+    $SHPP  -Dsh_make_ver=$VER -Dgit_rev=$git_rev -Dprefix=$PREFIX libsh_make.sh.in -o libsh_make 
+    $SHPP  -Dprefix=$PREFIX sh_make.sh.in -o sh_make
+    chmod +x sh_make
+}
+
+
+modules() {
+    $SHPP modules/configure.in -o modules/configure
+    $SHPP modules/main_module.in -o modules/main_module
+    $SHPP modules/make_installer.in -o modules/make_installer
+
+}
+
+
+install() {
+    prepare
+    install_sh_make
+    install_modules
+}
+
+install_sh_make() {
+    $INSTALL  sh_make $DESTDIR/$PREFIX/bin/sh_make
+    $INSTALL  libsh_make $DESTDIR/$PREFIX/$LIBPREFIX/sh_make/libsh_make
+}
+
+install_modules() {
+    $INSTALL modules/configure $DESTDIR/$PREFIX/$LIBPREFIX/sh_make/modules
+    $INSTALL modules/make_installer $DESTDIR/$PREFIX/$LIBPREFIX/sh_make/modules
+    $INSTALL modules/main_module $DESTDIR/$PREFIX/$LIBPREFIX/sh_make/modules
+}
+
+clean() {
+    rm -f sh_make \
+	  libsh_make \
+          modules/configure \
+	  modules/make_installer \
+	  modules/main_module \
+	  pkg \
+	
+}
+
+installer() {
+    load_module configure
+    load_module make_installer
+    gen_installer > install.sh
+}
