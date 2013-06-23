@@ -1,6 +1,6 @@
 # for info see dist_system/doc/README
 
-PROJECT_NAME=sh-make-tools
+PROJECT_NAME=shpp
 SOURCE_DIST=dist/source
 SOURCE_DIR=src
 DIST_DIR=dist
