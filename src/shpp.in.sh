@@ -484,7 +484,7 @@ call a new instance ${parser+of} ${parser}to process file"
 	    $tmp_dir/$IID/include/files/\ 
 	    ${current_include_no}${__outputfile__cleaned_include}  || \ 
 	     error "spawned copy of ourself: $appname returned $?, quiting" ;; 
-	noparse)  ln -s  $PWD/$__cleaned_include \
+	noparse)  ln -s  $__cleaned_include \
 	    $tmp_dir/$IID/include/files/${current_include_no}${__outputfile__cleaned_include} 
 	    # no $parser is used
 	    ;;
