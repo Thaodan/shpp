@@ -433,8 +433,8 @@ removing content from this else till next endif"
 #\\include
 include() {
     local  __include_arg  __parser __parser_args __cleaned_include \
-	__outputfile__cleaned_include  __realy_cleaned_include \
-	__include_space current_include_no __not_found=false 
+	__outputfile__cleaned_include  __include_space \
+	current_include_no __not_found=false 
 
 
     mkdir -p $tmp_dir/self/include/files
@@ -455,24 +455,21 @@ include() {
 call a new instance ${parser+of} ${parser}to process file"
     case $__cleaned_include in
 	\<*\>) 
-           __realy_cleaned_include=$(echo "$__cleaned_include" | \
-	       sed -e 's/^<//' -e 's/>$//')
-	   local IFS=:
-	   for __include_space in $INCLUDE_SPACES ; do
-               IFS=$old_ifs
-	       if [ -e "$__include_space"/"$__realy_cleaned_include" ] ; then
-		   __cleaned_include="$__include_space"/"$__realy_cleaned_include"
-		   __not_found=false
-	       else
-		   __not_found=true
-	       fi
-	   done 
-	   ;;
-	*)  if [ ! -e $__cleaned_include ] ; then
-		__not_found=true
-	    fi
-            ;;
+           __cleaned_include=$(echo "$__cleaned_include" | \
+	       sed -e 's/^<//' -e 's/>$//') ;;
     esac
+    local IFS=:
+    for __include_space in $INCLUDE_SPACES ; do
+        IFS=$old_ifs
+	if [ -e "$__include_space"/"$__cleaned_include" ] ; then
+	    __cleaned_include="$__include_space"/"$__cleaned_include"
+	    __not_found=false
+	    break
+	else
+	    __not_found=true
+	fi
+    done 
+
     [ $__not_found = true ] && error "'$__cleaned_include' not found"
     count++ self/include/counter
     current_include_no=$( var self/include/counter )
