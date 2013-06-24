@@ -20,9 +20,9 @@
 
 import() {
     local __import_file __import_link_mode pullobjs
-    while [ ! $# 0 ] ; do
+    while [ ! $# = 0 ] ; do
 	case $1 in
-	    --mode) __import_link_mode =$2; shift 2;;
+	    --mode) __import_link_mode=$2; shift 2;;
 	    -*) shift ;;
 	    *) __import_obj=$@; shift $#;;
 	esac
@@ -51,7 +51,7 @@ import() {
 	__import_obj="$tmp_dir/self/import/file/import_$__import_obj"
     else
 	if [ -e self/from ] ; then
-
+	    echo stub
 	fi
     fi
     include noparse "$__import_obj"
