@@ -19,10 +19,10 @@
 #
 
 import() {
-    local __import_file __import_link_mode pullobjs
+    local __import_file __import_link_mode pullobjs import_target
     while [ ! $# = 0 ] ; do
 	case $1 in
-	    --mode) __import_link_mode=$2; shift 2;;
+	    --mode) __import_linkmode=$2; shift 2;;
 	    -*) shift ;;
 	    *) __import_obj=$@; shift $#;;
 	esac
@@ -32,23 +32,23 @@ import() {
 	__import_obj=$(var self/from)
     fi
     if [  $( defined STATIC ) = 0 ] ; then
-	mkdir -p self/import/file
-	if [ -z $__import_link_mode ] ; then
-	    if ! __import_link_mode=$(var import/mode) ; then 
+	mkdir -p $tmp_dir/self/import/file
+	if [ -z $__import_linkmode ] ; then
+	    if ! __import_linkmode=$(var defines/import/mode) ; then 
 		error "import: wrong or no import link mode"  
 	    fi
 	fi
 	case ${__import_linkmode:-POSIX_SHELL} in
 	    POSIX_SHELL) echo ". $__import_obj" > \
-"$tmp_dir/import_$__import_obj";;
+"$tmp_dir/self/import/file/${__import_linkmode}${__import_obj}" ;;
 	    SHLOAD) echo "shload $__import_obj" > \
-"$tmp_dir/import_$__import_obj";;
+"$tmp_dir/self/import/file/${__import_linkmode}${__import_obj}" ;;
 	    IMPORT) echo "import $__import_obj"> \
-"$tmp_dir/import_$__import_obj";;
+"$tmp_dir/self/import/file/${__import_linkmode}${__import_obj}" ;;
 	    SOURCE|BASH|ZSH) echo "source $__import_obj" > \
-"$tmp_dir/import_$__import_obj";;
+"$tmp_dir/self/import/file/${__import_linkmode}${__import_obj}";;
 	esac
-	__import_obj="$tmp_dir/self/import/file/import_$__import_obj"
+	__import_obj="$tmp_dir/self/import/file/${__import_linkmode}${__import_obj}"
     else
 	if [ -e self/from ] ; then
 	    echo stub
