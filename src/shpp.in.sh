@@ -26,7 +26,7 @@ SHPP_REV=@GITREV@
 
 # init defined_vars
 registed_commands=stub
-INCLUDE_SPACES=.
+INCLUDE_SPACES=$PWD
 MACRO_SPACES=.
 appname=${0##*/}
 tmp_dir=$(mktemp -u --suffix=${appname}XXXXXXXX)
@@ -458,18 +458,23 @@ call a new instance ${parser+of} ${parser}to process file"
            __cleaned_include=$(echo "$__cleaned_include" | \
 	       sed -e 's/^<//' -e 's/>$//') ;;
     esac
-    local IFS=:
-    for __include_space in $INCLUDE_SPACES ; do
-        IFS=$old_ifs
-	if [ -e "$__include_space"/"$__cleaned_include" ] ; then
-	    __cleaned_include="$__include_space"/"$__cleaned_include"
-	    __not_found=false
-	    break
-	else
-	    __not_found=true
-	fi
-    done 
-
+    # only seek in INCLUDE_SPACES if we got no /*
+    case $__cleaned_include in 
+	/*) ;;
+	*) 
+	    local IFS=:
+	    for __include_space in $INCLUDE_SPACES ; do
+		IFS=$old_ifs
+		if [ -e "$__include_space"/"$__cleaned_include" ] ; then
+		    __cleaned_include="$__include_space"/"$__cleaned_include"
+		    __not_found=false
+		    break
+		else
+		    __not_found=true
+		fi
+	    done 
+	    ;;
+    esac
     [ $__not_found = true ] && error "'$__cleaned_include' not found"
     count++ self/include/counter
     current_include_no=$( var self/include/counter )
@@ -482,10 +487,6 @@ call a new instance ${parser+of} ${parser}to process file"
 	    ${current_include_no}${__outputfile__cleaned_include}  || \ 
 	     error "spawned copy of ourself: $appname returned $?, quiting" ;; 
 	noparse)
-	    case $__cleaned_include in 
-		/*) ;;
-		*) __cleaned_include=$PWD/$__cleaned_include ;; 
-	    esac
 	    ln -s  $__cleaned_include \
 	    $tmp_dir/$IID/include/files/${current_include_no}${__outputfile__cleaned_include} 
 	    # no $parser is used
