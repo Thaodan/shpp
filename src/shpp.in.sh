@@ -579,7 +579,7 @@ replace_vars() {
         IFS=$old_ifs
 	# if we got a var that contains other vars run us again
 	if [ -d $tmp_dir/$defines/$replace_var ] ; then
-	    replace_var $1/$replace_var $2
+	    replace_vars $1/$replace_var $2
 	else
 	    replace_var_content=$(var defines/$replace_var)
 	    verbose "replacing @$replace_var@ with $replace_var_content"
