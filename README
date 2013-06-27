@@ -1,14 +1,14 @@
-### INTRO ###
+# INTRO 
 
 This is a preprocessor for shell scripts (or other text files) and a make replacement  written for posix shells.
 
 
-## DEPENCIES ##
+# DEPENCIES 
 
  - posix compilant /bin/sh
  - posix compilant: sed, grep, sort, cat, basename, dirname, tr and cut
 
-## BUILD AND INSTALL ## 
+# BUILD AND INSTALL 
 
 See INSTALL.
 
