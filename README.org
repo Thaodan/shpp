@@ -10,7 +10,7 @@ This is a preprocessor for shell scripts (or other text files) and a make replac
 
 * BUILD AND INSTALL 
 
-See [[INSTALL.org]]
+See [[file:INSTALL.org][INSTALL.org]]
 
 
 
