@@ -36,7 +36,7 @@ tmp_dir=$(mktemp -u --suffix=${appname}XXXXXXXX)
 if [ ${0%/*} = . ] ; then
     shpp=$(which $0 2>/dev/null ) || shpp=${0%/*}/shpp
 else
-    shpp=$${0%/*}/shpp
+    shpp=${0%/*}/shpp
 fi
 
 #####################################################################
@@ -571,19 +571,21 @@ include_includes() {
 
 replace_vars() {
     verbose replace_vars "Opening '$2'"
-    local replace_var replace_var_content old_ifs IFS
+    local replace_var replace_var_content old_ifs IFS shifted_one
+    [ ! -z $depth ] && shifted_one=${1#*/}/
     old_ifs=$IFS
     IFS='
 '
     for replace_var in $( var $1 ) ; do
         IFS=$old_ifs
 	# if we got a var that contains other vars run us again
-	if [ -d $tmp_dir/$defines/$replace_var ] ; then
+	if [ -d $tmp_dir/$1/$replace_var ] ; then
+	    local depth=1
 	    replace_vars $1/$replace_var $2
 	else
-	    replace_var_content=$(var defines/$replace_var)
-	    verbose "replacing @$replace_var@ with $replace_var_content"
-	    sed -ie "s|@$replace_var@|$replace_var_content|g" $2|| \
+	    replace_var_content=$(var $1/$replace_var)
+	    verbose "replacing @${shifted_one}${replace_var}@ with $replace_var_content"
+	    sed -ie "s|@${shifted_one}${replace_var}@|$replace_var_content|g" $2|| \
 		error "replace_var: sed quit with $?"
 	fi
 	    IFS='
