@@ -31,14 +31,14 @@ ifde_enable_option() {  # if $1 is disabled and was enabled before, enable it
 #\\endif
 get_farray_lenght() { # get lenght of fake array
     if [ $# -ge 1 ] ; then 
-	old_ifs=$IFS
+        LIBUSE_getf_old_ifs=$IFS
 	IFS=:
 	for var in $1 ; do
 	    get_farry_lenght_count=$(( $get_farry_lenght_count + 1 ))
 	done
-	IFS=$old_ifs
+	IFS=$LIBUSE_getf_old_ifs=$IFS
 	echo  ${get_farry_lenght_count:-0}
-	unset get_farry_lenght_count var
+	unset get_farry_lenght_count var LIBUSE_getf_old_ifs
     else
 	echo 0
     fi
@@ -50,7 +50,7 @@ read_farray() { # read fake array
 	ifen_disable_option verbose
 	ifen_disable_option xtrace
 	#\\endif
-	old_ifs=$IFS
+	LIBUSE_readf_old_ifs=$IFS
 	IFS=:
 	for var in  $1 ; do
 	    _read_farry_count=$(( $_read_farry_count + 1 ))
@@ -60,13 +60,13 @@ read_farray() { # read fake array
 		fi
 	    fi
 	done
-	IFS=$old_ifs
+	IFS=$LIBUSE_readf_old_ifs
 	#\\ifdef DEBUG_FARRAY_LESS_OUTPUT
 	ifde_enable_option verbose
 	ifde_enable_option xtrace
 	#\\endif
     fi
-    unset _read_farry_count  var
+    unset _read_farry_count  var LIBUSE_readf_old_ifs
 }
 
 write_farray() {  # write fake array   
