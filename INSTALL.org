@@ -1,0 +1,7 @@
+* BUILDING 
+
+make
+
+* INSTALLING
+
+make install 
