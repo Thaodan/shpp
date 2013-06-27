@@ -1,4 +1,4 @@
-TESTFILES	        =  $(shell find  ! -iname "*~" -type f -iname \*.sh)
+TESTFILES	        =  $(wildcard *.sh)
 TARGET		        =  ../shpp
 TARGET_SHELL		=  
 override TARGET_ARGS    += --stdout --errexit
