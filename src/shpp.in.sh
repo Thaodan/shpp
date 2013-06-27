@@ -239,7 +239,7 @@ find_commands() {
 		*) command=$_command ;;	       		 
 	    esac					      			
 	    case "$command" in
-		define) 	define   $arg1                             ;;
+		define) 	define   $arg1   $arg2                        ;;
 		include) 	include  $arg1   $arg2  $arg3              ;;
 		macro)          macro    $arg1   $arg2  $arg3              ;;
 		ifdef)          ifdef    "$arg1"                           ;;
@@ -571,17 +571,22 @@ include_includes() {
 
 replace_vars() {
     verbose replace_vars "Opening '$2'"
-    local replace_var replace_var_content
+    local replace_var replace_var_content old_ifs IFS
     old_ifs=$IFS
     IFS='
 '
-    for replace_var in $( var  defines ) ; do
-	old_ifs=$IFS
-	replace_var_content=$(var defines/$replace_var)
-	verbose "replacing @$replace_var@ with $replace_var_content"
-	sed -ie "s|@$replace_var@|$replace_var_content|g" $2|| \
-	    error "replace_var: sed quit with $?"
-	IFS='
+    for replace_var in $( var $1 ) ; do
+        IFS=$old_ifs
+	# if we got a var that contains other vars run us again
+	if [ -d $tmp_dir/$defines/$replace_var ] ; then
+	    replace_var $1/$replace_var $2
+	else
+	    replace_var_content=$(var defines/$replace_var)
+	    verbose "replacing @$replace_var@ with $replace_var_content"
+	    sed -ie "s|@$replace_var@|$replace_var_content|g" $2|| \
+		error "replace_var: sed quit with $?"
+	fi
+	    IFS='
 '
     done 
 }
