@@ -7,4 +7,4 @@ SOURCE_DIR=src
 DIST_DIR=dist
 BUILD_FOLDER=${PROJECT_NAME}-${PROJECT_VER}
 ARCHIVE_ENDING=.tar.gz
-DIST_FILES="dist dist_system rules.mk src external tools README INSTALL build_src.sh PROJECT_INFO"
+DIST_FILES="dist dist_system rules.mk src external tools README.org INSTALL.org build_src.sh PROJECT_INFO"
