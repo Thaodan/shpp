@@ -62,3 +62,7 @@
     - *parser_args=options* :: set arguments for _parser_
 ** rem
    Inits a comment line that will be only the seen before that preprocessor was runned.
+** macro
+   Loads Macro file
+*** SYNTAX
+    *macro* _file_
