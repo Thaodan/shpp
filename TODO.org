@@ -1,0 +1,7 @@
+* doc/
+  - add updated manpage
+  - may be add some examples (we have src/tests as examples too)
+
+
+* src/
+  - shpp.in.sh :: find_commands(): don't parse if we have no code found
