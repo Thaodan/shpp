@@ -10,7 +10,7 @@ conflicts=('sh-make-tools')
 
 build() 
 {
-  cd $srcdir/$pkgname-$pkgver/src
+  cd $srcdir/$pkgname-$pkgver
   make 
 }
 
@@ -19,6 +19,6 @@ check() {
   make tests
 }
 package() {
-  cd $srcdir/$pkgname-$pkgver/src
+  cd $srcdir/$pkgname-$pkgver
   make PREFIX=$pkgdir/usr install
 }
