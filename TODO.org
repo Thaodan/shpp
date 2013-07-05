@@ -13,3 +13,5 @@
 
    - import.in.sh :: implement from() import()
   
+** SHMK
+   - input :: finish me
