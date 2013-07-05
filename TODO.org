@@ -5,3 +5,11 @@
 
 * src/
   - shpp.in.sh :: find_commands(): don't parse if we have no code found
+ 
+
+** modules
+
+** std
+
+   - import.in.sh :: implement from() import()
+  
