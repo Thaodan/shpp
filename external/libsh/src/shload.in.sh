@@ -9,7 +9,7 @@ shload()
 # SH_LIBRARY_PATH     set by user use to add a library path
 #################################################################    
 {
-    unset __shl_error_status
+    __shl_error_status=1
     case $1 in
       /*)
 	    . $1
