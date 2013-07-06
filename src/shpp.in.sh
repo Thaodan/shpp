@@ -239,13 +239,13 @@ find_commands() {
 		*) command=$_command ;;	       		 
 	    esac					      			
 	    case "$command" in
-		define) 	define   $arg1   $arg2                        ;;
-		include) 	include  $arg1   $arg2  $arg3              ;;
-		macro)          macro    $arg1   $arg2  $arg3              ;;
-		ifdef)          ifdef    "$arg1"                           ;;
-		ifndef)         ifndef   "$arg1"                           ;;
-		if)             If       $arg1                             ;;
-		else)	        Else                                       ;;
+		define) 	define   $arg1   $arg2                                      ;;
+		include) 	include  $arg1   $arg2  $arg3                               ;;
+		macro)          macro    $arg1   $arg2  $arg3                               ;;
+		ifdef)          ifdef    "$arg1"                                            ;;
+		ifndef)         ifndef   "$arg1"                                            ;;
+		if)             If       $arg1   $arg2  $arg3 $arg4 $arg5 $arg6 $arg7 $arg8 ;;
+		else)	        Else                                                        ;;
 		endif)	
 		    # just a stub call for syntax error 
 		    # cause endif was used before if/ifdef/else
