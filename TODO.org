@@ -1,11 +1,23 @@
+#+LANGUAGE: en
 * doc/
   - add updated manpage
   - may be add some examples (we have src/tests as examples too)
 
 
 * src/
-  - shpp.in.sh :: find_commands(): don't parse if we have no code found
- 
+** shpp.in.sh :: find_commands(): don't parse if we have no code found
+*** reddo command parser
+Structure should be like this:
+**** command
+***** lines
+****** $line
+- string :: command string 
+- childs :: contains all commands that are below as symlinks the command like if var; if var;endif;endif
+******* args
+Contains args numbered from 0-9
+- 0 :: name of command
+
+Contains 		 
 
 ** modules
 
