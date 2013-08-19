@@ -128,6 +128,10 @@ unvar() {
     rm -rf $tmp_dir/$1
 }
 
+link() {
+    ln -s $tmp_dir/$1 $tmp_dir/$2
+}
+
 count() {
     COUNTER=$3
     case $1 in 
@@ -156,7 +160,7 @@ find_commands() {
     erase_till_endif=false
     endif_notfound=false 
     var self/command/removed_stack=0
-
+    local if_line
     local old_ifs=$IFS
     IFS='
 '
@@ -215,9 +219,9 @@ find_commands() {
 				0)
 				    command=$__arg__ 
 				    # these commands don't need adiotional args so quit arg parsing
-				    if [ "$command" = rem ] ; then
-					break
-				    fi
+				    case "$command" in 
+					!*|rem) break ;;
+				    esac
 				    ;;
 				1) arg1=$__arg__ ;;
 				2) arg2=$__arg__;;
@@ -328,7 +332,7 @@ macro() {
 #\\error
 error() {  
    __error "L$line_ued:error" "$@"
-   die
+   die 1
 }
 
 #\\warning
@@ -336,7 +340,7 @@ warning() {
     __warning L$line_ued:warning:$command "$@"
     if [ $WARNING_IS_ERROR ] ; then
 	__msg2 '' 'warnings are error set, dieing'
-	die 
+	die 2
     fi
 }
 #\\msg
@@ -756,7 +760,7 @@ if [ ! $# = 0 ] ; then
 			"using '/dev/stdout' as default output"
 		fi 
 		if [ ! -e "$1" ] ; then
-		    __error error "$source_file not found" 
+		    __error error "$1 not found" 
 		    false
 		    shift
 		else
