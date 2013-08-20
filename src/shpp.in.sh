@@ -556,7 +556,7 @@ include_includes() {
 		done 
 	   ;;
 	esac
-	include=$( echo $include | xargs basename | sed -e 's|\/|_|g' -e 's|\.|_|g')
+	include=$( echo ${include##*/} | sed -e 's|\/|_|g' -e 's|\.|_|g')
 	sed "$include_line,$ d" $1 >  \
 	    "$tmp_dir/self/include/cut_source"
 	sed "1,$include_line d" $1 > \
