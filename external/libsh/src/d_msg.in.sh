@@ -1,17 +1,21 @@
+#\\rem we use kdialog as default if DE is generic unless DMSG_wDETECT_GENERIC_XMESSAGE
+#\\if ! defined DMSG_WDETECT_GENERIC_ZENITY
+#\\define DMSG_WDETECT_GENERIC_KDIALOG
+#\\endif
 detectDE() 
 # detect which DE is running
 # taken from xdg-email script 
 {
     if [ x"$KDE_FULL_SESSION" = x"true" ]; then 
-	DE=kde;
+	echo kde;
     elif [ x"$GNOME_DESKTOP_SESSION_ID" != x"" ]; then 
-	DE=gnome;
+       echo gnome;
     elif `dbus-send --print-reply --dest=org.freedesktop.DBus /org/freedesktop/DBus org.freedesktop.DBus.GetNameOwner string:org.gnome.SessionManager > /dev/null 2>&1` ; then 
-	DE=gnome;
+	echo gnome;
     elif xprop -root _DT_SAVE_MODE 2> /dev/null | grep ' = \"xfce4\"$' >/dev/null 2>&1; then 
-	DE=xfce;
+	echo xfce;
     else 
-	DE=generic 
+	echo generic
     fi
 }
 
@@ -51,8 +55,19 @@ d_msg() # display msgs and get input
 	unset dmsg_return_status
 	if [  "${DMSG_GUI}" = true ] || [ ! $DMSG_GUI = 0 ] ; then
 	    if [  -z "$DMSG_GUI_APP" ] ; then
-		detectDE
-		DMSG_GUI_APP=$DE
+		DMSG_DE=$(detectDE)
+	    fi
+	    case $DMSG_DE in
+		kde) DMSG_GUI_APP=kdialog ;; 
+		gnome) DMSG_GUI_APP=zenity ;;
+#\\ifndef DMSG_wDETECT_GENERIC_XMESSAGE
+#\\!DMSG_WDETECT_GENERIC_KDIALOG generic) DMSG_GUI_APP=kdialog ;;
+#\\!DMSG_WDETECT_GENERIC_ZENITY generic) DMSG_GUI_APP=zenity ;;
+#\\else
+#\\warning  "xmesssage functionality is too limeted"	   
+		generic) DMSG_GUI_APP=xmessage
+#\\endif
+
 	    case "$DMSG_GUI_APP" in 
 		kde)  
 		    which  kdialog  > /dev/null  || \
