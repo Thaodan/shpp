@@ -156,7 +156,7 @@ alias ifndef='If ! defined'
 
 find_commands() {
     local _command   command command_no  command_raw IFS \
-	counter=0 arg_counter=0 arg_string __arg__ 
+	counter=0 arg_counter=0 arg_string __arg__ arg1 arg2 arg3 arg4 arg5 arg6 arg7 arg8
     erase_till_endif=false
     endif_notfound=false 
     var self/command/removed_stack=0
