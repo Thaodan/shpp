@@ -59,7 +59,7 @@ d_msg() # display msgs and get input
 	    fi
 	    case $DMSG_DE in
 		kde) DMSG_GUI_APP=kdialog ;; 
-		gnome) DMSG_GUI_APP=zenity ;;
+		gnome|xfce) DMSG_GUI_APP=zenity ;;
 #\\ifndef DMSG_wDETECT_GENERIC_XMESSAGE
 #\\!DMSG_WDETECT_GENERIC_KDIALOG generic) DMSG_GUI_APP=kdialog ;;
 #\\!DMSG_WDETECT_GENERIC_ZENITY generic) DMSG_GUI_APP=zenity ;;
@@ -67,24 +67,25 @@ d_msg() # display msgs and get input
 #\\warning  "xmesssage functionality is too limeted"	   
 		generic) DMSG_GUI_APP=xmessage
 #\\endif
-
+	    esac	
+	    # FIXME or remove me
 	    case "$DMSG_GUI_APP" in 
-		kde)  
+		kdialog)  
 		    which  kdialog  > /dev/null  || \
-			{ which > /dev/null  zenity  && DMSG_GUI_APP=gnome  || DMSG_GUI_APP=generic; }
+			{ which > /dev/null  zenity  && DMSG_GUI_APP=zenity  || DMSG_GUI_APP=xmessage; }
 		    ;;
-		gnome|xfce) which zenity   > /dev/null   || \
-		   (  which  kdialog  > /dev/null  && DMSG_GUI_APP=kde || \
+		zenity) which zenity   > /dev/null   || \
+		    (  which  kdialog  > /dev/null  && DMSG_GUI_APP=kdialog || \
 		    DMSG_GUI_APP=generic );;
-		*)  which kdialog > /dev/null  && DMSG_GUI_APP=kde || { which zenity > /dev/null && DMSG_GUI_APP=zenity \
-		    || DMSG_GUI_APP=generic; }
+		*)  which kdialog > /dev/null  && DMSG_GUI_APP=kdialog || { which zenity > /dev/null && DMSG_GUI_APP=zenity \
+		    || DMSG_GUI_APP=xmessage; }
 		    ;; 
 	    esac 
 	fi
-	    
-	    case $DMSG_GUI_APP in 
-		kde)
-		    case $1 in 
+	
+	case $DMSG_GUI_APP in 
+	    kdialog)
+		case $1 in 
 		    !)  kdialog --icon ${DMSG_ICON:=xorg} --caption "${DMSG_APPNAME:=$appname}" --title "$2" --error "$3" 
 			dmsg_return_status=${DMSG_ERR_STAUS:=1}  
 			;;
@@ -100,7 +101,7 @@ d_msg() # display msgs and get input
 			dmsg_return_status=$? ;;
 		    esac
 		    ;;
-	    xfce|gnome) #nyi impleted
+	    zenity) 
 		    case $1 in 
 		    !) zenity --window-icon=${DMSG_ICON:=xorg}  --title="$2 - ${DMSG_APPNAME:=$appname}" --error --text="$3"
 			dmsg_return_status=${DMSG_ERR_STAUS:=1}   
@@ -119,7 +120,7 @@ d_msg() # display msgs and get input
 			dmsg_return_status=$? ;;
 		esac
 		;;
-	 *)
+	 xmessage)
 		    case $1 in
 		    !) xmessage -center -title "$2 - ${APPNAME:=$appname}" "err: "$3"" ;
 			dmsg_return_status=${DMSG_ERR_STAUS:=1} 
