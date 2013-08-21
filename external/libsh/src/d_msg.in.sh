@@ -65,7 +65,7 @@ d_msg() # display msgs and get input
 #\\!DMSG_WDETECT_GENERIC_ZENITY generic) DMSG_GUI_APP=zenity ;;
 #\\else
 #\\warning  "xmesssage functionality is too limeted"	   
-		generic) DMSG_GUI_APP=xmessage
+		generic) DMSG_GUI_APP=xmessage ;;
 #\\endif
 	    esac	
 	    # FIXME or remove me
@@ -81,7 +81,6 @@ d_msg() # display msgs and get input
 		    || DMSG_GUI_APP=xmessage; }
 		    ;; 
 	    esac 
-	fi
 	
 	case $DMSG_GUI_APP in 
 	    kdialog)
