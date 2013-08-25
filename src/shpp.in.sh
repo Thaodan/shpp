@@ -206,7 +206,7 @@ find_commands() {
 			     # if true, open our arg_string
 			     arg_string=$__arg__ 
                         # if we got string last try to end it or add our __arg__ to arg_string
-			elif [ $arg_string ] ; then
+			elif [ "$arg_string" ] ; then
 			    case $__arg__ in
 				# arg string ends, reset arg_string
 				*\"|*\') __arg__="${arg_string} ${__arg__}" ; arg_string=  ;;
