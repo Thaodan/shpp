@@ -165,10 +165,12 @@ d_msg() # display msgs and get input
 			  fi
 			  ;;
 		      i) 
-			  echo "$3"
+			  echo "$3" >&2
 			  read  a 
 			  if [ -z "$a" ] ; then
 			      dmsg_return_status=1;
+			  else
+			      echo $a
 			  fi
 			  ;;
 		      *)  echo "$2"   ; dsmg_return_status=$? ;;
