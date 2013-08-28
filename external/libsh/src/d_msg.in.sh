@@ -35,10 +35,10 @@ d_msg() # display msgs and get input
 #########################################################################################################################
 #															#
 # vars:															#
-# DMSG_GUI_APP=`detectDE` (default)  	# d_msg detects wich DE is installed and uses the equal dialog for displaing	#
-# DMSG_GUI_APP=generic 			# only set if dialog for DE not found						#
-# DMSG_GUI_APP=gnome|xfce 		# with this you can force d_msg to use zenity					#
-# DMSG_GUI_APP=kde 			# with this you can force d_msg to use kdialog					#
+# DMSG_DE     =`detectDE` (default)  	# d_msg detects wich DE is installed and uses the coresponding dialog app       #
+# DMSG_GUI_APP=kdialog|zenity|xmessage  # tell d_msg which tool it has to use for gui output                            #
+#  					# either zenity, kdialog or xmessage(not recommend)                             #
+# 				                                                                                        ## 
 #															#
 # DMSG_GUI                      	# if not zero use graphical dialog, else cfg gui				#
 # DMSG_ICON				# icon that d_msg uses when is runned in gui mode if not set icon xorg is used 	#
@@ -46,7 +46,7 @@ d_msg() # display msgs and get input
 #															#
 # DMSG_APP 				# say DMSG to use $DMSG_APP in cli possible vara are dialog and cgi_dialog	#  
 #															#
-#															#   
+# DMSG_APPNAME			        # set appname for d_msg default is $appname                                     #  
 #															#
 #															#
 #########################################################################################################################
@@ -108,23 +108,23 @@ d_msg() # display msgs and get input
 		    i) zenity --window-icon=${DMSG_ICON:=xorg}  --title="$2 - ${DMSG_APPNAME:=$appname}" --entry --text="$3"
 			dmsg_return_status=$? 
 			;;
-		    l) zenity --window-icon=${DMSG_ICON:=xorg}  --title="$2  -${APPNAME:=$appname}" --column='' --text="$3"\
+		    l) zenity --window-icon=${DMSG_ICON:=xorg}  --title="$2  -${DMSG_APPNAME:=$appname}" --column='' --text="$3"\
                         --list 
 		       dmsg_return_status=$? 
 		       ;;
-		    f) zenity --window-icon=${DMSG_ICON:=xorg}  --title="$2  -${APPNAME:=$appname}" --question --text="$3" 
+		    f) zenity --window-icon=${DMSG_ICON:=xorg}  --title="$2  -${DMSG_APPNAME:=$appname}" --question --text="$3" 
 			dmsg_return_status=$? 
 			;;
-		    *) zenity --window-icon=${DMSG_ICON:=xorg}  --title="$1  -${APPNAME:=$appname}" --info --text="$2" 
+		    *) zenity --window-icon=${DMSG_ICON:=xorg}  --title="$1  -${DMSG_APPNAME:=$appname}" --info --text="$2" 
 			dmsg_return_status=$? ;;
 		esac
 		;;
 	 xmessage)
 		    case $1 in
-		    !) xmessage -center -title "$2 - ${APPNAME:=$appname}" "err: "$3"" ;
+		    !) xmessage -center -title "$2 - ${DMSG_APPNAME:=$appname}" "err: "$3"" ;
 			dmsg_return_status=${DMSG_ERR_STAUS:=1} 
 			;;
-		    f) xmessage -center -title "$2  -${APPNAME:=$appname}" -buttons no:1,yes:0 "$3" 
+		    f) xmessage -center -title "$2  -${DMSG_APPNAME:=$appname}" -buttons no:1,yes:0 "$3" 
 			dmsg_return_status=$? 
 			;;	
 		    i) 
@@ -134,8 +134,8 @@ d_msg() # display msgs and get input
 			xmessage -center -title "$appname - "$2"" -print -buttons $buttons "$3"
 			dmsg_return_status=$?
 			;;
-		    l) xmessage -center -title "$2 - ${APPNAME:=$appname}" -print -buttons "$3","$4","$5","$6","$7","$8","$9" ; dmsg_return_status=$? ;;
-		    *) xmessage -center -title "$1 - ${APPNAME:=$appname}" "$2" ; dmsg_return_status=$? ;;
+		    l) xmessage -center -title "$2 - ${DMSG_APPNAME:=$appname}" -print -buttons "$3","$4","$5","$6","$7","$8","$9" ; dmsg_return_status=$? ;;
+		    *) xmessage -center -title "$1 - ${DMSG_APPNAME:=$appname}" "$2" ; dmsg_return_status=$? ;;
 		    esac
 		    ;;
 	    esac
@@ -143,15 +143,15 @@ d_msg() # display msgs and get input
 	      case ${DMSG_APP:-native} in
 	      dialog)
 		  case "$1" in 
-	              !) dialog --title "$2 -${APPNAME:=$appname}" --infobox "error:$3" 0 0 ; dmsg_return_status=${DMSG_ERR_STAUS:=1};;
+	              !) dialog --title "$2 -${DMSG_APPNAME:=$appname}" --infobox "error:$3" 0 0 ; dmsg_return_status=${DMSG_ERR_STAUS:=1};;
 		      #!) cgi_dialog ! "$3" ; dmsg_return_status=${DMG_ERR_STAUS:=1}  ;;
-		      f) dialog --title "$2 - ${APPNAME:=$appname}" --yesno "$3"   0 0 
+		      f) dialog --title "$2 - ${DMSG_APPNAME:=$appname}" --yesno "$3"   0 0 
 			  dmsg_return_status=$?
 			  ;;
-		      i) dialog --title "$2 - ${APPNAME:=$appname}" --inputbox "$3" 0 0
+		      i) dialog --title "$2 - ${DMSG_APPNAME:=$appname}" --inputbox "$3" 0 0
 			  dmsg_return_status=$?		 
 			  ;;
-		      *) dialog --title "$1 -${APPNAME:=$appname}" --infobox "$2" 0 0  ;;
+		      *) dialog --title "$1 -${DMSG_APPNAME:=$appname}" --infobox "$2" 0 0  ;;
 		      #*) cgi_dialog "$2" ; dmsg_return_status=$? ;;
 		  esac
 		  ;;
