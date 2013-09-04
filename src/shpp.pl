@@ -35,34 +35,34 @@ use feature 'switch';
 #####################################################################
 
 ### communication ###
-sub __plain()
+sub __plain($$)
 {
     my $first = $_[1];
     shift(@_);
     print("$ALL_OFF$BOLD $first:$ALL_OFF @_");
 }
 
-sub __msg()
+sub __msg($$)
 {
     my $first = $_[1];
     shift(@_);
     print( "${GREEN}==>${ALL_OFF}${BOLD} $first:${ALL_OFF} @_");
 }
 
-sub __msg2() {
+sub __msg2($$) {
     my $first = $_[1];
     shift(@_);
     print("${BLUE} ->${ALL_OFF}${BOLD} $first:${ALL_OFF} @_");
 }
 
-sub __warning()
+sub __warning($$)
 {
     my $first = $_[1];
     shift(@_);
     print( STDERR "$YELLOW==>$ALL_OFF$BOLD $first:$ALL_OFF $@");
 }
 
-sub __error()
+sub __error($$)
 {
     my $first = $_[1];
     shift(@_);
@@ -70,7 +70,7 @@ sub __error()
     return 1;
 }
 
-sub verbose()
+sub verbose($)
 {	
     if ( defined $verbose_output )
     {		
@@ -78,17 +78,10 @@ sub verbose()
     }
 }
 
-sub new() 
-{
-    my $obj = shift();
-    my $pkg = shift();
-    bless($obj, $pkg);
-}
-
 =pod
 make our script tree
 =cut
-sub find_commands()
+sub find_commands($)
 {
     my $counter = 0, @script;
     my $file_raw = shift();
@@ -99,7 +92,7 @@ sub find_commands()
 	die("cant open $file: $!");
     }
     
-    while ( defined($line_raw <SCRIPT_FILE> ) )
+    while ( defined($line_raw  ))
     {
 	if ( not $line_raw =~ /^#\\\\/ )
 	{
@@ -110,7 +103,7 @@ sub find_commands()
 	    @line = split(/[\s,\t]/, $line_raw); 
 	    %{$script[$counter]} = {
 		line => $counter,
-		self => \&$line[0],
+		self => \&$line,
 		args => @line,
 	    };
 	}
@@ -120,7 +113,7 @@ sub find_commands()
     return @script;
 }
 
-sub exec_commands() 
+sub exec_commands($$) 
 {
     $erase_till_endif = 'false';
     $endif_notfound = 'false';
@@ -146,29 +139,29 @@ sub exec_commands()
 }
 ### builtin commands
 #\\error
-sub error()
+sub error($)
 {
-    __error("L$command{line}:$command{self}" "@_");
+    __error("L$command{line}:$command{self}", "@_");
     exit 1;
 }
 
 #\\warning
-sub warning() 
+sub warning($) 
 {
-    __warning("L$command{line}:$command{self}" "@_");
+    __warning("L$command{line}:$command{self}", "@_");
     if ( $WARNING_IS_ERROR )
     {
-	__msg2('' 'warnings are error set');
+	__msg2('', 'warnings are error set');
 	exit(1);
     }
 }
 #\\msg
-sub msg() 
+sub msg($) 
 {
-    __msg("L$command{line}:$command{self}" "$@");
+    __msg("L$command{line}:$command{self}", "$@");
 }
 
-sub if() 
+sub if($) 
 {
 
 
@@ -189,7 +182,7 @@ syntax:  include file [OPTION]
 options: noparse - don't parse
          
 =cut
-sub include()
+sub include($)
 {
     while ( $#_ != 1 )
     {
@@ -206,7 +199,7 @@ sub include()
 	       break;
 	   }
        }
-
+    }
 }
 
 =pod
@@ -214,14 +207,14 @@ desc.: define var
 syntax: define var = var 
 syntax2: define var var
 =cut
-sub define()
+sub define($$)
 {
     given ($_[0])
     {
 	# c
-	when ( $_ =~ /*=*/ )
+	when ( $_ =~ / *=* / )
 	{
-	    my @var = split( /=/ $_ );
+	    my @var = split( /=/, $_ );
 	    $$var[0] = $var[1];
 	}
 	# cpp style define
