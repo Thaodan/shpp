@@ -132,6 +132,9 @@ sub exec_commands()
     }
     else
     {
+	# export command
+	%command = %{$script[$counter]};
+
 	if (not defined( &{$script[$counter]{self}} ) ) 
 	{
 	    error("$script[$counter]{self} not found");   
