@@ -92,7 +92,7 @@ sub find_commands($)
 	die("cant open $file: $!");
     }
     
-    while ( defined($line_raw  ))
+    while ( defined($line_raw = <SCRIPT_FILE> ))
     {
 	if ( not $line_raw =~ /^#\\\\/ )
 	{
