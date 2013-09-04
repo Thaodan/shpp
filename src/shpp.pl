@@ -28,12 +28,10 @@ $registed_commands = 'stub';
 $INCLUDE_SPACES = $PWD;
 $MACRO_SPACES = '.';
 $appname =~s/$ARGV[0]/*\//;
-$tmp_dir = TEMPLATE;
 
 use File::Path;
 use File::Basename;
 use feature 'switch';
-use tree;
 #####################################################################
 
 ### communication ###
@@ -92,13 +90,10 @@ make our script tree
 =cut
 sub find_commands()
 {
-    my $_command, %command, $command_no,  $command_raw;
     my $counter = 0, @script;
-    $erase_till_endif = 'false';
-    $endif_notfound = 'false';
-    my $file_raw = $_[1];
+    my $file_raw = shift();
     my ( @line, $line_raw );
-    open(SCRIPT_FILE, $file_raw);
+    open(SCRIPT_FILE, $file);
     if ( ! $file ) 
     {
 	die("cant open $file: $!");
@@ -106,8 +101,10 @@ sub find_commands()
     
     while ( defined($line_raw <SCRIPT_FILE> ) )
     {
-	if ( $line_raw =~ /^#\\\\/ )
+	if ( not $line_raw =~ /^#\\\\/ )
+	{
 	    $script[$counter] = 666;
+	}
 	else
 	{
 	    @line = split(/[\s,\t]/, $line_raw); 
@@ -118,13 +115,15 @@ sub find_commands()
 	    };
 	}
 	$counter++;
-     }
+    }
     close(SCRIPT_FILE);
     return @script;
 }
 
 sub exec_commands() 
 {
+    $erase_till_endif = 'false';
+    $endif_notfound = 'false';
     my @script = \@{$_[0]};
     if ( $script[$counter] == 666 )
     {
@@ -148,7 +147,7 @@ sub error()
 {
     __error("L$command{line}:$command{self}" "@_");
     exit 1;
-]
+}
 
 #\\warning
 sub warning() 
@@ -163,18 +162,108 @@ sub warning()
 #\\msg
 sub msg() 
 {
-    __msg("$L$line_ued" "$@");
+    __msg("L$command{line}:$command{self}" "$@");
 }
 
-sub If() 
+sub if() 
 {
 
 
+}
+
+sub else() 
+{
+
+}
+
+sub end()
+{
+
+}
+=pod
+desc.:   include file
+syntax:  include file [OPTION]
+options: noparse - don't parse
+         
+=cut
+sub include()
+{
+    while ( $#_ != 1 )
+    {
+       given($_[0])
+       {
+	   when( 'noparse' )
+	   {
+	       
+	       shift(@_);
+	   }
+	   when ( '--' )
+	   {
+	       shift(@_);
+	       break;
+	   }
+       }
+
+}
+
+=pod
+desc.: define var
+syntax: define var = var 
+syntax2: define var var
+=cut
+sub define()
+{
+    given ($_[0])
+    {
+	# c
+	when ( $_ =~ /*=*/ )
+	{
+	    my @var = split( /=/ $_ );
+	    $$var[0] = $var[1];
+	}
+	# cpp style define
+	default
+	{
+	    my $var = shift();
+	    my $content = shift();
+	    $$var = $content;
+	}
+    }
 }
 
 
 sub stub_main() 
 {
+    my $IID = int(rand(100));
     my @script = find_commands($_[0]);
     exec_commands(\@script, $_[1]);
+
 }
+
+
+sub print_help() {
+    print <<"HELP";
+$appname usage: 
+      $appname [Options] File
+    
+  Options:  
+  --help	-H -h			print this help
+  --version	-V			print version
+  --color	-C			enable colored output
+  --verbose     -v                      tell us what we do
+		
+  --output	  -o	<file>		places output in file
+  --option	  -O	<option>	give $appname <option>
+  --stdout				output result goes to stdout
+  --stderr=<destination>                stderr goes to destination
+  --critical-warning    		warnings are threated as errors
+                   -D<var=var>          define var
+                                        ( same as '#\\define var=var') 
+                   -I<path>             add path so search for includes
+                   -M<path>             same just for macros
+  --tmp=<tmp_dir>			set temp directory
+  --keep 				don\'t delete tmp files after running
+HELP
+}
+
+
