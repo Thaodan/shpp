@@ -77,22 +77,44 @@ sub verbose($)
 	print( STDERR "$YELLOW==>$ALL_OFF$BOLD$ALL_OFF @_");
     }
 }
+### tools ###
+sub file_to_array($)
+{
+    my $file = shift();
+    my $filesteam;
+    my @rray;
 
+    open($filestream, $file) or die("cant open $file: $!");
+    @rray = <$filestream>;
+    close($filestream);
+
+    return @rray;
+}
+
+sub array_to_file($$) 
+{
+    my @rray = shift;
+    my $file = shift;
+    my $filestream;
+
+    open($filestream, $file) or die("cant open $file: $!");
+    print($filestream, @rray);
+    close($filestream);
+}
 =pod
 make our script tree
 =cut
 sub find_commands($)
 {
-    my $counter = 0, @script;
-    my $file_raw = shift();
-    my ( @line, $line_raw );
-    open(SCRIPT_FILE, $file);
-    if ( ! $file ) 
-    {
-	die("cant open $file: $!");
-    }
-    
-    while ( defined($line_raw = <SCRIPT_FILE> ))
+    my $counter = 0,  $line_raw;
+    my @SCRIPT_FILE = shift(), @line;
+    my  %script = {
+	lines =>,
+	end_else =>,
+	end =>,
+    };
+         
+    for $line_raw ( @SCRIPT_FILE )
     {
 	if ( not $line_raw =~ /^#\\\\/ )
 	{
@@ -101,7 +123,7 @@ sub find_commands($)
 	else
 	{
 	    @line = split(/[\s,\t]/, $line_raw); 
-	    %{$script[$counter]} = {
+	    %{$script{lines}[$counter]} = {
 		line => $counter,
 		self => \&$line,
 		args => @line,
@@ -109,32 +131,38 @@ sub find_commands($)
 	}
 	$counter++;
     }
-    close(SCRIPT_FILE);
     return @script;
 }
 
 sub exec_commands($$) 
 {
-    $erase_till_endif = 'false';
-    $endif_notfound = 'false';
-    my @script = \@{$_[0]};
-    if ( $script[$counter] == 666 )
-    {
-	# ok we got non code part
-    }
-    else
-    {
-	# export command
-	%command = %{$script[$counter]};
+    my %script      = \%{$_[0]};
+    my @SCRIPT_FILE = \@{$_[1]};
+    my $end_else    = \$script{end_else};
+    my $end         = \$script{end};
+    my $counter;
+    my $line_raw;
 
-	if (not defined( &{$script[$counter]{self}} ) ) 
+    for $line_raw ( @SCRIPT_FILE )  
+    {
+	if ( ${script{lines}[$counter]} == 666 )
 	{
-	    error("$script[$counter]{self} not found");   
+	    # ok we got non code part
 	}
 	else
 	{
-	    &{$script[$counter]{self}}( ${script[$counter]{args}}[1..-1]); 
-	}    
+	    # export command
+	    %command = %{$script{lines}[$counter]};
+	    
+	    if (not defined( &{$script{lines}[$counter]{self}} ) ) 
+	    {
+		error("$script[$counter]{self} not found");   
+	    }
+	    else
+	    {
+		     &{$script{lines}[$counter]{self}}( ${script{lines}[$counter]{args}}[1..-1]); 
+	    }    
+	}
     }
 }
 ### builtin commands
@@ -163,18 +191,29 @@ sub msg($)
 
 sub if($) 
 {
-
-
+    $end_else++;
 }
 
 sub else() 
 {
-
+    # remove else or end token and add explizit end token
+    $end_else--;
+    $end++;
 }
 
 sub end()
 {
-
+    # look if we need explizit end token
+    if ( $end == 0 )
+    {
+	# we don't, remove some else or end token
+	$end_else--;
+    }
+    else
+    {
+	# ok we do, remove explizit end token
+	$end--;
+    }
 }
 =pod
 desc.:   include file
@@ -184,6 +223,8 @@ options: noparse - don't parse
 =cut
 sub include($)
 {
+    my $file;
+    my @SCRIPT_FILE;
     while ( $#_ != 1 )
     {
        given($_[0])
@@ -200,6 +241,9 @@ sub include($)
 	   }
        }
     }
+    $file        = shift();
+    @SCRIPT_FILE = file_to_array($file);
+    stub_main(\@SCRIPT_FILE, $includes[$#includes]);
 }
 
 =pod
@@ -228,11 +272,14 @@ sub define($$)
 }
 
 
-sub stub_main() 
+sub stub_main($$) 
 {
-    my $IID = int(rand(100));
-    my @script = find_commands($_[0]);
-    exec_commands(\@script, $_[1]);
+    my @includes;
+    my $file            = shift();
+    my @SCRIPT_FILE     = file_to_array($file);
+    my $IID             = int(rand(100));
+    my %script          = find_commands(\@SCRIPT_FILE);
+    exec_commands(\%script, \@SCRIPT_FILE);
 
 }
 
