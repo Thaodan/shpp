@@ -24,48 +24,56 @@
 # base config
 
 # init defined_vars
-$registed_commands = 'stub';
-$INCLUDE_SPACES = $PWD;
-$MACRO_SPACES = '.';
-$appname =~s/$ARGV[0]/*\//;
-
+our $registed_commands = 'stub';
+our $INCLUDE_SPACES = '.';
+our $MACRO_SPACES = '.';
+our $appname = 'shpp';
 use File::Path;
 use File::Basename;
+use Getopt::Long;
 use feature 'switch';
+#use strict 'vars';
+#use parent 'Exporter';
+
+#FIXME: clean me
+our $ALL_OFF="\e[1;0m";
+our $BOLD="\e[1;1m";
+our $BLUE="${BOLD}\e[1;34m";
+our $GREEN="${BOLD}\e[1;32m";
+our $RED="${BOLD}\e[1;31m";
+our $YELLOW="${BOLD}\e[1;33m";
+
+our $verbose_output;
+our $WARNING_IS_ERROR;
 #####################################################################
 
 ### communication ###
 sub __plain($$)
 {
-    my $first = $_[1];
-    shift(@_);
+    my $first = shift();
     print("$ALL_OFF$BOLD $first:$ALL_OFF @_");
 }
 
 sub __msg($$)
 {
-    my $first = $_[1];
-    shift(@_);
+    my $first = shift();
     print( "${GREEN}==>${ALL_OFF}${BOLD} $first:${ALL_OFF} @_");
 }
 
 sub __msg2($$) {
-    my $first = $_[1];
-    shift(@_);
+    my $first = shift();
     print("${BLUE} ->${ALL_OFF}${BOLD} $first:${ALL_OFF} @_");
 }
 
 sub __warning($$)
 {
-    my $first = $_[1];
-    shift(@_);
+    my $first = shift();
     print( STDERR "$YELLOW==>$ALL_OFF$BOLD $first:$ALL_OFF $@");
 }
 
 sub __error($$)
 {
-    my $first = $_[1];
-    shift(@_);
+    my $first = shift();
     print( STDERR "$RED==>$ALL_OFF$BOLD $first:$ALL_OFF @_");
     return 1;
 }
@@ -106,24 +114,23 @@ make our script tree
 =cut
 sub find_commands($)
 {
-    my $counter = 0,  $line_raw;
+    my $counter = 0, $line_raw;
     my @SCRIPT_FILE = shift(), @line;
-    my  %script = {
-	lines =>,
-	end_else =>,
-	end =>,
-    };
+    my @end_else, @end;
+    my @lines;
+    my %script;
+	
          
     for $line_raw ( @SCRIPT_FILE )
     {
 	if ( not $line_raw =~ /^#\\\\/ )
 	{
-	    $script[$counter] = 666;
+	    $lines[$counter] = 666;
 	}
 	else
 	{
 	    @line = split(/[\s,\t]/, $line_raw); 
-	    %{$script{lines}[$counter]} = {
+	    %{$lines[$counter]} = {
 		line => $counter,
 		self => \&$line,
 		args => @line,
@@ -131,17 +138,28 @@ sub find_commands($)
 	}
 	$counter++;
     }
-    return @script;
+
+    %script = {
+	lines => \@lines,
+	end_else => \@end_else,
+	end => \@end,
+    };
+    return %script;
 }
 
 sub exec_commands($$) 
 {
-    my %script      = \%{$_[0]};
-    my @SCRIPT_FILE = \@{$_[1]};
-    my $end_else    = \$script{end_else};
-    my $end         = \$script{end};
-    my $counter;
-    my $line_raw;
+    # private stuff
+    my  %script      = shift();
+    my  @SCRIPT_FILE = shift();
+    my  $counter=0;
+    my  $line_raw;
+
+    # stuff that needs to be exported
+    our $end_else    = \$script{end_else};
+    our $end         = \$script{end};
+    our %command;    # current command
+
 
     for $line_raw ( @SCRIPT_FILE )  
     {
@@ -156,15 +174,18 @@ sub exec_commands($$)
 	    
 	    if (not defined( &{$script{lines}[$counter]{self}} ) ) 
 	    {
-		error("$script[$counter]{self} not found");   
+		error("$command{self} not found");   
 	    }
 	    else
 	    {
-		     &{$script{lines}[$counter]{self}}( ${script{lines}[$counter]{args}}[1..-1]); 
+		&{$script{lines}[$counter]{self}}( ${script{lines}[$counter]{args}}[1..-1]); 
 	    }    
 	}
     }
 }
+
+our %defines;    # defined vars
+
 ### builtin commands
 #\\error
 sub error($)
@@ -253,22 +274,24 @@ syntax2: define var var
 =cut
 sub define($$)
 {
+    my @var;
+
     given ($_[0])
     {
 	# c
 	when ( $_ =~ / *=* / )
 	{
-	    my @var = split( /=/, $_ );
-	    $$var[0] = $var[1];
+	    @var = split( /=/, $_ );
 	}
 	# cpp style define
 	default
 	{
-	    my $var = shift();
-	    my $content = shift();
-	    $$var = $content;
+	    $var[0] = shift();
+	    $var[1] = shift();
 	}
     }
+    $defines{$var[0]} = $var[1];
+    
 }
 
 
@@ -309,4 +332,40 @@ $appname usage:
 HELP
 }
 
+our $target_name;
+our $input_file;
+our $stdout;
+our $stderr;
 
+GetOptions ('verbose' => \$verbose_output,
+	    'help|h' => \&print_help,
+	    'critical-warning' => \$WARNING_IS_ERROR,
+	    'D=s'              => \%defines,
+	    'I' => \@INCLUDE_SPACES,
+	    'M' => \@MACRO_SPACES, 
+	    'o' => \$target_name, 
+	    'stdout' => \$stdout,
+	    'stderr=s' => \$stderr,
+	 #   '<>' => \$input_file,
+    );
+
+$input_file = shift();
+
+if ( $stderr )
+{
+    open(STDERR, $stderr) or die("Cant open file: $!");
+}
+if ( $stdout || ! $target_name )
+{
+    $target_name = $stdout;
+}
+if ( $input_file )
+{
+    stub_main($input_file, $target_name);
+}
+
+
+
+	    
+	    
+	    
