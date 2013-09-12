@@ -154,32 +154,61 @@ sub exec_commands($$)
     my  @SCRIPT_FILE = shift();
     my  $counter=0;
     my  $line_raw;
+    my  @args;
+    my  $arg_counter, $arg;
 
     # stuff that needs to be exported
     our $end_else    = \$script{end_else};
     our $end         = \$script{end};
     our %command;    # current command
-
-
+    our @cut, @cut_end;
+ 
     for $line_raw ( @SCRIPT_FILE )  
     {
-	if ( ${script{lines}[$counter]} == 666 )
+	if ( $end == 0 && $end_else == 0 )
 	{
-	    # ok we got non code part
-	}
-	else
-	{
-	    # export command
-	    %command = %{$script{lines}[$counter]};
-	    
-	    if (not defined( &{$script{lines}[$counter]{self}} ) ) 
+	    if ( ${script{lines}[$counter]} == 666 )
 	    {
-		error("$command{self} not found");   
+		# ok we got non code part
 	    }
 	    else
 	    {
-		&{$script{lines}[$counter]{self}}( ${script{lines}[$counter]{args}}[1..-1]); 
-	    }    
+		# export command
+		%command = %{$script{lines}[$counter]};
+		
+		if (not defined( &{$script{lines}[$counter]{self}} ) ) 
+		{
+		    error("$command{self} not found");   
+		}
+		else
+		{
+		    # parse args end replace eventual vars
+		    $arg_counter = 0;
+		    
+		    for $arg ( $script{lines}[$counter]{args} )
+		    {
+			if ( not $arg_counter == 0 )
+			{
+			    if ( $arg =~ m/@*@/ )
+			    {
+				$arg =~ s/[^@,@$]//g;
+				$args[$arg_counter]=&defined($arg);
+			    }
+			    else     
+			    {
+				$args[$arg_counter]=$arg;
+			    }
+			    $arg_counter++;
+			}
+		    }
+		    &{$script{lines}[$counter]{self}}( $args[0..-1]); 
+		}    
+	    }
+	}
+	else
+	{
+	    my $to_cut = $cut[-1] - $cut_end[-1]; # get how many lines we need to cut
+	    splice(@SCRIPT_FILE, $cut[-1], $to_cut);
 	}
     }
 }
@@ -212,7 +241,12 @@ sub msg($)
 
 sub if($) 
 {
+    my $unsuccesfull = 'false';
     $end_else++;
+    if ( $unsuccesfull == 'true' )
+    {
+	$cut[$command{line}] = 1;
+    }
 }
 
 sub else() 
@@ -220,6 +254,15 @@ sub else()
     # remove else or end token and add explizit end token
     $end_else--;
     $end++;
+    if ( $cut[-1] || $cut[-1] != 0 )
+    {
+	$cut_end[$command{line}] = 1;
+    }
+    else
+    {
+	$cut[-1] = 0;
+	$cut[$command{line}] = 1;
+    }
 }
 
 sub end()
@@ -235,6 +278,7 @@ sub end()
 	# ok we do, remove explizit end token
 	$end--;
     }
+    $cut_end[$command{line}] = 1;
 }
 =pod
 desc.:   include file
@@ -264,6 +308,7 @@ sub include($)
     }
     $file        = shift();
     @SCRIPT_FILE = file_to_array($file);
+    $includes_raw[$#includes_raw] = \@SCRIPT_FILE;
     stub_main(\@SCRIPT_FILE, $includes[$#includes]);
 }
 
@@ -294,16 +339,39 @@ sub define($$)
     
 }
 
+sub defined($)
+{
+    my $var = shift();
+    
+    if ( $defines{$var} )
+    {
+	return $defines{$var};
+    }
+    else
+    {
+	return '';
+    }
+}
+
+sub include_includes($)
+{
+#
+
+
+
+}
 
 sub stub_main($$) 
 {
-    my @includes;
+    our @includes;
+    our @includes_raw;
     my $file            = shift();
     my @SCRIPT_FILE     = file_to_array($file);
     my $IID             = int(rand(100));
     my %script          = find_commands(\@SCRIPT_FILE);
     exec_commands(\%script, \@SCRIPT_FILE);
 
+    include_includes(\@includes_raw);
 }
 
 
