@@ -85,6 +85,12 @@ sub verbose($)
 	print( STDERR "$YELLOW==>$ALL_OFF$BOLD$ALL_OFF @_");
     }
 }
+
+sub stub()
+{
+    warn("stub");
+}
+
 ### tools ###
 sub file_to_array($)
 {
@@ -116,7 +122,6 @@ sub find_commands($)
 {
     my $counter = 0, $line_raw;
     my @SCRIPT_FILE = shift(), @line;
-    my @end_else, @end;
     my @lines;
     my %script;
 	
@@ -130,20 +135,20 @@ sub find_commands($)
 	else
 	{
 	    @line = split(/[\s,\t]/, $line_raw); 
-	    %{$lines[$counter]} = {
+	    %{$lines[$counter]} = (
 		line => $counter,
-		self => \&$line,
-		args => @line,
-	    };
+		self => \$line[0],
+		args => \@line,
+	    );
 	}
 	$counter++;
     }
 
-    %script = {
+    %script = (
 	lines => \@lines,
-	end_else => \@end_else,
-	end => \@end,
-    };
+	end_else => 0,
+	end => 0,
+    );
     return %script;
 }
 
@@ -158,8 +163,8 @@ sub exec_commands($$)
     my  $arg_counter, $arg;
 
     # stuff that needs to be exported
-    our $end_else    = \$script{end_else};
-    our $end         = \$script{end};
+    our $end_else    = $$script{end_else};
+    our $end         = $$script{end};
     our %command;    # current command
     our @cut, @cut_end;
  
@@ -169,7 +174,7 @@ sub exec_commands($$)
 	{
 	    if ( ${script{lines}[$counter]} == 666 )
 	    {
-		# ok we got non code part
+		stub();
 	    }
 	    else
 	    {
@@ -425,7 +430,7 @@ if ( $stderr )
 }
 if ( $stdout || ! $target_name )
 {
-    $target_name = $stdout;
+    $target_name = <STDOUT>;
 }
 if ( $input_file )
 {
