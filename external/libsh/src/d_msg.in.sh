@@ -7,49 +7,53 @@ detectDE()
 # taken from xdg-email script 
 {
     if [ x"$KDE_FULL_SESSION" = x"true" ]; then 
-	echo kde;
+	echo kde
     elif [ x"$GNOME_DESKTOP_SESSION_ID" != x"" ]; then 
-       echo gnome;
-    elif `dbus-send --print-reply --dest=org.freedesktop.DBus /org/freedesktop/DBus org.freedesktop.DBus.GetNameOwner string:org.gnome.SessionManager > /dev/null 2>&1` ; then 
-	echo gnome;
+       echo gnome
+    elif $(dbus-send --print-reply --dest=org.freedesktop.DBus /org/freedesktop/DBus \
+	org.freedesktop.DBus.GetNameOwner \
+	string:org.gnome.SessionManager > /dev/null 2>&1) ; then 
+	echo gnome
     elif xprop -root _DT_SAVE_MODE 2> /dev/null | grep ' = \"xfce4\"$' >/dev/null 2>&1; then 
-	echo xfce;
+	echo xfce
     else 
 	echo generic
     fi
 }
 
-
 d_msg() # display msgs and get input 
-#########################################################################################################################
-# NOTE: needs kdialog ( or zenity ) to display graphical messages and get input in gui					#
-#########################################################################################################################
-# usage:														#
-#  d_msg [modifer] topic msg												#
-#  modifers:														#
-#  ! msg is an error/faile message											#
-#  i msg is an msg/input ( work's not properly in cgi and with xmessage : terminal)					#
-#  f msg is an yes/no msg/test												#
-#  l msg is an list of items ( nyi in cgi: terminal)									#
-#    no modifer msg is an normal msg											#
-#########################################################################################################################
-#															#
-# vars:															#
-# DMSG_DE     =`detectDE` (default)  	# d_msg detects wich DE is installed and uses the coresponding dialog app       #
-# DMSG_GUI_APP=kdialog|zenity|xmessage  # tell d_msg which tool it has to use for gui output                            #
-#  					# either zenity, kdialog or xmessage(not recommend)                             #
-# 				                                                                                        ## 
-#															#
-# DMSG_GUI                      	# if not zero use graphical dialog, else cfg gui				#
-# DMSG_ICON				# icon that d_msg uses when is runned in gui mode if not set icon xorg is used 	#
-#															#
-#															#
-# DMSG_APP 				# say DMSG to use $DMSG_APP in cli possible vara are dialog and cgi_dialog	#  
-#															#
-# DMSG_APPNAME			        # set appname for d_msg default is $appname                                     #  
-#															#
-#															#
-#########################################################################################################################
+#################################################################################################
+# NOTE: needs kdialog ( or zenity ) to display graphical messages and get input in gui		#
+#################################################################################################
+# usage:											#	       
+#  d_msg [modifer] topic msg									#
+#  modifers:											#	       
+#  ! msg is an error/faile message								#	
+#  i msg is an msg/input ( work's not properly in cgi and with xmessage : terminal)		#
+#  f msg is an yes/no msg/test									#	       
+#  l msg is an list of items ( nyi in cgi: terminal)						#
+#    no modifer msg is an normal msg								#
+#################################################################################################
+#												#
+# vars:											        #
+# DMSG_DE     =`detectDE` (default)  	# d_msg detects wich DE is installed and                #
+#                                       # uses the coresponding dialog app                      #
+# DMSG_GUI_APP=kdialog|zenity|xmessage  # tell d_msg which tool it has to use for gui output    #
+#  					# either zenity, kdialog or xmessage(not recommend)     #
+# 				                                                                #
+#											        #
+# DMSG_GUI                      	# if not zero use graphical dialog, else cfg gui        #
+# DMSG_ICON				# icon that d_msg uses when is runned in gui mode       #
+#                                       # if not set icon xorg is used 	                        #
+#											        #
+#											        #
+# DMSG_APP 				# say DMSG to use $DMSG_APP in cli                      #
+#                                       # ( dialog or cgi_dialog )	                        #  
+#												#
+# DMSG_APPNAME			        # set appname for d_msg default is $appname             #  
+#											        #
+#											        #
+#################################################################################################
 {
     if [ ! $# -lt 2 ] ; then
 	unset dmsg_return_status
