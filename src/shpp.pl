@@ -10,7 +10,7 @@
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
+# GNU General Public License for mo re details.
 #
 # You should have received a copy of the GNU General Public License along
 # with this program; if not, write to the Free Software Foundation, Inc.,
@@ -107,8 +107,8 @@ sub file_to_array($)
 
 sub array_to_file($$) 
 {
-    my @rray = shift;
-    my $file = shift;
+    my @rray = shift();
+    my $file = shift();
     my $filestream;
 
     open($filestream, $file) or die("cant open $file: $!");
@@ -120,9 +120,10 @@ make our script tree
 =cut
 sub find_commands($)
 {
-    my $counter = 0, $line_raw;
-    my @SCRIPT_FILE = shift(), @line;
-    my @lines;
+    my $counter = 0;
+    my $line_raw;
+    my @SCRIPT_FILE = shift();
+    my(@line,  @lines);
     my %script;
 	
          
@@ -160,13 +161,14 @@ sub exec_commands($$)
     my  $counter=0;
     my  $line_raw;
     my  @args;
-    my  $arg_counter, $arg;
+    my  ($arg_counter, $arg);
 
     # stuff that needs to be exported
-    our $end_else    = $$script{end_else};
-    our $end         = $$script{end};
-    our %command;    # current command
-    our @cut, @cut_end;
+    local  $end_else    = $$script{end_else};
+    local  $end         = $$script{end};
+    local  %command;    # current command
+    local  %defines;    # defined vars
+    local  (@cut, @cut_end);
  
     for $line_raw ( @SCRIPT_FILE )  
     {
@@ -218,7 +220,7 @@ sub exec_commands($$)
     }
 }
 
-our %defines;    # defined vars
+
 
 ### builtin commands
 #\\error
@@ -285,36 +287,15 @@ sub end()
     }
     $cut_end[$command{line}] = 1;
 }
+
 =pod
-desc.:   include file
-syntax:  include file [OPTION]
-options: noparse - don't parse
-         
+desc.: load macro file
+syntax.: macro $file [OPTIONS]
 =cut
-sub include($)
+sub macro($)
 {
-    my $file;
-    my @SCRIPT_FILE;
-    while ( $#_ != 1 )
-    {
-       given($_[0])
-       {
-	   when( 'noparse' )
-	   {
-	       
-	       shift(@_);
-	   }
-	   when ( '--' )
-	   {
-	       shift(@_);
-	       break;
-	   }
-       }
-    }
-    $file        = shift();
-    @SCRIPT_FILE = file_to_array($file);
-    $includes_raw[$#includes_raw] = \@SCRIPT_FILE;
-    stub_main(\@SCRIPT_FILE, $includes[$#includes]);
+    my $file = shift();
+    do $file or die("cant open file $!");
 }
 
 =pod
@@ -344,6 +325,8 @@ sub define($$)
     
 }
 
+*def = \&define;
+
 sub defined($)
 {
     my $var = shift();
@@ -357,26 +340,75 @@ sub defined($)
 	return '';
     }
 }
-
-sub include_includes($)
+=pod
+desc.:   include file
+syntax:  include file [OPTION]
+options: noparse - don't parse
+         
+=cut
+sub include($)
 {
-#
+    my ($file,  @SCRIPT_FILE);
+    while ( $#_ != 1 )
+    {
+       given($_[0])
+       {
+	   when( 'noparse' )
+	   {
+	       
+	       shift(@_);
+	   }
+	   when ( '--' )
+	   {
+	       shift(@_);
+	       break;
+	   }
+       }
+    }
+    $file        = shift();
+    @SCRIPT_FILE = file_to_array($file);
+    $includes{raw}[-1] = \@SCRIPT_FILE;
+    $includes{pos}[-1] = $command{line};
+    stub_main(\@SCRIPT_FILE, $includes[-1]);
+}
 
 
-
+sub include_includes($$)
+{
+    my $includes_raw = shift();
+    my @SCRIPT_FILE = shift();
+    my ( $include_raw, $cur_pos);
+    my ( $pos_counter , $pos_stack) = 0; 
+    for $include_raw ( \$includes{raw} )
+    {
+	$cur_pos = $includes{pos}[$pos_counter];
+	@SCRIPT_FILE = ( @SCRIPT_FILE[0..$cur_pos + $pos_stack], $include_raw, 
+			 @SCRIPT_FILE[($cur_pos + $pos_stack )..$#SCRIPT_FILE]);
+	$pos_stack += @$include_raw + 1;
+	$pos_counter++;
+    }
+    return @SCRIPT_FILE;
 }
 
 sub stub_main($$) 
 {
-    our @includes;
-    our @includes_raw;
+    my (@includes_raw, @includes, @pos);
+=pod
+hash with the raw file, the script and the positions of the includes in the root
+=cut 
+    local  %includes = (
+	'raw'  =>  \@includes_raw,
+	'self' =>  \@includes,
+	'pos'  =>  \@pos,
+	);
+
     my $file            = shift();
     my @SCRIPT_FILE     = file_to_array($file);
     my $IID             = int(rand(100));
     my %script          = find_commands(\@SCRIPT_FILE);
     exec_commands(\%script, \@SCRIPT_FILE);
 
-    include_includes(\@includes_raw);
+    include_includes(\%includes, @SCRIPT_FILE);
 }
 
 
