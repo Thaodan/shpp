@@ -82,7 +82,7 @@ verbose() {
 die() {
     verbose 'got signal to die, dieing'
     IID=1 cleanup
-    exit $1
+    exit ${1:-1}
 }
 
 cleanup() {
@@ -114,7 +114,7 @@ var() {
 	    ;;	
 	*) 
 	    if [ -d $tmp_dir/$1 ] ; then
-		ls $tmp_dir/$1
+		echo  $tmp_dir/$1/*
 	    elif [ -e $tmp_dir/$1 ] ; then 
 		cat $tmp_dir/$1
 	    else
