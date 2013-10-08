@@ -126,16 +126,29 @@ sub find_commands($)
     my(@line,  @lines);
     my %script;
 	
+    if ( $SCRIPT_FILE[0] =~ /#\!\/.*/)
+    {
+	if ( $SCRIPT_FILE[0] =~ /#\!\/bin\/shpp/)
+	{
+	    $macro_mode = 1;
+	}
+	shift(@SCRIPT_FILE);
+    }
          
     for $line_raw ( @SCRIPT_FILE )
     {
-	if ( not $line_raw =~ /^#\\\\/ )
+	if ( not $macro_mode or not $line_raw =~ /^#\!/ )
 	{
 	    $lines[$counter] = 666;
+	}
+	if ( not  $macro_mode)
+	{
+	    $line_raw =~ s/^#!//;
 	}
 	else
 	{
 	    @line = split(/[\s,\t]/, $line_raw); 
+	    
 	    %{$lines[$counter]} = (
 		line => $counter,
 		self => \$line[0],
@@ -174,7 +187,7 @@ sub exec_commands($$)
     {
 	if ( $end == 0 && $end_else == 0 )
 	{
-	    if ( ${script{lines}[$counter]} == 666 )
+	    if ( $macro_mode or ${script{lines}[$counter]} == 666 )
 	    {
 		stub();
 	    }
@@ -223,14 +236,14 @@ sub exec_commands($$)
 
 
 ### builtin commands
-#\\error
+#!error
 sub error($)
 {
     __error("L$command{line}:$command{self}", "@_");
     exit 1;
 }
 
-#\\warning
+#!warning
 sub warning($) 
 {
     __warning("L$command{line}:$command{self}", "@_");
@@ -240,12 +253,17 @@ sub warning($)
 	exit(1);
     }
 }
-#\\msg
+#!msg
 sub msg($) 
 {
     __msg("L$command{line}:$command{self}", "$@");
 }
-
+#!rem 
+sub rem($)
+{
+    return 0;
+}
+#!if
 sub if($) 
 {
     my $unsuccesfull = 'false';
@@ -382,8 +400,7 @@ sub include_includes($$)
     for $include_raw ( \$includes{raw} )
     {
 	$cur_pos = $includes{pos}[$pos_counter];
-	@SCRIPT_FILE = ( @SCRIPT_FILE[0..$cur_pos + $pos_stack], $include_raw, 
-			 @SCRIPT_FILE[($cur_pos + $pos_stack )..$#SCRIPT_FILE]);
+	splice(@SCRIPT_FILE,  ($cur_pos + $pos_stack), 0, $SCRIPT_FILE[($cur_pos + $pos_stack)], $include_raw);
 	$pos_stack += @$include_raw + 1;
 	$pos_counter++;
     }
@@ -392,7 +409,8 @@ sub include_includes($$)
 
 sub stub_main($$) 
 {
-    my (@includes_raw, @includes, @pos);
+    my (@includes_raw, @includes, @pos);    
+    local $macro_mode; # if true commands don't start with #!);
 =pod
 hash with the raw file, the script and the positions of the includes in the root
 =cut 
@@ -403,12 +421,14 @@ hash with the raw file, the script and the positions of the includes in the root
 	);
 
     my $file            = shift();
+    my $target_file     = shift();
     my @SCRIPT_FILE     = file_to_array($file);
     my $IID             = int(rand(100));
     my %script          = find_commands(\@SCRIPT_FILE);
     exec_commands(\%script, \@SCRIPT_FILE);
 
-    include_includes(\%includes, @SCRIPT_FILE);
+    @SCRIPT_FILE = include_includes(\%includes, @SCRIPT_FILE);
+    array_to_file(@SCRIPT_FILE, $target_file);
 }
 
 
