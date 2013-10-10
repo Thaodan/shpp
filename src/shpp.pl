@@ -162,10 +162,9 @@ sub find_commands($)
 	    }
 
 	    @line = split(/[\s,\t]/, $line_raw); 
-
 	    %{$lines[$counter]} = (
 		line => $counter,
-		self => \&{$line[0]},
+		self => $line[0],
 		args => \@line,
 	    );
 	}
@@ -232,11 +231,11 @@ sub exec_commands($$)
 		    # parse args end replace eventual vars
 		    $arg_counter = 0;
 		    
-		    for $arg ( $script{lines}[$counter]{args} )
+		    for $arg ( @{$script{lines}[$counter]{args}} )	  
 		    {
 			if ( not $arg_counter == 0 )
 			{
-			    if ( $arg =~ m/@*@/ )
+			    if ( $arg =~ /@*@/ )
 			    {
 				$arg =~ s/[^@,@$]//g;
 				$args[$arg_counter]=&defined($arg);
@@ -245,10 +244,11 @@ sub exec_commands($$)
 			    {
 				$args[$arg_counter]=$arg;
 			    }
-			    $arg_counter++;
+			  
 			}
+			$arg_counter++;
 		    }
-		    &{$script{lines}[$counter]{self}}( $args[0..-1]); 
+		    &{$script{lines}[$counter]{self}}( $args[0]); 
 		}    
 	    }
 	}
@@ -257,6 +257,7 @@ sub exec_commands($$)
 	    my $to_cut = $cut[-1] - $cut_end[-1]; # get how many lines we need to cut
 	    splice(@SCRIPT_FILE, $cut[-1], $to_cut);
 	}
+	$counter++;
     }
 }
 
