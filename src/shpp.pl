@@ -30,6 +30,7 @@ our $MACRO_SPACES = '.';
 our $appname = 'shpp';
 use File::Path;
 use File::Basename;
+no warnings 'experimental';
 use Getopt::Long;
 use feature 'switch';
 #use strict 'vars';
@@ -95,24 +96,36 @@ sub stub()
 sub file_to_array($)
 {
     my $file = shift();
-    my $filesteam;
+    my ($filestream, $string);
     my @rray;
 
     open($filestream, $file) or die("cant open $file: $!");
-    @rray = <$filestream>;
+    while ( $string = <$filestream> )
+    {
+	push(@rray, $string);
+    }
     close($filestream);
-
     return @rray;
 }
 
 sub array_to_file($$) 
 {
-    my @rray = shift();
+    my @rray = @{shift()};
     my $file = shift();
     my $filestream;
 
-    open($filestream, $file) or die("cant open $file: $!");
-    print($filestream, @rray);
+    if ( not defined $file )
+    {
+	$filestream =  STDOUT
+    }
+    else 
+    {
+	open($filestream, '>', $file) or die("cant open $file: $!");
+    }
+    foreach my $line ( @rray )
+    {
+	print  $filestream $line;
+    }
     close($filestream);
 }
 =pod
@@ -122,7 +135,7 @@ sub find_commands($)
 {
     my $counter = 0;
     my $line_raw;
-    my @SCRIPT_FILE = shift();
+    my @SCRIPT_FILE = @{shift()};
     my(@line,  @lines);
     my %script;
 	
@@ -137,21 +150,22 @@ sub find_commands($)
          
     for $line_raw ( @SCRIPT_FILE )
     {
-	if ( not $macro_mode or not $line_raw =~ /^#\!/ )
+	if ( not $macro_mode and not $line_raw =~ /#\\\\/ )
 	{
 	    $lines[$counter] = 666;
 	}
-	if ( not  $macro_mode)
-	{
-	    $line_raw =~ s/^#!//;
-	}
 	else
 	{
+	    if ( not  $macro_mode)
+	    {
+		$line_raw =~ s/^#\\\\//;
+	    }
+
 	    @line = split(/[\s,\t]/, $line_raw); 
-	    
+
 	    %{$lines[$counter]} = (
 		line => $counter,
-		self => \$line[0],
+		self => \&{$line[0]},
 		args => \@line,
 	    );
 	}
@@ -169,8 +183,8 @@ sub find_commands($)
 sub exec_commands($$) 
 {
     # private stuff
-    my  %script      = shift();
-    my  @SCRIPT_FILE = shift();
+    my  %script      = %{shift()};
+    my  @SCRIPT_FILE = @{shift()};
     my  $counter=0;
     my  $line_raw;
     my  @args;
@@ -187,9 +201,22 @@ sub exec_commands($$)
     {
 	if ( $end == 0 && $end_else == 0 )
 	{
-	    if ( $macro_mode or ${script{lines}[$counter]} == 666 )
+	    if ( not $macro_mode and ${script{lines}[$counter]} == 666 )
 	    {
-		stub();
+		for my $word ( \@{$line_raw})
+		{
+		    # check if $word is a var
+		    if ( $word =~/@*@/ )
+		    {
+			$word =~s/[^@,@$]//g ;
+			$word = &defined($word);
+		    }
+		    # check if var is a sub
+		    if ( $word ~~ 'tt' )
+		    {
+			tet;
+		    }
+		}
 	    }
 	    else
 	    {
@@ -233,7 +260,7 @@ sub exec_commands($$)
     }
 }
 
-
+our @subs;
 
 ### builtin commands
 #!error
@@ -242,6 +269,7 @@ sub error($)
     __error("L$command{line}:$command{self}", "@_");
     exit 1;
 }
+$subs+=\&error;
 
 #!warning
 sub warning($) 
@@ -253,16 +281,22 @@ sub warning($)
 	exit(1);
     }
 }
+$subs+=\&warning;
+
 #!msg
 sub msg($) 
 {
     __msg("L$command{line}:$command{self}", "$@");
 }
+$subs+=\&msg;
+
 #!rem 
 sub rem($)
 {
     return 0;
 }
+$subs+=\&rem;
+
 #!if
 sub if($) 
 {
@@ -273,6 +307,7 @@ sub if($)
 	$cut[$command{line}] = 1;
     }
 }
+$subs+=\&if;
 
 sub else() 
 {
@@ -289,6 +324,7 @@ sub else()
 	$cut[$command{line}] = 1;
     }
 }
+$subs+=\&else;
 
 sub end()
 {
@@ -305,6 +341,7 @@ sub end()
     }
     $cut_end[$command{line}] = 1;
 }
+$subs+=\&end;
 
 =pod
 desc.: load macro file
@@ -315,6 +352,7 @@ sub macro($)
     my $file = shift();
     do $file or die("cant open file $!");
 }
+$subs+=\&macro;
 
 =pod
 desc.: define var
@@ -342,7 +380,7 @@ sub define($$)
     $defines{$var[0]} = $var[1];
     
 }
-
+$subs+=\&define;
 *def = \&define;
 
 sub defined($)
@@ -358,6 +396,8 @@ sub defined($)
 	return '';
     }
 }
+$subs+=\&defined;
+
 =pod
 desc.:   include file
 syntax:  include file [OPTION]
@@ -389,6 +429,7 @@ sub include($)
     $includes{pos}[-1] = $command{line};
     stub_main(\@SCRIPT_FILE, $includes[-1]);
 }
+$subs+=\&include;
 
 
 sub include_includes($$)
@@ -427,9 +468,13 @@ hash with the raw file, the script and the positions of the includes in the root
     my %script          = find_commands(\@SCRIPT_FILE);
     exec_commands(\%script, \@SCRIPT_FILE);
 
-    @SCRIPT_FILE = include_includes(\%includes, @SCRIPT_FILE);
-    array_to_file(@SCRIPT_FILE, $target_file);
+    if (  @includes_raw != 0 )
+    {
+	@SCRIPT_FILE = include_includes(\%includes, @SCRIPT_FILE);
+    }
+    array_to_file(\@SCRIPT_FILE, $target_file);
 }
+
 
 
 sub print_help() {
@@ -468,21 +513,20 @@ GetOptions ('verbose' => \$verbose_output,
 	    'D=s'              => \%defines,
 	    'I' => \@INCLUDE_SPACES,
 	    'M' => \@MACRO_SPACES, 
-	    'o' => \$target_name, 
+	    'o=s' => \$target_name, 
 	    'stdout' => \$stdout,
 	    'stderr=s' => \$stderr,
 	 #   '<>' => \$input_file,
-    );
+    ) or exit(1);
 
 $input_file = shift();
-
 if ( $stderr )
 {
     open(STDERR, $stderr) or die("Cant open file: $!");
 }
 if ( $stdout || ! $target_name )
 {
-    $target_name = <STDOUT>;
+    undef $target_name;
 }
 if ( $input_file )
 {
