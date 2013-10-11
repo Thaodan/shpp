@@ -37,12 +37,6 @@ use feature 'switch';
 #use parent 'Exporter';
 
 #FIXME: clean me
-our $ALL_OFF="\e[1;0m";
-our $BOLD="\e[1;1m";
-our $BLUE="${BOLD}\e[1;34m";
-our $GREEN="${BOLD}\e[1;32m";
-our $RED="${BOLD}\e[1;31m";
-our $YELLOW="${BOLD}\e[1;33m";
 
 our $verbose_output;
 our $WARNING_IS_ERROR;
@@ -211,10 +205,11 @@ sub exec_commands($$)
 			$word = &defined($word);
 		    }
 		    # check if var is a sub
-		    if ( $word ~~ 'tt' )
-		    {
-			tet;
-		    }
+		    stub();
+		    #if ( $word ~~  )
+		    #{
+		    #	tet;
+		    #}
 		}
 	    }
 	    else
@@ -503,17 +498,20 @@ $appname usage:
 HELP
 }
 
-our $target_name;
-our $input_file;
-our $stdout;
-our $stderr;
+my $use_color;
+my $stdout;
+my $stderr;
+my $target_name;
+my $input_file;
+
 
 GetOptions ('verbose' => \$verbose_output,
 	    'help|h' => \&print_help,
 	    'critical-warning' => \$WARNING_IS_ERROR,
 	    'D=s'              => \%defines,
-	    'I' => \@INCLUDE_SPACES,
-	    'M' => \@MACRO_SPACES, 
+	    'C|color' => \$use_color,
+	    'I=s' => \@INCLUDE_SPACES,
+	    'M=s' => \@MACRO_SPACES, 
 	    'o=s' => \$target_name, 
 	    'stdout' => \$stdout,
 	    'stderr=s' => \$stderr,
@@ -521,14 +519,27 @@ GetOptions ('verbose' => \$verbose_output,
     ) or exit(1);
 
 $input_file = shift();
+
+if ( $use_color )
+{
+    our $ALL_OFF="\e[1;0m";
+    our $BOLD="\e[1;1m";
+    our $BLUE="${BOLD}\e[1;34m";
+    our $GREEN="${BOLD}\e[1;32m";
+    our $RED="${BOLD}\e[1;31m";
+    our $YELLOW="${BOLD}\e[1;33m";
+}
+
 if ( $stderr )
 {
     open(STDERR, $stderr) or die("Cant open file: $!");
 }
+
 if ( $stdout || ! $target_name )
 {
     undef $target_name;
 }
+
 if ( $input_file )
 {
     stub_main($input_file, $target_name);
