@@ -91,7 +91,7 @@ sub debug($)
 {
     if ( $DEBUG )
     {
-	print(@_);
+	print(@_, "at ", "line ", __LINE__);
     }
 }
 ### tools ###
@@ -221,7 +221,6 @@ sub exec_commands($$)
     {
 	if ( $end == 0 && $end_else == 0 )
 	{
-	    $line_raw = 4;
 	    #debug($script{lines}[0]{self});
 	    # export command
 	    $command = $$script{lines}[$counter];
@@ -292,8 +291,8 @@ sub exec_commands($$)
 			else
 			{
 			   $cmd_ret = &{$cur_cmdr}($args[0], $args[1], $args[2], $args[3], $args[4], $args[5], $args[6], $args[7], $args[8] );
-			   #debug($cmd_ret);
-			   if ( $cmd_ret != 1 )
+			   #print $cmd_ret;
+			   if ( $cmd_ret != 1 && $cmd_ret != 0 )
 			   {
 			       $line_raw = $cmd_ret;
 			   }
@@ -334,6 +333,7 @@ sub warning($)
 	__msg2('', 'warnings are error set');
 	exit(1);
     }
+    return 0;
 }
 $subs{warning} = { 'self' => 'warning',
 		 args => 1,
@@ -343,6 +343,7 @@ $subs{warning} = { 'self' => 'warning',
 sub msg($) 
 {
     __msg("L$$command{line}:$$command{self}", "@_");
+    return 1;
 }
 $subs{msg} = { 'self' => 'msg',
 		 args => 1,
@@ -352,7 +353,7 @@ $subs{msg} = { 'self' => 'msg',
 #!rem 
 sub rem($)
 {
-    return 0;
+    return 1;
 }
 $subs{rem} = { 'self' => 'rem',
 		 args => 1,
@@ -367,6 +368,7 @@ sub If($)
     {
 	$cut[$command{line}] = 1;
     }
+    return 1;
 }
 $subs{if} = { 'self' => 'If',
 		 args => 'ALL',
@@ -386,6 +388,7 @@ sub Else()
 	$cut[-1] = 0;
 	$cut[$$command{line}] = 1;
     }
+    return 1;
 }
 $subs{else} = { 'self' => 'Else',
 		 args => 0,
@@ -405,6 +408,7 @@ sub end()
 	$end--;
     }
     $cut_end[$$command{line}] = 1;
+    return 1;
 }
 $subs{end} = { 'self' => 'end',
 		 args => 0,
@@ -449,7 +453,7 @@ sub define($$)
 	}
     }
     $defines{$var[0]} = $var[1];
-    
+    return 1;
 }
 $subs{define} = { 'self' => 'define',
 		 args => 2,
@@ -503,6 +507,7 @@ sub include($)
     $includes{raw}[-1] = \@SCRIPT_FILE;
     $includes{pos}[-1] = $command{line};
     stub_main(\@SCRIPT_FILE, $includes[-1]);
+    return 1;
 }
 
 $subs{include} = { 'self' => 'include',
