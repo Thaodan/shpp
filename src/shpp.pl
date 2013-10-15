@@ -182,20 +182,19 @@ sub find_commands($)
 
 	    @line = split(/[\s,\t]/, $line_raw); 
 	    $lines[$counter] = {
-		line => $counter+1,
-		self => $line[0],
-		args => \@line,
-	    };
-	    shift(@line); # pop first arg
+				line => $counter+1,
+				self => $line[0],
+				args => \@line,
+			       };
+	    shift(@line);	# pop first arg
 	}
 	$counter++;
     }
 
     %script = (
-	lines => \@lines,
-	end_else => 0,
-	end => 0,
-    );
+	       lines => \@lines,
+	       removed_stack => 0,
+	      );
     return %script;
 }
 
@@ -204,22 +203,24 @@ sub exec_commands($$)
     # private stuff
     my  $script      = shift();
     my  $SCRIPT_FILE = shift();
-    my  $counter=0; # index
-    my  @args; # parsed arguments 
-    my  ($arg_counter, $arg); # need to parse
-    my $cmd_ret; # return of command
+    my  $counter=0;		# index
+    my  @args;			# parsed arguments 
+    my  ($arg_counter, $arg);	# need to parse
+    my  $removed_stack = $$script{removed_stack};
+    my  $cur_removed_stack=0;
+    my  $cmd_ret;		# return of command
 
     # stuff that needs to be exported
-    local  $end_else    = $$script{end_else};
-    local  $end         = $$script{end};
-    local  $command;    # current command
-    local  %defines;    # defined vars
-    local  $line_raw;   #FIXME:  make me readonly at every turn
-    local  (@cut, @cut_end);
- 
+    local  @start;		# line were if block started
+    local  @end;
+    local  $command;	       # current command
+    local  %defines;	       # defined vars
+    local  $line_raw;	       #FIXME:  make me readonly at every turn
+    local  @l_cmd_ret;
+
     for $line_raw ( @$SCRIPT_FILE )
     {
-	if ( $end == 0 && $end_else == 0 )
+	if ( $$script{lines}[$counter]{self} == {'else','end'} or  @end == 0 )
 	{
 	    #debug($script{lines}[0]{self});
 	    # export command
@@ -275,7 +276,7 @@ sub exec_commands($$)
 			$arg_counter++;
 		    }
 
-		    my $cur_cmdr = $subs{$$command{self}}{self};  # cürrent raw name of command 
+		    my $cur_cmdr = $subs{$$command{self}}{self}; # cürrent raw name of command 
 		    #debug($cur_commandr);
 		    if ( not defined &{$cur_cmdr} )
 		    {
@@ -290,16 +291,21 @@ sub exec_commands($$)
 			}
 			else
 			{
-			   $cmd_ret = &{$cur_cmdr}($args[0], $args[1], $args[2], $args[3], $args[4], $args[5], $args[6], $args[7], $args[8] );
-			   #print $cmd_ret;
-			   if ( $cmd_ret != 1 && $cmd_ret != 0 )
-			   {
-			       $line_raw = $cmd_ret;
-			   }
-			   else
-			   {
-			       undef $line_raw;
-			   }
+			    $cmd_ret = &{$cur_cmdr}($args[0], $args[1], $args[2], $args[3], $args[4], $args[5], $args[6], $args[7], $args[8] );
+			    #print $cmd_ret;
+			    if ( $cmd_ret != 1 && $cmd_ret != 0 )
+			    {
+				$line_raw = $cmd_ret;
+			    }
+			    else
+			    {
+				#  if last return was just a return status skipp it and add it for iss(inter sub system)
+				if ( $$command{self} == {'else','if'} ) # fixme 
+				{
+				    $l_cmd_ret[-1] = $cmd_ret;
+				}
+				undef $line_raw;
+			    }
 			}
 		    }
 		}
@@ -307,11 +313,42 @@ sub exec_commands($$)
 	}
 	else
 	{
-	    my $to_cut = $cut[-1] - $cut_end[-1]; # get how many lines we need to cut
-	    splice(@$SCRIPT_FILE, $cut[-1], $to_cut);
+	    $cur_removed_stack = $start[-1] - $end[-1]; # get how many lines we need to cut
+	    splice(@$SCRIPT_FILE, $start[-1], $cur_removed_stack);
+	    shift(@start);
+	    shift(@end);
 	}
 	$counter++;
     }
+
+=pod 
+
+if # start
+
+else # end(shift), start
+
+end # end
+$cur_removed_stack =  @end - @start ; shift(@start)
+( $start[-1] = $$command{line} shift(@end,@start) )if IF == false and if else == true
+shift @
+undef tet
+define teg
+ifndef tet (
+$start[-1] = $$command{line}
+ifdef teg 
+( - )
+else ( $l_cmd_ret && $start[-1] = $$command{line} )
+# stuff
+end ( $l_cmd_ret && $end[-1] == $$command{line} )
+# stuff
+else
+(
+$end[-1] = $$command{line}
+)
+#stuff
+end
+
+=cut
 }
 
 ### builtin commands
@@ -336,8 +373,8 @@ sub warning($)
     return 0;
 }
 $subs{warning} = { 'self' => 'warning',
-		 args => 1,
-	       };
+		   args => 1,
+		 };
 
 #!msg
 sub msg($) 
@@ -346,73 +383,71 @@ sub msg($)
     return 1;
 }
 $subs{msg} = { 'self' => 'msg',
-		 args => 1,
-	       };
+	       args => 1,
+	     };
 
 
 #!rem 
-sub rem($)
+sub rem
 {
     return 1;
 }
 $subs{rem} = { 'self' => 'rem',
-		 args => 1,
-	       };
+	       args => ALL,
+	     };
 
 #!if
-sub If($) 
+sub If
 {
     my $unsuccesfull = 'false';
-    $end_else++;
     if ( $unsuccesfull == 'true' )
     {
-	$cut[$command{line}] = 1;
+	$start[-1] = $$command{line};
+	return 0;
     }
     return 1;
 }
 $subs{if} = { 'self' => 'If',
-		 args => 'ALL',
-	       };
+	      args => 'ALL',
+	    };
 
 sub Else() 
 {
-    # remove else or end token and add explizit end token
-    $end_else--;
-    $end++;
-    if ( $cut[-1] || $cut[-1] != 0 )
+    # else token
+    if ( $l_cmd_ret == 1 )
     {
-	$cut_end[$$command{line}] = 1;
+	# ok if(or any command that starts a new end block) was fine skip it
+	$start[-1] = $$command{line};
+	return 1;
     }
     else
     {
-	$cut[-1] = 0;
-	$cut[$$command{line}] = 1;
+	# ok if wasn't fine we end this block
+	$end[-1] = $$command{line};
+	return 0;
     }
     return 1;
 }
 $subs{else} = { 'self' => 'Else',
-		 args => 0,
-	       };
+		args => 0,
+	      };
 
 sub end()
 {
-    # look if we need explizit end token
-    if ( $end == 0 )
+    # if was fine we end this
+    if ( $l_cmd_ret == 1 )
     {
-	# we don't, remove some else or end token
-	$end_else--;
+	$end[-1] = $$command{line};
     }
     else
     {
-	# ok we do, remove explizit end token
-	$end--;
+       # ok skip it we're useless
     }
-    $cut_end[$$command{line}] = 1;
     return 1;
 }
 $subs{end} = { 'self' => 'end',
-		 args => 0,
-	       };
+	       args => 0,
+	     };
 
 =pod
 desc.: load macro file
@@ -456,8 +491,8 @@ sub define($$)
     return 1;
 }
 $subs{define} = { 'self' => 'define',
-		 args => 2,
-	       };
+		  args => 2,
+		};
 
 sub defined($)
 {
@@ -473,8 +508,8 @@ sub defined($)
     }
 }
 $subs{defined} = { 'self' => 'Defined',
-		 args => 1,
-	       };
+		   args => 1,
+		 };
 
 
 =pod
@@ -488,19 +523,19 @@ sub include($)
     my ($file,  @SCRIPT_FILE);
     while ( $#_ != 1 )
     {
-       given($_[0])
-       {
-	   when( 'noparse' )
-	   {
+	given($_[0])
+	{
+	    when( 'noparse' )
+	    {
 	       
-	       shift(@_);
-	   }
-	   when ( '--' )
-	   {
-	       shift(@_);
-	       break;
-	   }
-       }
+		shift(@_);
+	    }
+	    when ( '--' )
+	    {
+		shift(@_);
+		break;
+	    }
+	}
     }
     $file        = shift();
     @SCRIPT_FILE = file_to_array($file);
@@ -512,7 +547,7 @@ sub include($)
 
 $subs{include} = { 'self' => 'include',
 		   args => 1,
-		   };
+		 };
 
 sub include_includes($$)
 {
@@ -533,17 +568,17 @@ sub include_includes($$)
 sub stub_main($$) 
 {
     my (@includes_raw, @includes, @pos);
-    local $macro_mode; # if true commands don't start with #!);
+    local $macro_mode;	      # if true commands don't start with #!);
 
 =pod
 hash with the raw file, the script and the positions of the includes in the root
 =cut
 
     local  %includes = (
-	'raw'  =>  \@includes_raw,
-	'self' =>  \@includes,
-	'pos'  =>  \@pos,
-	);
+			'raw'  =>  \@includes_raw,
+			'self' =>  \@includes,
+			'pos'  =>  \@pos,
+		       );
 
     my $file            = shift();
     my $target_file     = shift();
@@ -604,8 +639,8 @@ GetOptions ('verbose' => \$verbose_output,
 	    'stdout' => \$stdout,
 	    'stderr=s' => \$stderr,
 	    'debug|d' => \$DEBUG,
-	 #   '<>' => \$input_file,
-    ) or die ("no options given call with -h for help");
+	    #   '<>' => \$input_file,
+	   ) or die ("no options given call with -h for help");
 
 $input_file = shift();
 
