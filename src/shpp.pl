@@ -420,8 +420,51 @@ $subs{rem} = {
 #!if
 sub If
 {
-    my $unsuccesfull = 'false';
-    if ($unsuccesfull == 'true')
+    my $expr; # stuff that called cmd returns;
+    my ( $call_brace, $call); #true if we got a call
+    my @s_args;
+
+    for my $arg (@_) # look if we got cmds
+    {
+	if ( exists $subs{$arg}{self} )
+	{
+	    $s_args[-1] = $arg;
+	    $call = 1;
+	    continue;
+	}
+	if ( $call )
+	{
+	    @s_args = split(/,/ , $arg);
+	    if ( exists $subs{$s_args[0]}{self} )
+	    {
+		$expr+=&{$subs{$s_args[0]}{self}}( $s_args[1], $s_args[2], $s_args[3] );
+	    }
+	}
+	else
+	{
+	    if ( $arg =~ /.*\(/ and not $arg =~ /\)/) # arg () begins
+	    {
+		$s_args[-1] = s/\(//;
+		$call_brace = 1;
+		continue;
+	    }
+	    if ( $call_brace  and $arg =~ /\)/ or $call_brace ) # arg ends or not
+	    {
+		if ( $arg =~ /\)/ ) # arg() ends
+		{
+		    $s_args[-1] = s/\)//;
+		    if ( exists $subs{$s_args[0]}{self} )
+		    {
+			$expr+=&{$subs{$s_args[0]}{self}}( $s_args[1], $s_args[2], $s_args[3] );
+		    }
+		}
+		$s_args[-1] =~ s/,//g;
+	    }
+	}
+
+    }
+    # FIXME: make me save
+    if ( not eval ( $expr ) )
     {
         $start[-1] = $$command{line};
         return 0;
@@ -433,6 +476,22 @@ $subs{if} = {
              args   => 'ALL',
             };
 
+sub ifdef
+{
+    return If(defined, @_);
+}
+$subs{ifdef} = {
+             'self' => 'ifdef',
+             args   => 'ALL',
+            };
+sub ifndef
+{
+    return If('!', defined, @_);
+}
+$subs{ifdef} = {
+             'self' => 'ifndef',
+             args   => 'ALL',
+            };
 sub Else()
 {
     # else token
