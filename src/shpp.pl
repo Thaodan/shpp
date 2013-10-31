@@ -34,7 +34,7 @@ no warnings 'experimental';
 use Getopt::Long;
 Getopt::Long::Configure("bundling");
 use feature 'switch';
-
+our $LINE;
 #use strict 'vars';
 #use parent 'Exporter';
 
@@ -91,10 +91,13 @@ sub stub()
 
 sub debug($)
 {
-    if ($DEBUG)
-    {
-        print(@_, "at ", "line ", __LINE__);
-    }
+   my $line = shift();
+   my $msg = shift();
+   
+   if ($DEBUG)
+   {
+       print("L$line: $msg\n");
+   }
 }
 ### tools ###
 sub file_to_array($)
@@ -182,17 +185,16 @@ sub find_commands($)
                 $line_raw =~ s/^#\\\\//;
             }
 
-            @line = split(/[\s,\t]/, $line_raw);
+            @{$line[$counter]} = split(/[\s,\t]/, $line_raw);
             $lines[$counter] = {
                                 line => $counter + 1,
-                                self => $line[0],
-                                args => \@line,
+                                self => ${$line[$counter]}[0],
+                                args => \@{$line[$counter]},
                                };
-            shift(@line);    # pop first arg
+            shift(@{$line[$counter]});    # pop first arg
         }
         $counter++;
     }
-
     %script = (
                lines         => \@lines,
                removed_stack => 0,
@@ -224,7 +226,7 @@ sub exec_commands($$)
     {
         if ($$script{lines}[$counter]{self} == {'else', 'end'} or @end == 0)
         {
-            #debug($script{lines}[0]{self});
+            #print($$script{lines}[0]{args}[0]);
             # export command
             $command = $$script{lines}[$counter];
 
@@ -251,9 +253,9 @@ sub exec_commands($$)
             }
             else
             {
-                debug("L:$counter:");
-                debug("rsub: $subs{$$command{self}}\n");
-                debug("sub: $$command{self}\n");
+                #debug("L:$counter:");
+                #debug("rsub: $subs{$$command{self}}\n");
+                #debug("sub: $$command{self}\n");
 
                 # check if command is in %subs
                 if (not exists $subs{$$command{self}})
@@ -277,12 +279,10 @@ sub exec_commands($$)
                         {
                             $args[$arg_counter] = $arg;
                         }
-                        debug($args[$arg_counter]);
                         $arg_counter++;
                     }
 
-                    my $cur_cmdr = $subs{$$command{self}}{self}
-                      ;    # cürrent raw name of command
+                    my $cur_cmdr = $subs{$$command{self}}{self};    # cürrent raw name of command
                            #debug($cur_commandr);
                     if (not defined &{$cur_cmdr})
                     {
@@ -328,8 +328,8 @@ sub exec_commands($$)
         }
         else
         {
-            $cur_removed_stack =
-              $start[-1] - $end[-1];    # get how many lines we need to cut
+	    # get how many lines we need to cut
+            $cur_removed_stack = $start[-1] - $end[-1];
             splice(@$SCRIPT_FILE, $start[-1], $cur_removed_stack);
             shift(@start);
             shift(@end);
@@ -466,7 +466,7 @@ sub If
     # FIXME: make me save
     if ( not eval ( $expr ) )
     {
-        $start[-1] = $$command{line};
+        $start[@start] = $$command{line};
         return 0;
     }
     return 1;
