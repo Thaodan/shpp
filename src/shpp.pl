@@ -76,11 +76,27 @@ sub __error($$)
     return 1;
 }
 
-sub verbose($)
+=pod
+
+syntax: verbose <msg> [mode]
+desc: print msg if verbose if defined
+modes:
+| mode  | desc                         | 
+|-------+------------------------------|
+|1      |   don't print new line       |
+|2      |   don't print line number    |
+|3      |   print everything (default) |
+
+=cut
+sub verbose
 {
+    my $msg = shift();
+    my $mode = ( shift() or 3);
     if (defined $verbose_output)
     {
-        print(STDERR "$YELLOW==>$ALL_OFF$BOLD$ALL_OFF @_");
+	print(STDERR "$YELLOW==>$ALL_OFF$BOLD $$command{line}:$ALL_OFF") if $mode == 3 or $mode == 1;
+        print(STDERR "$msg");
+	print(STDERR "\n") if not $mode == 1;
     }
 }
 
@@ -224,7 +240,7 @@ sub exec_commands($$)
 
     for $line_raw (@$SCRIPT_FILE)
     {
-        if ($$script{lines}[$counter]{self} == {'else', 'end'} or @end == 0)
+        if ($$script{lines}[$counter]{self} == {'else', 'end'} or ( @end == 0 and @start == 0 ))
         {
             #print($$script{lines}[0]{args}[0]);
             # export command
@@ -300,12 +316,8 @@ sub exec_commands($$)
                         }
                         else
                         {
-                            $cmd_ret =
-                              &{$cur_cmdr}(
-                                           $args[0], $args[1], $args[2],
-                                           $args[3], $args[4], $args[5],
-                                           $args[6], $args[7], $args[8]
-                                          );
+			    verbose("calling $cur_cmdr( @args )");
+                            $cmd_ret = &{$cur_cmdr}( @args );
 
                             #print $cmd_ret;
                             if ($cmd_ret != 1 && $cmd_ret != 0)
@@ -420,48 +432,66 @@ $subs{rem} = {
 #!if
 sub If
 {
-    my $expr; # stuff that called cmd returns;
+    my $expr="b"; # stuff that called cmd returns;
     my ( $call_brace, $call); #true if we got a call
     my @s_args;
-
-    for my $arg (@_) # look if we got cmds
+    for  my $arg (@_) # look if we got cmds
     {
-	if ( exists $subs{$arg}{self} )
+	if ( $arg == "not" or $arg == "!" or $arg == "or" or $arg == "and" ) # skip not or etc
 	{
-	    $s_args[-1] = $arg;
-	    $call = 1;
-	    continue;
-	}
-	if ( $call )
-	{
-	    @s_args = split(/,/ , $arg);
-	    if ( exists $subs{$s_args[0]}{self} )
+	    if ( $expr )
 	    {
-		$expr+=&{$subs{$s_args[0]}{self}}( $s_args[1], $s_args[2], $s_args[3] );
+		$expr+="$arg ";
+	    }
+	    else
+	    {
+		$expr="$arg";
 	    }
 	}
 	else
 	{
-	    if ( $arg =~ /.*\(/ and not $arg =~ /\)/) # arg () begins
+	    if ( exists $subs{$arg}{self} )
 	    {
-		$s_args[-1] = s/\(//;
-		$call_brace = 1;
-		continue;
+		verbose("ok $arg is a sub",1);
+		$s_args[@s_args] = $arg;
+		$call = 1;
+		next;
 	    }
-	    if ( $call_brace  and $arg =~ /\)/ or $call_brace ) # arg ends or not
+	    if ( $call )
 	    {
-		if ( $arg =~ /\)/ ) # arg() ends
+		push(@s_args ,split(/,/ , $arg));
+		verbose("calling it: @s_args",2);
+		if ( exists $subs{$s_args[0]}{self} )
 		{
-		    $s_args[-1] = s/\)//;
-		    if ( exists $subs{$s_args[0]}{self} )
-		    {
-			$expr+=&{$subs{$s_args[0]}{self}}( $s_args[1], $s_args[2], $s_args[3] );
-		    }
+		    $expr+=&{$subs{$s_args[0]}{self}}( $s_args[1], $s_args[2], $s_args[3] );
+		    $expr+=" ";
 		}
-		$s_args[-1] =~ s/,//g;
+	    }
+	    else
+	    {
+		verbose("ok $arg is a sub",1);
+		if ( $arg =~ /.*\(/ and not $arg =~ /\)/) # arg () begins
+		{
+		    $s_args[-1] = s/\(//;
+		    $call_brace = 1;
+		    next;
+		}
+		if ( $call_brace  and $arg =~ /\)/ or $call_brace ) # arg ends or not
+		{
+		    verbose("calling it: @s_args",2);
+		    if ( $arg =~ /\)/ ) # arg() ends
+		    {
+			$s_args[-1] = s/\)//;
+			if ( exists $subs{$s_args[0]}{self} )
+			{
+			    $expr+=&{$subs{$s_args[0]}{self}}( $s_args[1], $s_args[2], $s_args[3] );
+			    $expr+=" ";
+			}
+		    }
+		    $s_args[-1] =~ s/,//g;
+		}
 	    }
 	}
-
     }
     # FIXME: make me save
     if ( not eval ( $expr ) )
@@ -582,11 +612,11 @@ $subs{define} = {
                  args   => 2,
                 };
 
-sub defined($)
+sub Defined($)
 {
     my $var = shift();
-
-    if ($defines{$var})
+    verbose("Testing if '$var' is defined");
+    if (exists $defines{$var})
     {
         return $defines{$var};
     }
@@ -610,6 +640,7 @@ options: noparse - don't parse
 sub include($)
 {
     my ($file, @SCRIPT_FILE);
+    my $noparse = 0;
     while ($#_ != 1)
     {
         given ($_[0])
@@ -617,7 +648,8 @@ sub include($)
             when ('noparse')
             {
 
-                shift(@_);
+	       $noparse = 1;
+	       shift(@_);
             }
             when ('--')
             {
@@ -627,10 +659,11 @@ sub include($)
         }
     }
     $file              = shift();
+    verbose("Including $file");
     @SCRIPT_FILE       = file_to_array($file);
     $includes{raw}[-1] = \@SCRIPT_FILE;
     $includes{pos}[-1] = $command{line};
-    stub_main(\@SCRIPT_FILE, $includes[-1]);
+    stub_main(\@SCRIPT_FILE, $includes[-1]) if not $noparse;
     return 1;
 }
 
@@ -719,8 +752,8 @@ my $stderr;
 my $target_name;
 my $input_file;
 our $DEBUG;
-GetOptions(
-    'verbose'          => \$verbose_output,
+if (@ARGV == 0 or not GetOptions(
+    'verbose|v'          => \$verbose_output,
     'help|h'           => \&print_help,
     'critical-warning' => \$WARNING_IS_ERROR,
     'D=s'              => \%defines,
@@ -733,7 +766,12 @@ GetOptions(
     'debug|d'          => \$DEBUG,
 
     #   '<>' => \$input_file,
-          ) or die("no options given call with -h for help");
+          ))
+{
+    
+    print("no options given call with -h for help\n");
+    exit(1);
+}
 
 $input_file = shift();
 
