@@ -1,0 +1,21 @@
+#+TITLE: Todo
+#+LANGUAGE: en
+
+* TODO Syntax
+** TODO [#B] check
+** TODO block
+   Improve parser by parsing in blocks needed by [[multi line define]]
+
+* TODO Commands
+** Core
+*** TODO [#A] if
+**** TODO expression parser:
+***** TODO [#A] basic expression
+      + use eval or parse expression self, if use eval:
+	 + add unsave expression exception
+
+*** TODO [#A] define
+**** TODO multi line define
+     support multi line line for defining subs etc. needs [[block]]
+*** TODO [#B] macro
+**** TODO [#B] do syntax check before run
