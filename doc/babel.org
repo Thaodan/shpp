@@ -1,0 +1,32 @@
+#+TITLE: Shpp-Babel
+#+LANGUAGE: en
+* Intro
+This is an idea how embed other code in Shpp code.
+All that is done by using [[file:../todo.org*here-documents][here-documents]].
+Some example code:
+#+NAME: some example code
+#+BEGIN_SRC sh 
+#\\begin_src sample_mode <<
+your mode text here
+#\\end
+#+END_SRC
+
+* Modules
+** Org 
+Embed Org-Mode for further processing.
+Arguments
+| Arg    | Decription       |
+|--------+------------------|
+| /      | <>               |
+| export | set export mode  |
+
+*** org-sample-code
+#+BEGIN_SRC sh
+#\\run command and add << after its arguments
+#\\begin_src org :export org <<
+#+TITLE: My Sample doc
++ This is my Sample doc!
+#\\end
+#+END_SRC
+
+
