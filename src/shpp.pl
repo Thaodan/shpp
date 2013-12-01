@@ -34,7 +34,9 @@ no warnings 'experimental';
 use Getopt::Long;
 Getopt::Long::Configure("bundling");
 use feature 'switch';
+use Shpp::Bind;
 our $LINE;
+
 #use strict 'vars';
 #use parent 'Exporter';
 
@@ -45,34 +47,29 @@ our $WARNING_IS_ERROR;
 #####################################################################
 
 ### communication ###
-sub __plain($$)
-{
+sub __plain($$) {
     my $first = shift();
     print("$ALL_OFF$BOLD $first:$ALL_OFF @_");
 }
 
-sub __msg($$)
-{
+sub __msg($$) {
     my $first = shift();
     print("${GREEN}==>${ALL_OFF}${BOLD} $first:${ALL_OFF} @_\n");
 }
 
-sub __msg2($$)
-{
+sub __msg2($$) {
     my $first = shift();
     print("${BLUE} ->${ALL_OFF}${BOLD} $first:${ALL_OFF} @_\n");
 }
 
-sub __warning($$)
-{
+sub __warning($$) {
     my $first = shift();
-    print(STDERR "$YELLOW==>$ALL_OFF$BOLD $first:$ALL_OFF @_\n");
+    print( STDERR "$YELLOW==>$ALL_OFF$BOLD $first:$ALL_OFF @_\n" );
 }
 
-sub __error($$)
-{
+sub __error($$) {
     my $first = shift();
-    print(STDERR "$RED==>$ALL_OFF$BOLD $first:$ALL_OFF @_\n");
+    print( STDERR "$RED==>$ALL_OFF$BOLD $first:$ALL_OFF @_\n" );
     return 1;
 }
 
@@ -88,71 +85,62 @@ modes:
 |3      |   print everything (default) |
 
 =cut
-sub verbose
-{
+
+sub verbose {
     my $msg = shift();
-    my $mode = ( shift() or 3);
-    if (defined $verbose_output)
-    {
-	print(STDERR "$YELLOW==>$ALL_OFF$BOLD $$command{line}:$ALL_OFF") if $mode == 3 or $mode == 1;
-        print(STDERR "$msg");
-	print(STDERR "\n") if not $mode == 1;
+    my $mode = ( shift() or 3 );
+    if ( defined $verbose_output ) {
+        print( STDERR "$YELLOW==>$ALL_OFF$BOLD $$command{line}:$ALL_OFF" )
+          if $mode == 3 or $mode == 1;
+        print( STDERR "$msg" );
+        print( STDERR "\n" ) if not $mode == 1;
     }
 }
 
-sub stub()
-{
+sub stub() {
     warn("stub");
 }
 
-sub debug($)
-{
-   my $line = shift();
-   my $msg = shift();
-   
-   if ($DEBUG)
-   {
-       print("L$line: $msg\n");
-   }
+sub debug($) {
+    my $line = shift();
+    my $msg  = shift();
+
+    if ($DEBUG) {
+        print("L$line: $msg\n");
+    }
 }
 ### tools ###
-sub file_to_array($)
-{
+sub file_to_array($) {
     my $file = shift();
-    my ($filestream, $string);
+    my ( $filestream, $string );
     my @rray;
 
-    open($filestream, $file) or die("cant open $file: $!");
-    while ($string = <$filestream>)
-    {
-        push(@rray, $string);
+    open( $filestream, $file ) or die("cant open $file: $!");
+    while ( $string = <$filestream> ) {
+        push( @rray, $string );
     }
     close($filestream);
     return @rray;
 }
 
-sub array_to_file($$)
-{
-    my @rray = @{shift()};
+sub array_to_file($$) {
+    my @rray = @{ shift() };
     my $file = shift();
     my $filestream;
 
-    if (not defined $file)
-    {
+    if ( not defined $file ) {
         $filestream = STDOUT;
     }
-    else
-    {
-        open($filestream, '>', $file) or die("cant open $file: $!");
+    else {
+        open( $filestream, '>', $file ) or die("cant open $file: $!");
     }
-    foreach my $line (@rray)
-    {
+    foreach my $line (@rray) {
         print $filestream $line;
     }
     close($filestream);
 }
 
-our %subs;
+our $subs = Shpp::Bind->new();
 
 #sub add_sub($$)
 #{
@@ -170,62 +158,55 @@ make our script tree
 
 =cut
 
-sub find_commands($)
-{
+sub find_commands($) {
     my $counter = 0;
     my $line_raw;
     my $SCRIPT_FILE = shift();
-    my (@line, @lines);
+    my ( @line, @lines );
     my %script;
 
     # skip shebang and check for macro_mode
-    if ($$SCRIPT_FILE[0] =~ /#\!\/.*/)
-    {
-        if ($$SCRIPT_FILE[0] =~ /#\!\/bin\/shpp/)
-        {
+    if ( $$SCRIPT_FILE[0] =~ /#\!\/.*/ ) {
+        if ( $$SCRIPT_FILE[0] =~ /#\!\/bin\/shpp/ ) {
             $macro_mode = 1;
         }
         shift(@$SCRIPT_FILE);
     }
 
-    for $line_raw (@$SCRIPT_FILE)
-    {
-        if (not $macro_mode and not $line_raw =~ /#\\\\/)
-        {
+    for $line_raw (@$SCRIPT_FILE) {
+        if ( not $macro_mode and not $line_raw =~ /#\\\\/ ) {
             $lines[$counter] = 666;
         }
-        else
-        {
-            if (not $macro_mode)
-            {
+        else {
+            if ( not $macro_mode ) {
                 $line_raw =~ s/^#\\\\//;
             }
 
-            @{$line[$counter]} = split(/[\s,\t]/, $line_raw);
+            @{ $line[$counter] } = split( /[\s,\t]/, $line_raw );
             $lines[$counter] = {
-                                line => $counter + 1,
-                                self => ${$line[$counter]}[0],
-                                args => \@{$line[$counter]},
-                               };
-            shift(@{$line[$counter]});    # pop first arg
+                line => $counter + 1,
+                self => ${ $line[$counter] }[0],
+                args => \@{ $line[$counter] },
+            };
+            shift( @{ $line[$counter] } );    # pop first arg
         }
         $counter++;
     }
     %script = (
-               lines         => \@lines,
-               removed_stack => 0,
-              );
+        lines         => \@lines,
+        removed_stack => 0,
+    );
     return %script;
 }
 
-sub exec_commands($$)
-{
+sub exec_commands($$) {
+
     # private stuff
     my $script      = shift();
     my $SCRIPT_FILE = shift();
     my $counter     = 0;         # index
     my @args;                    # parsed arguments
-    my ($arg_counter, $arg);     # need to parse
+    my ( $arg_counter, $arg );   # need to parse
     my $removed_stack     = $$script{removed_stack};
     my $cur_removed_stack = 0;
     my $cmd_ret;                 # return of command
@@ -238,22 +219,20 @@ sub exec_commands($$)
     local $line_raw;             #FIXME:  make me readonly at every turn
     local @l_cmd_ret;
 
-    for $line_raw (@$SCRIPT_FILE)
-    {
-        if ($$script{lines}[$counter]{self} == {'else', 'end'} or ( @end == 0 and @start == 0 ))
+    for $line_raw (@$SCRIPT_FILE) {
+        if ( $$script{lines}[$counter]{self} == { 'else', 'end' }
+            or ( @end == 0 and @start == 0 ) )
         {
             #print($$script{lines}[0]{args}[0]);
             # export command
             $command = $$script{lines}[$counter];
 
-            if (not $macro_mode and $$script{lines}[$counter] == 666)
-            {
-                for my $word (\@{$line_raw})
-                {
+            if ( not $macro_mode and $$script{lines}[$counter] == 666 ) {
+                for my $word ( \@{$line_raw} ) {
+
                     #debug($word);
                     # check if $word is a var
-                    if ($word =~ /@*@/)
-                    {
+                    if ( $word =~ /@*@/ ) {
                         $word =~ s/[^@,@$]//g;
                         $word = &defined($word);
                     }
@@ -267,82 +246,68 @@ sub exec_commands($$)
                     #}
                 }
             }
-            else
-            {
+            else {
                 #debug("L:$counter:");
                 #debug("rsub: $subs{$$command{self}}\n");
                 #debug("sub: $$command{self}\n");
-
-                # check if command is in %subs
-                if (not exists $subs{$$command{self}})
-                {
+                my $cur_cmdr =
+                  $subs->get( $$command{self} );  # cürrent raw name of command
+                                                  # check if command is in %subs
+                if ( not $cur_cmdr ) {
                     error("$$command{self} not found");
                 }
-                else
-                {
+                else {
                     # parse args end replace eventual vars
                     my $arg_counter = 0;
 
-                    for my $arg (@{$$command{args}})
-                    {
+                    for my $arg ( @{ $$command{args} } ) {
                         debug("$arg\n");
-                        if ($arg =~ /@*@/)
-                        {
+                        if ( $arg =~ /@*@/ ) {
                             $arg =~ s/[^@,@$]//g;
                             $args[$arg_counter] = &defined($arg);
                         }
-                        else
-                        {
+                        else {
                             $args[$arg_counter] = $arg;
                         }
                         $arg_counter++;
                     }
-
-                    my $cur_cmdr = $subs{$$command{self}}{self};    # cürrent raw name of command
-                           #debug($cur_commandr);
-                    if (not defined &{$cur_cmdr})
+                    # check if current command has to many args
+                    if ( @args > $$cur_cmdr{args} 
+                        and not $$cur_cmdr{args} == 'ALL' )
                     {
-                        error("$$subs{$$command{self}}{self} not found");
+			print($$cur_cmdr{args}, "\n");
+			print(@args,"","\n");
+                        error(
+"to many args for $$command{self} (max args: $$cur_cmdr{args})"
+                        );
                     }
-                    else
-                    {
-                        # check if current command has to many args
-                        if (@args > $subs{$$command{self}}{args}
-                            and not $subs{$$command{self}}{args} == 'ALL')
-                        {
-                            error(
-                                "to many args for $$command{self} (max args: $subs{$$command{self}}{args})"
-                            );
-                        }
-                        else
-                        {
-			    verbose("calling $cur_cmdr( @args )");
-                            $cmd_ret = &{$cur_cmdr}( @args );
+                    else {
+                        verbose("calling $cur_cmdr( @args )");
+                        $cmd_ret = &{$$cur_cmdr{self}}(@args);
 
-                            #print $cmd_ret;
-                            if ($cmd_ret != 1 && $cmd_ret != 0)
+                        #print $cmd_ret;
+                        if ( $cmd_ret != 1 && $cmd_ret != 0 ) {
+                            $line_raw = $cmd_ret;
+                        }
+                        else {
+#  if last return was just a return status skipp it and add it for iss(inter sub system)
+                            if ( $$command{self} == { 'else', 'if' } )   # fixme
                             {
-                                $line_raw = $cmd_ret;
+                                $l_cmd_ret[-1] = $cmd_ret;
                             }
-                            else
-                            {
-                                #  if last return was just a return status skipp it and add it for iss(inter sub system)
-                                if ($$command{self} == {'else', 'if'})   # fixme
-                                {
-                                    $l_cmd_ret[-1] = $cmd_ret;
-                                }
-                                undef $line_raw;
-                            }
+                            undef $line_raw;
                         }
                     }
+
                 }
             }
+	    @args = '';
+	    
         }
-        else
-        {
-	    # get how many lines we need to cut
+        else {
+            # get how many lines we need to cut
             $cur_removed_stack = $start[-1] - $end[-1];
-            splice(@$SCRIPT_FILE, $start[-1], $cur_removed_stack);
+            splice( @$SCRIPT_FILE, $start[-1], $cur_removed_stack );
             shift(@start);
             shift(@end);
         }
@@ -382,185 +347,147 @@ end
 
 ### builtin commands
 #!error
-sub error($)
-{
-    __error("L$$command{line}:$$command{self}", "@_");
+sub error($) {
+    __error( "L$$command{line}:$$command{self}", "@_" );
     exit 1;
 }
-$subs{error} = {
-                'self' => 'error',
-                args   => 1,
-               };
+$subs->add( 'error', 'error', 1 );
 
 #!warning
-sub warning($)
-{
-    __warning("L$$command{line}:$$command{self}", "@_");
-    if ($WARNING_IS_ERROR)
-    {
-        __msg2('', 'warnings are error set');
+sub warning($) {
+    __warning( "L$$command{line}:$$command{self}", "@_" );
+    if ($WARNING_IS_ERROR) {
+        __msg2( '', 'warnings are error set' );
         exit(1);
     }
     return 0;
 }
-$subs{warning} = {
-                  'self' => 'warning',
-                  args   => 1,
-                 };
+$subs->add( 'warning', 'warning', 1 );
 
 #!msg
-sub msg($)
-{
-    __msg("L$$command{line}:$$command{self}", "@_");
+sub msg($) {
+    __msg( "L$$command{line}:$$command{self}", "@_" );
     return 1;
 }
-$subs{msg} = {
-              'self' => 'msg',
-              args   => 1,
-             };
+$subs->add( 'msg', 'msg', 1 );
 
 #!rem
-sub rem
-{
+sub rem {
     return 1;
 }
-$subs{rem} = {
-              'self' => 'rem',
-              args   => ALL,
-             };
+$subs->add( 'rem', 'rem', 'ALL' );
 
 #!if
-sub If
-{
-    my $expr="b"; # stuff that called cmd returns;
-    my ( $call_brace, $call); #true if we got a call
+sub If {
+    my ($expr, $cur_cmdr);    # stuff that called cmd returns;
+    my ( $call_brace, $call );    #true if we got a call
     my @s_args;
-    for  my $arg (@_) # look if we got cmds
+    for my $arg (@_)              # look if we got cmds
     {
-	if ( $arg == "not" or $arg == "!" or $arg == "or" or $arg == "and" ) # skip not or etc
-	{
-	    if ( $expr )
-	    {
-		$expr+="$arg ";
-	    }
-	    else
-	    {
-		$expr="$arg";
-	    }
-	}
-	else
-	{
-	    if ( exists $subs{$arg}{self} )
-	    {
-		verbose("ok $arg is a sub",1);
-		$s_args[@s_args] = $arg;
-		$call = 1;
-		next;
-	    }
-	    if ( $call )
-	    {
-		push(@s_args ,split(/,/ , $arg));
-		verbose("calling it: @s_args",2);
-		if ( exists $subs{$s_args[0]}{self} )
-		{
-		    $expr+=&{$subs{$s_args[0]}{self}}( $s_args[1], $s_args[2], $s_args[3] );
-		    $expr+=" ";
-		}
-	    }
-	    else
-	    {
-		verbose("ok $arg is a sub",1);
-		if ( $arg =~ /.*\(/ and not $arg =~ /\)/) # arg () begins
-		{
-		    $s_args[-1] = s/\(//;
-		    $call_brace = 1;
-		    next;
-		}
-		if ( $call_brace  and $arg =~ /\)/ or $call_brace ) # arg ends or not
-		{
-		    verbose("calling it: @s_args",2);
-		    if ( $arg =~ /\)/ ) # arg() ends
-		    {
-			$s_args[-1] = s/\)//;
-			if ( exists $subs{$s_args[0]}{self} )
-			{
-			    $expr+=&{$subs{$s_args[0]}{self}}( $s_args[1], $s_args[2], $s_args[3] );
-			    $expr+=" ";
-			}
-		    }
-		    $s_args[-1] =~ s/,//g;
-		}
-	    }
-	}
+        if (   $arg == "not"
+            or $arg == "!"
+            or $arg == "or"
+            or $arg == "and" )    # skip not or etc
+        {
+            if ($expr) {
+                $expr += "$arg ";
+            }
+            else {
+                $expr = "$arg";
+            }
+        }
+        else {
+	    $cur_cmdr = $subs->get($arg);
+            if ( $cur_cmdr ) {
+                verbose( "ok $arg is a sub", 1 );
+                $s_args[@s_args] = $cur_cmdr;
+                $call = 1;
+                next;
+            }
+            if ($call) {
+                push( @s_args, split( /,/, $arg ) );
+                verbose( "calling it: @s_args", 2 );
+		$expr += "&{${$s_args[0]}{self}}
+( $s_args[1], $s_args[2], $s_args[3] )";
+$expr += " ";
+            }
+            else {
+                verbose( "ok $arg is a sub", 1 );
+                if ( $arg =~ /.*\(/ and not $arg =~ /\)/ )    # arg () begins
+                {
+                    $s_args[-1]=~ s/\(//;
+                    $call_brace = 1;
+                    next;
+                }
+                if (   $call_brace and $arg =~ /\)/
+                    or $call_brace )                          # arg ends or not
+                {
+                    verbose( "calling it: @s_args", 2 );
+                    if ( $arg =~ /\)/ )                       # arg() ends
+                    {
+                        $s_args[-1]=~s/\)//;
+                        $cur_cmdr = $subs->get($s_args[0]);
+                        if ( $cur_cmdr ) {
+                            $expr += "&{$$cur_cmdr{self}}
+                              ( $s_args[1], $s_args[2], $s_args[3] )";
+                            $expr += " ";
+                        }
+                    }
+                    $s_args[-1] =~ s/,//g;
+                }
+            }
+        }
     }
+
     # FIXME: make me save
-    if ( not eval ( $expr ) )
-    {
+    if ( not eval($expr) ) {
         $start[@start] = $$command{line};
         return 0;
     }
     return 1;
 }
-$subs{if} = {
-             'self' => 'If',
-             args   => 'ALL',
-            };
+$subs->add( 'if', 'If', 'ALL' );
 
-sub ifdef
-{
-    return If(defined, @_);
+sub ifdef {
+    return If( defined, @_ );
 }
-$subs{ifdef} = {
-             'self' => 'ifdef',
-             args   => 'ALL',
-            };
-sub ifndef
-{
-    return If('!', defined, @_);
+$subs->add( 'ifdef', 'ifdef', 'ALL' );
+
+sub ifndef {
+    return If( '!', defined, @_ );
 }
-$subs{ifdef} = {
-             'self' => 'ifndef',
-             args   => 'ALL',
-            };
-sub Else()
-{
+$subs->add( 'ifndef', 'ifndef', 'ALL' );
+
+sub Else() {
+
     # else token
-    if ($l_cmd_ret == 1)
-    {
+    if ( $l_cmd_ret == 1 ) {
+
         # ok if(or any command that starts a new end block) was fine skip it
         $start[-1] = $$command{line};
         return 1;
     }
-    else
-    {
+    else {
         # ok if wasn't fine we end this block
         $end[-1] = $$command{line};
         return 0;
     }
     return 1;
 }
-$subs{else} = {
-               'self' => 'Else',
-               args   => 0,
-              };
+$subs->add( 'else', 'Else', 0 );
 
-sub end()
-{
+sub end() {
+
     # if was fine we end this
-    if ($l_cmd_ret == 1)
-    {
+    if ( $l_cmd_ret == 1 ) {
         $end[-1] = $$command{line};
     }
-    else
-    {
+    else {
         # ok skip it we're useless
     }
     return 1;
 }
-$subs{end} = {
-              'self' => 'end',
-              args   => 0,
-             };
+$subs->add( 'end', 'end', 0 );
 
 =pod
 desc.: load macro file
@@ -568,15 +495,11 @@ syntax.: macro $file [OPTIONS]
 
 =cut
 
-sub macro($)
-{
+sub macro($) {
     my $file = shift();
     do $file or die("cant open file $!");
 }
-$subs{macro} = {
-                'self' => 'macro',
-                args   => 1,
-               };
+$subs->add( 'macro', 'macro', 1 );
 
 =pod
 desc.: define var
@@ -585,50 +508,38 @@ syntax2: define var var
 
 =cut
 
-sub define($$)
-{
+sub define($$) {
     my @var;
 
-    given ($_[0])
-    {
+    given ( $_[0] ) {
+
         # c
-        when ($_ =~ / *=* /)
-        {
-            @var = split(/=/, $_);
+        when ( $_ =~ / *=* / ) {
+            @var = split( /=/, $_ );
         }
 
         # cpp style define
-        default
-        {
+        default {
             $var[0] = shift();
             $var[1] = shift();
         }
     }
-    $defines{$var[0]} = $var[1];
+    $defines{ $var[0] } = $var[1];
     return 1;
 }
-$subs{define} = {
-                 'self' => 'define',
-                 args   => 2,
-                };
+$subs->add( 'define', 'define', 2 );
 
-sub Defined($)
-{
+sub Defined($) {
     my $var = shift();
     verbose("Testing if '$var' is defined");
-    if (exists $defines{$var})
-    {
+    if ( exists $defines{$var} ) {
         return $defines{$var};
     }
-    else
-    {
+    else {
         return '';
     }
 }
-$subs{defined} = {
-                  'self' => 'Defined',
-                  args   => 1,
-                 };
+$subs->add( 'defined', 'Defined', 1 );
 
 =pod
 desc.:   include file
@@ -637,61 +548,49 @@ options: noparse - don't parse
 
 =cut
 
-sub include($)
-{
-    my ($file, @SCRIPT_FILE);
+sub include($) {
+    my ( $file, @SCRIPT_FILE );
     my $noparse = 0;
-    while ($#_ != 1)
-    {
-        given ($_[0])
-        {
-            when ('noparse')
-            {
+    while ( $#_ != 1 ) {
+        given ( $_[0] ) {
+            when ('noparse') {
 
-	       $noparse = 1;
-	       shift(@_);
+                $noparse = 1;
+                shift(@_);
             }
-            when ('--')
-            {
+            when ('--') {
                 shift(@_);
                 break;
             }
         }
     }
-    $file              = shift();
+    $file = shift();
     verbose("Including $file");
     @SCRIPT_FILE       = file_to_array($file);
     $includes{raw}[-1] = \@SCRIPT_FILE;
     $includes{pos}[-1] = $command{line};
-    stub_main(\@SCRIPT_FILE, $includes[-1]) if not $noparse;
+    stub_main( \@SCRIPT_FILE, $includes[-1] ) if not $noparse;
     return 1;
 }
+$subs->add( 'include', 'include', 1 );
 
-$subs{include} = {
-                  'self' => 'include',
-                  args   => 1,
-                 };
-
-sub include_includes($$)
-{
+sub include_includes($$) {
     my $includes_raw = shift();
     my @SCRIPT_FILE  = shift();
-    my ($include_raw, $cur_pos);
-    my ($pos_counter, $pos_stack) = 0;
-    for $include_raw (\$includes{raw})
-    {
+    my ( $include_raw, $cur_pos );
+    my ( $pos_counter, $pos_stack ) = 0;
+    for $include_raw ( \$includes{raw} ) {
         $cur_pos = $includes{pos}[$pos_counter];
-        splice(@SCRIPT_FILE, ($cur_pos + $pos_stack),
-               0, $SCRIPT_FILE[($cur_pos + $pos_stack)], $include_raw);
+        splice( @SCRIPT_FILE, ( $cur_pos + $pos_stack ),
+            0, $SCRIPT_FILE[ ( $cur_pos + $pos_stack ) ], $include_raw );
         $pos_stack += @$include_raw + 1;
         $pos_counter++;
     }
     return @SCRIPT_FILE;
 }
 
-sub stub_main($$)
-{
-    my (@includes_raw, @includes, @pos);
+sub stub_main($$) {
+    my ( @includes_raw, @includes, @pos );
     local $macro_mode;    # if true commands don't start with #!);
 
 =pod
@@ -699,29 +598,27 @@ hash with the raw file, the script and the positions of the includes in the root
 =cut
 
     local %includes = (
-                       'raw'  => \@includes_raw,
-                       'self' => \@includes,
-                       'pos'  => \@pos,
-                      );
+        'raw'  => \@includes_raw,
+        'self' => \@includes,
+        'pos'  => \@pos,
+    );
 
     my $file        = shift();
     my $target_file = shift();
     my @SCRIPT_FILE = file_to_array($file);
-    my $IID         = int(rand(100));
-    my %script      = find_commands(\@SCRIPT_FILE);
-    exec_commands(\%script, \@SCRIPT_FILE);
+    my $IID         = int( rand(100) );
+    my %script      = find_commands( \@SCRIPT_FILE );
+    exec_commands( \%script, \@SCRIPT_FILE );
 
-    if (@includes_raw != 0)
-    {
-        @SCRIPT_FILE = include_includes(\%includes, \@SCRIPT_FILE);
+    if ( @includes_raw != 0 ) {
+        @SCRIPT_FILE = include_includes( \%includes, \@SCRIPT_FILE );
     }
 
     #$SCRIPT_FILE[0] = 0;
-    array_to_file(\@SCRIPT_FILE, $target_file);
+    array_to_file( \@SCRIPT_FILE, $target_file );
 }
 
-sub print_help()
-{
+sub print_help() {
     print <<"HELP";
 $appname usage: 
       $appname [Options] File
@@ -752,31 +649,32 @@ my $stderr;
 my $target_name;
 my $input_file;
 our $DEBUG;
-if (@ARGV == 0 or not GetOptions(
-    'verbose|v'          => \$verbose_output,
-    'help|h'           => \&print_help,
-    'critical-warning' => \$WARNING_IS_ERROR,
-    'D=s'              => \%defines,
-    'C|color'          => \$use_color,
-    'I=s'              => \@INCLUDE_SPACES,
-    'M=s'              => \@MACRO_SPACES,
-    'o=s'              => \$target_name,
-    'stdout'           => \$stdout,
-    'stderr=s'         => \$stderr,
-    'debug|d'          => \$DEBUG,
+if (
+    @ARGV == 0 or not GetOptions(
+        'verbose|v'        => \$verbose_output,
+        'help|h'           => \&print_help,
+        'critical-warning' => \$WARNING_IS_ERROR,
+        'D=s'              => \%defines,
+        'C|color'          => \$use_color,
+        'I=s'              => \@INCLUDE_SPACES,
+        'M=s'              => \@MACRO_SPACES,
+        'o=s'              => \$target_name,
+        'stdout'           => \$stdout,
+        'stderr=s'         => \$stderr,
+        'debug|d'          => \$DEBUG,
 
-    #   '<>' => \$input_file,
-          ))
+        #   '<>' => \$input_file,
+    )
+  )
 {
-    
+
     print("no options given call with -h for help\n");
     exit(1);
 }
 
 $input_file = shift();
 
-if ($use_color)
-{
+if ($use_color) {
     our $ALL_OFF = "\e[1;0m";
     our $BOLD    = "\e[1;1m";
     our $BLUE    = "${BOLD}\e[1;34m";
@@ -785,17 +683,14 @@ if ($use_color)
     our $YELLOW  = "${BOLD}\e[1;33m";
 }
 
-if ($stderr)
-{
-    open(STDERR, $stderr) or die("Cant open file: $!");
+if ($stderr) {
+    open( STDERR, $stderr ) or die("Cant open file: $!");
 }
 
-if ($stdout || !$target_name)
-{
+if ( $stdout || !$target_name ) {
     undef $target_name;
 }
 
-if ($input_file)
-{
-    stub_main($input_file, $target_name);
+if ($input_file) {
+    stub_main( $input_file, $target_name );
 }

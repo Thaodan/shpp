@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-package Bind;
+package Shpp::Bind;
 
 =pod
 
