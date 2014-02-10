@@ -18,7 +18,7 @@
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 
-appname=`basename $0`
+appname=${0##*/}
 libsh_ver=@LIBSH_VER@
 LIBSH_REV=@LIBSH_REV@
 
