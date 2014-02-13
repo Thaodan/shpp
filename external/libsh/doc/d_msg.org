@@ -1,0 +1,29 @@
+#+TITLE: d_msg
+#+LANGUAGE: en
+* DESCRIPTION
+A message/input function, implemented as wrapper around /kdialog/ or /zenity/ for gui 
+output or as wrapper around /echo/ and /read/ for use in cli.
+* SYNTAX 
+/d_msg/ [MODIFIERS] <title> <message>
+* MODIFIERS  
++ no modifier :: normal message 
++ ! :: error message
++ i :: get input 
++ f :: tell yes/no question
++ l :: select item from list of items  
+* VARS
+| Name         | Valid Values            | Description                                                              |
+|              | Default Values          |                                                                          |
+|--------------+-------------------------+--------------------------------------------------------------------------|
+| DMSG_GUI     | 0,false(default) 1,true | if true enable gui output                                                |
+| DMSG_DE      | $(detectDE) (default)   | d_msg detects wich DE is installed and  uses the coresponding dialog app |
+| DMSG_GUI_APP | kdialog zenity xmessage | tell d_msg which tool it has to use for gui output                       |
+| DMSG_APP     | dialog, native          | say DMSG to use $DMSG_APP in cli                                         |
+| DMSG_APPNAME | $appname(default)       | set appname for d_msg (used in with title)                               |
+|              |                         |                                                                          |
+
+
+
+
+
+
