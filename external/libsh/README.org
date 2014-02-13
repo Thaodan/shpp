@@ -22,4 +22,4 @@ Like above (uses shload) but check if script is already loaded (like '#import' f
 
 * BUILD and INSTALL 
 
-See [[./INSTALL][INSTALL]]
+See [[./INSTALL.org][INSTALL]]
