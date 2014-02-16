@@ -89,23 +89,19 @@ d_msg() # display msgs and get input
 	    case $DMSG_GUI_APP in 
 		kdialog)
 		    case $1 in 
-			!)  kdialog --icon ${DMSG_ICON:=xorg} --caption "${DMSG_APPNAME:=$appname}" \
-			    --title "$2" --error "$3" 
+			!)  kdialog --icon ${DMSG_ICON:=xorg} --caption "${DMSG_APPNAME:=$appname}" --title "$2" --error "$3" 
 			    dmsg_return_status=${DMSG_ERR_STAUS:=1}  
 			    ;;
-			i) kdialog --icon ${DMSG_ICON:=xorg} --caption "${DMSG_APPNAME:=$appname}" \
-			    --title "$2" --inputbox "$3" 
+			i) kdialog --icon ${DMSG_ICON:=xorg} --caption "${DMSG_APPNAME:=$appname}" -title "$2" --inputbox "$3" 
 			    dmsg_return_status=$?
 			;;
-			l)  kdialog --icon ${DMSG_ICON:=xorg} --caption "${DMSG_APPNAME:=$appname}" \
+			l)  kdialog --icon ${DMSG_ICON:=xorg} --caption "${DMSG_APPNAME:=$appname}"
 			    --title "$2" --menu \
-			    "$3" "$4" "$5" "$6" "$7" "$8" "$9" 
+			    "$3" "$4" "$5" "$6" "$7" "$8" "$9" 4
 			    shift ; dmsg_return_status=$? ;;
-			f)  kdialog --icon ${DMSG_ICON:=xorg} --caption "${DMSG_APPNAME:=$appname}" \ 
-			    --title "$2" --yesno "$3" 
+			f)  kdialog --icon ${DMSG_ICON:=xorg} --caption "${DMSG_APPNAME:=$appname}"  --title "$2" --yesno "$3" 
 			    dmsg_return_status=$? ;;
-			*)  kdialog --icon ${DMSG_ICON:=xorg} --caption "${DMSG_APPNAME:=$appname}" \
-			    --title "$1" --msgbox "$2" 
+			*)  kdialog --icon ${DMSG_ICON:=xorg} --caption "${DMSG_APPNAME:=$appname}" -title "$1" --msgbox "$2" 
 			    dmsg_return_status=$? ;;
 		    esac
 		    ;;
