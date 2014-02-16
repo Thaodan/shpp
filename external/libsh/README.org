@@ -9,7 +9,7 @@ For moore see [[./doc/d_msg.org]]
 
 ** shload 
 Function to load a shell script that works much like dlopen 
-Fore moore see [[./doc/sh_load.org]]
+Fore moore see [[./doc/shload.org]]
 
 ** import 
 Like above (uses shload) but check if script is already loaded (like '#import' from obj-c)
