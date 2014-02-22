@@ -3,7 +3,6 @@ package Shpp::Expr;
 use feature "switch";
 use strict;
 no warnings 'experimental';
-use feature 'say';
 my %operators = (
     '=' =>,
     '>' =>,
