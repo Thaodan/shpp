@@ -1,0 +1,17 @@
+*hese are the option strings that cane be given to shpp via -O <option>*
+
+| optstring             | valid values*        | comment    |
+|-----------------------+----------------------+------------|
+| WARNING_IS_ERROR |        true          |  if set all warnings are threated as error
+| stdout		|	<any>         | if output goes to stdout
+| keep			|<any>         | if set shpp don't deletes $tmp_dir
+| USE_COLOR		|<any>,!n     |  enable colored output (disabled if there's no stdin present)
+| FORCE_COLOR   |          <any>,!n           | forces colored output even when there is no stdin
+| verbose_output |          <any>         | enable verbose messages
+
+
+* legend:
+| string    | meaning |
+|-----------+---------|
+| <any>     |means that value just needs to be set | 
+| !         |not |
