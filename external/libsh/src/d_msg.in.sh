@@ -184,7 +184,7 @@ d_msg() # display msgs and get input
 				echo $a
 			    fi
 			    ;;
-			*)  echo "$2"   ; dsmg_return_status=$? ;;
+			*)  echo "$2"   ; dmsg_return_status=$? ;;
 		    esac
 		    ;;
 	    esac
