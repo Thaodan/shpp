@@ -50,9 +50,9 @@ d_msg() # display msgs and get input
 # DMSG_APP 				# say DMSG to use $DMSG_APP in cli                      #
 #                                       # ( dialog or cgi_dialog )	                        #  
 #												#
-# DMSG_APPNAME			        # set appname for d_msg default is $appname             #  
-#											        #
-#											        #
+# DMSG_APPNAME			        # set appname for d_msg default is $appname             #
+# DMSG_ERR_STATUS = 1                   # return value that is returned when modifer is !       # 
+# DMSG_XBUTTONS	= 'not:1,set:2'		# -buttons parameter for xmessage when modifer is i     #
 #################################################################################################
 {
     if [ ! $# -lt 2 ] ; then
@@ -138,10 +138,10 @@ d_msg() # display msgs and get input
 			    dmsg_return_status=$? 
 			    ;;	
 			i) 
-			    if [ -z $buttons ] ; then
+			    if [ -z $DMSG_XBUTTONS ] ; then
 				DMSG_XBUTTONS='not:1,set:2'
 			    fi
-			    xmessage -center -title "$appname - "$2"" -print -buttons $buttons "$3"
+			    xmessage -center -title "$appname - "$2"" -print -buttons $DMSG_XBUTTONS "$3"
 			    dmsg_return_status=$?
 			    ;;
 			l) xmessage -center -title "$2 - ${DMSG_APPNAME:=$appname}" -print \
