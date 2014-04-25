@@ -19,7 +19,15 @@ Like above (uses shload) but check if script is already loaded (like '#import' f
 + grep
 + sed
 
+* BUILD DEPENCIES
+ - shpp [1] (you can use WBUILTIN_SHPP=1 if don't want to install shpp)
+ 
 
 * BUILD and INSTALL 
 
 See [[./INSTALL.org][INSTALL]]
+
+* Footnotes
+
+[1] https://github.com/Thaodan/shpp
+
