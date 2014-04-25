@@ -1,7 +1,15 @@
+* Build from dists  
+#+BEGIN_SRC sh
+./build_src
+cd dists/$yourdist
+./update_pkg_ressources
+./build_pkg
+#+END_SRC 
 * BUILDING 
-
+#+BEGIN_SRC sh
 make
-
+#+END_SRC
 * INSTALLING
-
+#+BEGIN_SRC sh
 make install 
+#+END_SRC
