@@ -162,7 +162,8 @@ alias ifndef='If ! defined'
 
 find_commands() {
     local _command   command command_no  command_raw IFS \
-	counter=0 arg_counter=0 arg_string __arg__ arg1 arg2 arg3 arg4 arg5 arg6 arg7 arg8
+	counter=0 arg_counter=0 arg_string __arg__ arg1 \
+	arg2 arg3 arg4 arg5 arg6 arg7 arg8 in_arg_string=false
     erase_till_endif=false
     endif_notfound=false 
     var self/command/removed_stack=0
@@ -203,19 +204,23 @@ find_commands() {
 		    IFS=" "
 		    for __arg__ in $_command ; do
 			# test if we got/get now arg_string and test our new arg is a string
-			if [ ! "$arg_string" ] && case $__arg__ in  
+			if [ $in_arg_string = false  ] && case $__arg__ in  
 				\'*\'|\"*\") false;; 
 				\'*|\"*) true;;
 				 *)false ;;
 			     esac
 			then
 			     # if true, open our arg_string
-			     arg_string=$__arg__ 
+			     in_arg_string=true
                         # if we got string last try to end it or add our __arg__ to arg_string
-			elif [ "$arg_string" ] ; then
+			elif [ $in_arg_string = true  ] ; then
 			    case $__arg__ in
 				# arg string ends, reset arg_string
-				*\"|*\') __arg__="${arg_string} ${__arg__}" ; arg_string=  ;;
+				*\"|*\') 
+				    __arg__="${arg_string}" 
+				    arg_string=
+				    in_arg_string=false;
+				    ;;
 				*) arg_string="${arg_string} ${__arg__}" ;;
 			    esac
 			fi
