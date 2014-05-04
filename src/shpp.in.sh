@@ -212,12 +212,18 @@ find_commands() {
 			then
 			     # if true, open our arg_string
 			     in_arg_string=true
+			     arg_string=$(echo "$__arg__" | sed -e 's|^\"||' -e "s|^\'||")
                         # if we got string last try to end it or add our __arg__ to arg_string
 			elif [ $in_arg_string = true  ] ; then
 			    case $__arg__ in
 				# arg string ends, reset arg_string
-				*\"|*\') 
-				    __arg__="${arg_string}" 
+				*\"|*\')
+				    # only run sed if we have characters before quote end
+				    if ! [ $__arg__ = \' ] || [ $__arg__ = \" ] ; then
+					__arg__="${arg_string}$(echo "$__arg__" | sed -e 's|\"$||' -e "s|\'$||")"
+				    else
+					__arg__="$arg_string"
+				    fi
 				    arg_string=
 				    in_arg_string=false;
 				    ;;
