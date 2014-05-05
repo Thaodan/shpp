@@ -103,7 +103,7 @@ var() {
 		    if [ -d $tmp_dir/$__var_part1 ] ; then
 			printf  -- $__var_part2 > $tmp_dir/$__var_part1/\  $(( 
 				$( echo $tmp_dir/$__var_part2/* \
-				    | tail  | basename )\ + 1 ))
+				    | tail  | basename ) + 1 ))
 		    else
 			printf -- "$__var_part2" >> $tmp_dir/$__var_part1  
 		    fi
@@ -179,10 +179,12 @@ find_commands() {
     for _command in $( grep  \#\\\\\\\\$2 "$1" | sed -e 's/#\\\\//'  ) ; do
 	IFS=$old_ifs
 	counter=$(( $counter + 1))
-	# current line with removeing deleted lines
+	# current line with removed deleted lines
 	local line_ued=$( var self/command/lines/$counter )
+	# current current lines eg. without deleted lines
 	local line=$(($line_ued-$( var self/command/removed_stack))) 
-	_command=$( echo "$_command" | sed -e 's/[ \t]*$//' -e 's/^[ \t]*//' -e  "s|^\ ||" -e 's|\ $||')
+	# remove tabs and spaces after and before string
+	_command=$( echo "$_command" | sed -e 's/[ \t]*$//' -e 's/^[ \t]*//' -e  "s|^\ ||" -e 's|\ $||') 
 	if [ $erase_till_endif = true ] ; then
 	    if [ "$_command" = endif ] || [ "$_command" = else  ]  ; then
 		sed -ie "$if_line,$line d" "$1" 
@@ -198,16 +200,18 @@ find_commands() {
 	else
 	    verbose "L$line_ued: Found '$_command' calling corresponding command"
 	    case $_command in 
-		#if $_command has space, clear  it and give 
+		#if $_command has space clear  it,  give 
 		# the commands still the ability to   know who they are
+		# and parse it's arguments
 		*\ * ) 	        
 		    IFS=" "
 		    for __arg__ in $_command ; do
 			# test if we got/get now arg_string and test our new arg is a string
-			if [ $in_arg_string = false  ] && case $__arg__ in  
+			if [ $in_arg_string = false  ] && case $__arg__ in
+			     # ugly but the only way to test for string start eg ' or " 
 				\'*\'|\"*\") false;; 
 				\'*|\"*) true;;
-				 *)false ;;
+				 *)false ;; 
 			     esac
 			then
 			     # if true, open our arg_string
@@ -230,7 +234,7 @@ find_commands() {
 				*) arg_string="${arg_string} ${__arg__}" ;;
 			    esac
 			fi
-			# if we got no arg string set arg<n>
+			# after we parsed arg string set arg<n>
 			if [ ! "$arg_string" ] ; then
 			    case $arg_counter in 
 				0)
