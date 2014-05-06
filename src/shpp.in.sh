@@ -94,7 +94,7 @@ cleanup() {
 var() {
     case $1 in 
 	*=|*=*) 
-	    local __var_part1=$( echo "$1" | sed -e 's/=.*//' -e 's/[+,-]//' )
+	    local __var_part1=$( echo "$1" | sed -e 's/=.*//' -e 's/^[+,-]//' )
 	    local __var_part2=$( echo "$1" | sed -e 's/.*.=//' )
 	    local __var12=$tmp_dir/$__var_part1
 	    mkdir -p ${__var12%/*}
