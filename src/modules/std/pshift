@@ -1,0 +1,25 @@
+#!/bin/sh
+# Module Info:
+# Desc:Implements perl like shift for shell scripts
+# Syntax: #\\SHIFT  [ARG] TARGET_VAR
+# Example: #\\SHIFT file
+# Result:
+# file=$1
+# shift 
+# Result End
+# Args:
+# local - target var is local
+SHIFT() 
+{
+    if [ $1 = local ] ; then
+	echo "local $2" > $tmp_dir/shift$IID
+	shift
+    fi
+    cat >> $tmp_dir/shift$IID<<EOF
+$1=\$1
+shift
+EOF
+    include take $tmp_dir/shift$IID
+}
+
+register_external --command SHIFT
