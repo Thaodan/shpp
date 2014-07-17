@@ -331,23 +331,19 @@ macro() {
     local  __cleaned_macro __macro_space __not_found=false
     case $1 in
 	\<*\>) 
-            __cleaned_macro=$(echo "$1" | sed -e 's/^<//' -e 's/>$//')
-	    local IFS=:
-	    for __macro_space in $MACRO_SPACES ; do
-		if [ -e "$__macro_space"/"$__cleaned_macro" ] ; then
-		    __cleaned_macro="$__macro_space"/"$__cleaned_macro"
-		    __not_found=false
-		else
-		   __not_found=true
-		fi
-	    done 
-	    ;;
-	*)  if [ ! -e $1 ] ; then
-		_not_found=true
-	    fi
-	    __cleaned_macro=$1
-	    ;;
+           __cleaned_macro=$(echo "$1" | \
+	       sed -e 's/^<//' -e 's/>$//') ;;
+	*) __cleaned_macro=$1;;
     esac
+    local IFS=:
+    for __macro_space in $MACRO_SPACES ; do
+	if [ -e "$__macro_space"/"$__cleaned_macro" ] ; then
+	    __cleaned_macro="$__macro_space"/"$__cleaned_macro"
+	    __not_found=false
+	else
+	    __not_found=true
+	fi
+    done 
     [ $__not_found = true ] && error "'$__cleaned_macro' not found"
     verbose "found macro: '$__cleaned_macro', doing syntax check"
     if sh -n $__cleaned_macro ; then
@@ -475,6 +471,7 @@ include() {
     while [ ! $# = 0 ] ; do
 	case $1 in  
 	    noparse)  __parser=noparse; shift;;
+	    take) __parser=take; shift;;
 	    parser=*) 
 		# set parser to use another parser than shpp 
 		__parser=$( echo $1 | sed 's|parser=||' )
@@ -519,6 +516,9 @@ call a new instance ${parser+of} ${parser}to process file"
 	    $tmp_dir/$IID/include/files/\ 
 	    ${current_include_no}${__outputfile__cleaned_include}  || \ 
 	     error "spawned copy of ourself: $appname returned $?, quiting" ;; 
+	take)
+	    mv $__cleaned_include $tmp_dir/$IID/include/files/${current_include_no}${__outputfile__cleaned_include}
+	    ;;
 	noparse)
 	    ln -s  $__cleaned_include \
 	    $tmp_dir/$IID/include/files/${current_include_no}${__outputfile__cleaned_include} 
@@ -528,7 +528,13 @@ call a new instance ${parser+of} ${parser}to process file"
 	    stub_main $__cleaned_include $tmp_dir/$IID/include/files/${current_include_no}${__outputfile__cleaned_include} ;;
 	*) $__parser $__parser_args ;; # use $parser with $parser_args 
     esac
-    var  self/include/lines/$current_include_no="$line" 
+    # FIXME dirty workaround if we running after find_commands()
+    # cause $line is set local in it
+    if [ ! $line ] ; then
+	var self/include/lines/$current_include_no=$(wc -l $tmp_dir/self/pc_file.stage1)
+    else
+	var self/include/lines/$current_include_no="$line" 
+    fi
 }
 
 #\\define

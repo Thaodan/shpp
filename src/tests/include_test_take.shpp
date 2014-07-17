@@ -1,0 +1,7 @@
+#!/bin/sh
+take_test() 
+{
+    echo "define SUCCES=t" > $tmp_dir/test_file
+    include take $tmp_dir/test_file
+}
+register_external --runner take_test
