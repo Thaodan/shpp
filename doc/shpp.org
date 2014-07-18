@@ -58,6 +58,7 @@
 
 *** OPTIONS
     - noparse :: dont parse _file_
+    - take :: just take file and move it to self/include/file
     - *parser=_parser* :: use _parser_ to parse file
     - *parser_args=options* :: set arguments for _parser_
 ** rem
