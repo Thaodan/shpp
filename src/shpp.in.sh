@@ -156,9 +156,9 @@ alias count++='count + 1'
 # (alias must be known before use, instead before call unlike functions)
 
 #\\ifdef 
-alias ifdef='If defined'
+alias ifdef='__If defined'
 #\\ifndef
-alias ifndef='If ! defined' 
+alias ifndef='__If ! defined' 
 
 find_commands() {
     local _command   command command_no  command_raw IFS \
@@ -224,7 +224,7 @@ find_commands() {
 				*\"|*\')
 				    # only run sed if we have characters before quote end
 				    if ! [ $__arg__ = \' ] || [ $__arg__ = \" ] ; then
-					__arg__="${arg_string}$(echo "$__arg__" | sed -e 's|\"$||' -e "s|\'$||")"
+					__arg__="${arg_string} $(echo "$__arg__" | sed -e 's|\"$||' -e "s|\'$||")"
 				    else
 					__arg__="$arg_string"
 				    fi
@@ -269,14 +269,14 @@ find_commands() {
 		macro)          macro    $arg1   $arg2  $arg3                               ;;
 		ifdef)          ifdef    "$arg1"                                            ;;
 		ifndef)         ifndef   "$arg1"                                            ;;
-		if)             If       $arg1   $arg2  $arg3 $arg4 $arg5 $arg6 $arg7 $arg8 ;;
-		else)	        Else                                                        ;;
-		endif)	
+		'if')           __If       $arg1   $arg2  $arg3 $arg4 $arg5 $arg6 $arg7 $arg8 ;;
+		'else')	        __Else                                                        ;;
+		'endif')	
 		    # just a stub call for syntax error 
 		    # cause endif was used before if/ifdef/else
 		    endif 
 		    ;; 
-		break)          verbose 'found break abort parsing'; break ;;
+		'break')          verbose 'found break abort parsing'; break ;;
 		error|warning|msg)	$command  "$arg1" ;;
 		![a-z]*|rem) : ;; # ignore stubs for ignored functions
 		*)  if echo $registed_commands | grep -q $command ; then
@@ -305,11 +305,13 @@ find_commands() {
 # description:	this are commands that can be executed in $source_file (#\\*)
 # 		commands can be builtin or suplied by macro files
 # 		most commands exept if* do their write parts after find_commands()
-# 		external commands shoud do their write part with a runner that is executed after find_commands()
+# 		external commands shoud do their write part with a runner
+#                that is executed after find_commands()
 
+# usage:  register_external  <__mode> function
+# description: this functions  registers  externals to shpp either commands (#\\*) or runners
+#
 register_external() { 
-# usage:  register_external  <__mode> file
-# description: this command (#\\macro) register externals to shpp either commands (#\\*) or runners
     local __mode
     case $1 in  # set component to register
 	-c|--command) __mode=add_command;;
@@ -326,7 +328,8 @@ register_external() {
     done
 }
 
-#\\macro
+# usage: macro file
+# description: load macro file must be either relativ to $PWD or to $MACRO_SPACES
 macro() {
     local  __cleaned_macro __macro_space __not_found=false
     case $1 in
@@ -354,13 +357,15 @@ macro() {
 }
 
 #### built im commands ###
-#\\error
+# usage: error msg
+# description: display error and die
 error() {  
    __error "L$line_ued:error" "$@"
    die 1
 }
 
-#\\warning
+# usage: warming  msg
+# description: display warning
 warning() {
     __warning L$line_ued:warning:$command "$@"
     if [ $WARNING_IS_ERROR ] ; then
@@ -368,13 +373,18 @@ warning() {
 	die 2
     fi
 }
-#\\msg
+
+# usage: msg msg
+# description: display mesage
 msg() {
     __msg "$L$line_ued" "$@"
 }
 
-#!\\if
-If() {
+# usage: if condiion
+#            msg bla
+#        endif
+# description: test for condition and do bla
+__If() {
     # set default logig eg. positive
     local __logic_number=1 \
 	__condition_done=false \
@@ -425,6 +435,8 @@ If() {
 }
 
 #### if conditions ###
+# usage: defined var
+# description: test if var is defined return 1 if true return 1 if not 
 defined() {
     if [ -e $tmp_dir/defines/$1 ] ;  then
 	echo 1
@@ -436,7 +448,7 @@ defined() {
 
 #### if conditions ### end
 
-#\\endif
+# description: see if
 endif() { 
     # just a stub that calls error to handle if endif 
     # is before if/ifdef/else
@@ -446,8 +458,8 @@ endif() {
     unset found_if_or_else
 }
 
-#\\else
-Else() {
+# description see if
+__Else() {
     if [ "$unsuccesfull" = false ] ; then
 	verbose "L$line_ued:Last if was succesfull,\
 removing content from this else till next endif" 
@@ -459,7 +471,11 @@ removing content from this else till next endif"
     fi
 }
 
-#\\include
+# usage: include [option] file
+# usage: include file with option , file must be either relative to $PWD or $INCLUDE_SPACES
+# options:
+# no_parse: don't parse file
+# take: just take file and don't copy it before parsing
 include() {
     local  __include_arg  __parser __parser_args __cleaned_include \
 	__outputfile__cleaned_include  __include_space \
@@ -537,7 +553,9 @@ call a new instance ${parser+of} ${parser}to process file"
     fi
 }
 
-#\\define
+# usage: define var=content
+#    or: dine var content
+# description define var
 define() {
     # use internal var function with defines as root space
     # NOTE: settings arrays like this curenntly not supported:
@@ -564,7 +582,8 @@ include_includes() {
     local include_lines __include include_argument \
 	include_line   __tmp_include \
 	__realy_cleaned_include __include_space \
-	include_no=0  include_stack=0
+	include_no=0  include_stack=0 \
+	include_line_last=0
 
     # make backups before do include
     cp "$tmp_dir/self/pc_file.stage2" "$tmp_dir/self/pre_include" 
@@ -577,7 +596,14 @@ include_includes() {
 	    esac
 	done
 	include_no=$(( $include_no + 1 ))
-        include_line=$(( $include_stack + $( var self/include/lines/$include_no )))
+	include_line=$( var self/include/lines/$include_no)
+	#if we don't had an include before in source file
+	#discard stack
+	if [ ! $include_line_last = $(($include_line + 1 )) ] ; then 
+	    include_stack=0
+	else    
+            include_line=$(( $include_stack + $include_line))
+	fi
 	case $include in
 	    \<*\>) 
                 __realy_cleaned_include=$(echo "$current_include" | \
