@@ -582,9 +582,8 @@ include_includes() {
     local include_lines __include include_argument \
 	include_line   __tmp_include \
 	__realy_cleaned_include __include_space \
-	include_no=0  include_stack=0 \
-	include_line_last=0
-
+	include_no=0  include_stack=0
+    
     # make backups before do include
     cp "$tmp_dir/self/pc_file.stage2" "$tmp_dir/self/pre_include" 
     for include in $tmp_dir/self/include/files/* ; do
@@ -597,12 +596,9 @@ include_includes() {
 	done
 	include_no=$(( $include_no + 1 ))
 	include_line=$( var self/include/lines/$include_no)
-	#if we don't had an include before in source file
-	#discard stack
-	if [ ! $include_line_last = $(($include_line + 1 )) ] ; then 
-	    include_stack=0
-	else    
-            include_line=$(( $include_stack + $include_line))
+	# discard stack of one
+	if [ ! $include_stack = 1 ] ; then
+           include_line=$(( $include_stack + $include_line))
 	fi
 	case $include in
 	    \<*\>) 
@@ -628,7 +624,8 @@ include_includes() {
 		"$tmp_dir/self/include/cut_source"
 	cp "$tmp_dir/self/include/cut_source" \
 	    "$tmp_dir/self/pc_file.stage2"
-	include_stack=$(( $include_stack + 1 + $( wc -l < $tmp_dir/self/include/files/$include )))
+	include_stack=$(( $include_stack +  $( wc -l  \
+						   <  $tmp_dir/self/include/files/$include || true)))
 	IFS='
 	'
     done
