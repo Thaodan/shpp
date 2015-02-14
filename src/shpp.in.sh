@@ -29,7 +29,7 @@ registed_commands=stub
 INCLUDE_SPACES=$PWD
 MACRO_SPACES=.
 appname=${0##*/}
-tmp_dir=$(mktemp -u --suffix=${appname}XXXXXXXX)
+tmp_dir=$(mktemp -u ${appname}.XXXXXXX)
 
 ################################################################
 
