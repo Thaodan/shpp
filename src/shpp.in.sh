@@ -145,6 +145,13 @@ count() {
 	+)  echo $(( $( cat $tmp_dir/$COUNTER ) + $2 )) > $tmp_dir/$COUNTER ;;
     esac
 }
+cut()
+# usage: cut <range> <file>
+# description:  primitive to remove line from file
+# example: cut 1,9 tet
+{
+    sed -e "$1 d" -i $2 
+}
 
 alias count--='count - 1'
 alias count++='count + 1'
@@ -187,7 +194,7 @@ find_commands() {
 	_command=$( echo "$_command" | sed -e 's/[ \t]*$//' -e 's/^[ \t]*//' -e  "s|^\ ||" -e 's|\ $||') 
 	if [ $erase_till_endif = true ] ; then
 	    if [ "$_command" = endif ] || [ "$_command" = else  ]  ; then
-		sed -ie "$if_line,$line d" "$1" 
+		cut "$if_line,$line" "$1" 
 #\\!debug_if  cp "$1" "$tmp_dir/ifsteps/pc_file.stage.$_find_command_count"
 		erase_till_endif=false
 	        # save removed lines (difference between $current_line and $if_line + 1)
