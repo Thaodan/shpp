@@ -146,10 +146,14 @@ count() {
     esac
 }
 cut()
-# usage: cut <range> <file>
+# usage: cut <range> <file> [1]
 # description:  primitive to remove line from file
+#               if $3 is true we output deleted content
 # example: cut 1,9 tet
 {
+    if [  $3 ] ; then
+	sed -n "$1p" $2
+    fi
     sed -e "$1 d" -i $2 
 }
 
@@ -465,8 +469,9 @@ endif() {
     unset found_if_or_else
 }
 
+__Else()
 # description see if
-__Else() {
+{
     if [ "$unsuccesfull" = false ] ; then
 	verbose "L$line_ued:Last if was succesfull,\
 removing content from this else till next endif" 
@@ -478,12 +483,14 @@ removing content from this else till next endif"
     fi
 }
 
+include()
 # usage: include [option] file
 # usage: include file with option , file must be either relative to $PWD or $INCLUDE_SPACES
 # options:
 # no_parse: don't parse file
 # take: just take file and don't copy it before parsing
-include() {
+{
+    
     local  __include_arg  __parser __parser_args __cleaned_include \
 	__outputfile__cleaned_include  __include_space \
 	current_include_no __not_found=false 
@@ -560,10 +567,11 @@ call a new instance ${parser+of} ${parser}to process file"
     fi
 }
 
+define()
 # usage: define var=content
 #    or: dine var content
 # description define var
-define() {
+{
     # use internal var function with defines as root space
     # NOTE: settings arrays like this curenntly not supported:
     # #\\define FRUITS { BANANA APPEL TOMATO }
