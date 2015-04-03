@@ -160,9 +160,9 @@ cut()
 cut_cur()
 {
     # save removed lines (difference between range begin and range end + 1)
-    count + $(( $1 - $2  + 1)) \
+    count + $(( $2 - $1  + 1)) \
 	  self/command/removed_stack
-    cut $@ 
+    cut $1 $2 $tmp_dir/self/pc_file.stage1 $3
 
 }
 alias count--='count - 1'
@@ -206,7 +206,7 @@ find_commands() {
 	_command=$( echo "$_command" | sed -e 's/[ \t]*$//' -e 's/^[ \t]*//' -e  "s|^\ ||" -e 's|\ $||') 
 	if [ $erase_till_endif = true ] ; then
 	    if [ "$_command" = endif ] || [ "$_command" = else  ]  ; then
-		cut_cur "$if_line" "$line" "$1" 
+		cut_cur "$if_line" "$line" 
 #\\!debug_if  cp "$1" "$tmp_dir/ifsteps/pc_file.stage.$_find_command_count"
 		erase_till_endif=false
 		[ $_command = else ] && found_if_or_else=true
