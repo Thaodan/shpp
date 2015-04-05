@@ -134,7 +134,10 @@ var()
     esac	
 }
 
-unvar() {
+unvar()
+# usage: unvar <var>
+# desription: remove var
+{
     rm -rf $tmp_dir/$1
 }
 
