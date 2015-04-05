@@ -145,6 +145,9 @@ count() {
 	+)  echo $(( $( cat $tmp_dir/$COUNTER ) + $2 )) > $tmp_dir/$COUNTER ;;
     esac
 }
+alias count--='count - 1'
+alias count++='count + 1'
+
 cut()
 # usage: cut <range begin >  <range end> <file> [1]
 # description:  primitive to remove line from file
@@ -167,8 +170,7 @@ cut_cur()
     cut $1 $2 $tmp_dir/self/pc_file.stage1 $3
 
 }
-alias count--='count - 1'
-alias count++='count + 1'
+
 
 ############################################################
 
