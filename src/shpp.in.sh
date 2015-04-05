@@ -138,7 +138,10 @@ link() {
     ln -s $tmp_dir/$1 $tmp_dir/$2
 }
 
-count() {
+count()
+# usage: count <+,-> <number> [<COUNTER>]
+# description: charge number from or to file, if COUNTER is not given use existing
+{
     COUNTER=$3
     case $1 in 
 	-)  echo $(( $( cat $tmp_dir/$COUNTER ) - $2 )) > $tmp_dir/$COUNTER ;;
@@ -168,7 +171,6 @@ cut_cur()
     count + $(( $2 - $1  + 1)) \
 	  self/command/removed_stack
     cut $1 $2 $tmp_dir/self/pc_file.stage1 $3
-
 }
 
 
