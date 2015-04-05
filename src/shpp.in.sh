@@ -91,7 +91,11 @@ cleanup() {
     fi
 }
 
-var() {
+var()
+# usage: var var[=content]
+# description: set var to content if =content is not given, output content of var
+#              vars can be put in an other by using / just like when creating dirs
+{
     case $1 in 
 	*=|*=*) 
 	    local __var_part1=$( echo "$1" | sed -e 's/=.*//' -e 's/^[+,-]//' )
