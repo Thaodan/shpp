@@ -156,8 +156,10 @@ cut()
     fi
     sed -e "$1,$2 d" -i $3
 }
-# just like cut but for current file
+
 cut_cur()
+# usage: cut_cur <range begin> <range end> [t]
+# description: just like cut but for current file
 {
     # save removed lines (difference between range begin and range end + 1)
     count + $(( $2 - $1  + 1)) \
