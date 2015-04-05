@@ -158,6 +158,13 @@ count()
 alias count--='count - 1'
 alias count++='count + 1'
 
+random()
+# usage: random [range] [digits]
+# description: gen random number
+{
+    tr -dc ${1:-1-9} < /dev/urandom | head -c${2:-4}
+}
+
 cut()
 # usage: cut <range begin >  <range end> <file> [1]
 # description:  primitive to remove line from file
@@ -710,7 +717,7 @@ stub_main()    {
     # else gen rnd var and move old self to new instance and create new self
     else
 	# same here: init InstanceID
-	IID=$(tr -dc 1-9 < /dev/urandom | head -c5)
+	IID=$(random)
         mkdir -p "$tmp_dir/$IID"
 	mv "$tmp_dir/self" "$tmp_dir/$IID/.lastself"
 	ln -s $IID $tmp_dir/self
