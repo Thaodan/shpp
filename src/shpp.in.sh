@@ -150,9 +150,11 @@ count()
 # description: charge number from or to file, if COUNTER is not given use existing
 {
     COUNTER=$3
+    local counter_cur
+    read counter_cur <  $tmp_dir/$COUNTER || true # exit status isn't relevant
     case $1 in 
-	-)  echo $(( $( cat $tmp_dir/$COUNTER ) - $2 )) > $tmp_dir/$COUNTER ;;
-	+)  echo $(( $( cat $tmp_dir/$COUNTER ) + $2 )) > $tmp_dir/$COUNTER ;;
+	-)  echo $(( $counter_cur - $2 )) > $tmp_dir/$COUNTER ;;
+	+)  echo $(( $counter_cur + $2 )) > $tmp_dir/$COUNTER ;;
     esac
 }
 alias count--='count - 1'
