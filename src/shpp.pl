@@ -459,7 +459,7 @@ sub ifndef {
 $subs->add( 'ifndef', 'ifndef', 'ALL' );
 
 sub Else() {
-
+   
     # else token
     if ( $l_cmd_ret == 1 ) {
 
@@ -477,7 +477,8 @@ sub Else() {
 $subs->add( 'else', 'Else', 0 );
 
 sub end() {
-
+   print $l_cmd_ret;
+   print @end;
     # if was fine we end this
     if ( $l_cmd_ret == 1 ) {
         $end[-1] = $$command{line};
@@ -488,6 +489,11 @@ sub end() {
     return 1;
 }
 $subs->add( 'end', 'end', 0 );
+sub endif()
+{
+   return end();
+}
+$subs->add( 'endif', 'endif', 0);
 
 =pod
 desc.: load macro file
