@@ -5,9 +5,29 @@
 ** TODO [#B] check
 ** TODO block
    Improve parser by parsing in blocks needed by [[multi line define]]
+*** Pseudo Code
+#+BEGIN_SRC 
+do stuff we do like usual
+if not block mode  do # dont search for block mode if already on
+   if found <<<block at the end  do
+      enable block mode
+      save current command line
+   end
+else
+     if not found  >>>block
+         collect strings
+     else
+         disable block mode
+         call saved command with block
+         reset block
+     end
+end
+#+END_SRC
 ** TODO here-documents
 Support here-documents for Commands like [[multi line define.]]
 This should look like [[file:doc/babel.org::*org-sample-code]this]]
+
+
 * TODO Commands
 ** Core
 *** TODO [#A] if
@@ -21,3 +41,10 @@ This should look like [[file:doc/babel.org::*org-sample-code]this]]
      support multi line line for defining subs etc. needs [[block]]
 *** TODO [#B] macro
 **** TODO [#B] do syntax check before run
+
+
+* TODO Structure
+  May implement alias to commands by executing them 
+  as own command instead of wrinting raw perl code
+  
+** add a function to execute raw shpp code
