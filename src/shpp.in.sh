@@ -359,7 +359,7 @@ register_external() {
     shift 
     while [ ! $# = 0 ] ; do
 	case $__mode in
-	    add_command) registed_commands=$register_commands:$1 ;;
+	    add_command) registed_commands=$registed_commands:$1 ;;
 	    add_runner) registed_runners="$registed_runners $1";;
 	esac
 	shift
