@@ -1,6 +1,0 @@
-#!/bin/sh
-
-. ../../dist_system/usr/lib/update_source
-. ../../src/sh_makefile
-rm -f ${PROJECT_NAME}_$VER.orig.tar.gz
-ln -s $( readlink $SOURCE_FILE ) ${PROJECT_NAME}_$VER.orig.tar.gz

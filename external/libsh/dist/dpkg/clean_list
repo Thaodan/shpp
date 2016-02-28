@@ -1,5 +1,0 @@
-libsh-*/
-*.dsc
-*.changes
-*.orig.tar.*
-*.debian*

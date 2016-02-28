@@ -2,14 +2,13 @@
 .SH "NAME"
 .PP
 shpp - preprocessor shell script
-
 .SH "SYNOPSIS"
 .PP
 \fBshpp\fP [Options] [\d\s-2file\s+2\u\d\s-2]\s+2\u
-
 .SH "DESCRIPTION"
 .PP
 shpp  is  a  preprocessor  for  shell  scripts , but may used for other files too.  #\\\\ is used as an indicator for preprocessor commands.
+
 .SH "OPTIONS"
 .TP
 \fB--help        -H -h\fP
@@ -55,7 +54,6 @@ set temp directory (use before \fB-D\fP or this has no effect)
 .TP
 \fB--keep                        \fP
 don't delete tmp files after running
-
 .SH "COMMANDS"
 .SS "define"
 .PP
@@ -65,7 +63,6 @@ define  variable
 \fBdefine\fP \fIfoo=\d\s-2bar\s+2\u\fP
 Or
 \fBdefine\fP \fIfoo\fP \fIbar\fP
-
 .SS "if"
 .PP
 test if condition is true
@@ -88,6 +85,7 @@ do condition after || if previus condition fails
 .TP
 \fB&&              \fP
 do condition after && if previus condition is succesfull
+
 .SS "Aliases"
 .TP
 \fBifdef \fP
@@ -95,33 +93,38 @@ do condition after && if previus condition is succesfull
 .TP
 \fBifndef\fP
 = \fBif\fP ! \fBdefined\fP
+
 .SS "else"
 .PP
 Else statement if if(def) was unsuccesfull, will sent an error if no if(def) was found before or removes content till endif if ifdef was succesfull.
+
 .SS "endif"
 .PP
 Says shpp to stop after ifdef or else was found before, if no ifdef or else was found before shpp will send an error.
+
 .SS "include"
 .PP
 Includes File
 .SS "SYNTAX"
 .PP
 \fBinclude\fP [\d\s-2options\s+2\u\d\s-2]\s+2\u \fIfile\fP
+
 .SS "OPTIONS"
 .TP
 \fBnoparse\fP
 dont parse \fIfile\fP
+.TP
+\fBtake\fP
+just take file and move it to self/include/file
 .TP
 \fB\fBparser=\d\s-2parser\s+2\u\fP\fP
 use \fIparser\fP to parse file
 .TP
 \fB\fBparser\d\s-2args\s+2\u=options\fP\fP
 set arguments for \fIparser\fP
-
 .SS "rem"
 .PP
 Inits a comment line that will be only the seen before that preprocessor was runned.
-
 .SS "macro"
 .PP
 Loads Macro file

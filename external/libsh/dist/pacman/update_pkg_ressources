@@ -1,6 +1,0 @@
-#!/bin/sh
-
-. ../../dist_system/usr/lib/update_source
-
-cp PKGBUILD.in PKGBUILD
-makepkg -f PKGBUILD.in -g >> PKGBUILD

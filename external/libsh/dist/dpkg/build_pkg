@@ -1,6 +1,0 @@
-#!/bin/sh
-. ../../src/sh_makefile
-tar -xaf libsh_$VER.orig.tar.gz
-cd libsh-$VER
-cp -a ../debian . 
-dpkg-buildpackage -d
