@@ -435,8 +435,10 @@ __If() {
 	while [ ! $# = 0 ]; do
 	    case $1 in 
 		!) __logic_number=0 ;shift ;;
-		defined) 
-		    IFS=$old_ifs;  __condition="$(defined $2) $__condition"; 
+		defined)
+                    local tmp
+                    tmp=$(defined $2)
+		    IFS=$old_ifs;  __condition="${#tmp} > 1  $__condition"; 
 		    IFS=" ";shift 2
 		    ;;
 		\|\|) __break_false=true; shift ;break;;
@@ -477,7 +479,7 @@ __If() {
 # description: test if var is defined return 1 if true return 1 if not 
 defined() {
     if [ -e $tmp_dir/defines/$1 ] ;  then
-	echo 1
+	cat $tmp_dir/defines/$1
     else
 	verbose "L$line_ued: $1 was not defined" 
 	echo 0
