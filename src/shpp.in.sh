@@ -274,6 +274,12 @@ find_commands() {
 			fi
 			# after we parsed arg string set arg<n>
 			if [ ! "$arg_string" ] ; then
+                            case $__arg__ in
+                                @*@)
+                                defined $var
+                                ;;
+                            esac
+                                       
 			    case $arg_counter in 
 				0)
 				    command=$__arg__ 
