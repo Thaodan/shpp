@@ -444,7 +444,7 @@ __If() {
 		defined)
                     local tmp
                     tmp=$(defined $2)
-		    IFS=$old_ifs;  __condition="${#tmp} > 1  $__condition"; 
+		    IFS=$old_ifs;  __condition="${#tmp} >= 1  $__condition"; 
 		    IFS=" ";shift 2
 		    ;;
 		\|\|) __break_false=true; shift ;break;;
@@ -485,7 +485,11 @@ __If() {
 # description: test if var is defined return 1 if true return 1 if not 
 defined() {
     if [ -e $tmp_dir/defines/$1 ] ;  then
-	cat $tmp_dir/defines/$1
+        if [ -s $tmp_dir/defines/$1 ] ; then
+	    cat $tmp_dir/defines/$1
+        else
+            echo 1
+        fi
     else
 	verbose "L$line_ued: $1 was not defined" 
 	echo 0
