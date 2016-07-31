@@ -442,9 +442,12 @@ __If() {
 	    case $1 in 
 		!) __logic_number=0 ;shift ;;
 		defined)
-                    local tmp
-                    tmp=$(defined $2)
-		    IFS=$old_ifs;  __condition="${#tmp} >= 1  $__condition"; 
+                    local result
+                    result=$(defined $2)
+                    case $result in
+                        ''|*[!0-9]*) result=${#result} ;;
+                    esac
+		    IFS=$old_ifs;  __condition="$result >= 1  $__condition"; 
 		    IFS=" ";shift 2
 		    ;;
 		\|\|) __break_false=true; shift ;break;;
