@@ -396,7 +396,7 @@ macro() {
     if sh -n $__cleaned_macro ; then
 	. $__cleaned_macro
     else
-	error "'__$cleaned_macro' don't passed syntax check, quiting"
+	error "'$__cleaned_macro' don't passed syntax check, quiting"
     fi  
 }
 
