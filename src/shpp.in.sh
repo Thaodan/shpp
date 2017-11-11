@@ -86,8 +86,10 @@ die() {
 }
 
 cleanup() {
-    if [ ! $keep ] ; then 
-	rm -rf $( cat $tmp_dir/$IID/clean_files); 
+    if [ ! $keep ] ; then
+        local clean_files
+        read -r clean_files < "$tmp_dir/$IID/clean_files"
+	rm -rf "$clean_files"
     fi
 }
 
