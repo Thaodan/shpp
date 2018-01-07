@@ -638,7 +638,7 @@ write_shortifdefs() { # write #\\! flags to $2
 }
 
 include_includes() { 
-    local include_lines __include include_argument \
+    local include_lines \
 	include_line   __tmp_include \
 	__realy_cleaned_include __include_space \
 	include_no=0  include_stack=0
@@ -646,13 +646,6 @@ include_includes() {
     # make backups before do include
     cp "$tmp_dir/self/pc_file.stage2" "$tmp_dir/self/pre_include" 
     for include in $tmp_dir/self/include/files/* ; do
-	for __include_argument in $__include ; do
-	    case $__include_argument in 
-		# stub arguments that are only used by #\\include
-	        include|noparse|parser=*|parser_args=*) : ;; 
-		*) __include=$__include_argument ;;
-	    esac
-	done
 	include_no=$(( $include_no + 1 ))
 	include_line=$( var self/include/lines/$include_no)
 	# discard stack of one
