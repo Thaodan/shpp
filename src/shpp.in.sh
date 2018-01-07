@@ -280,6 +280,9 @@ find_commands() {
                                 @*@)
                                 defined $var
                                 ;;
+                                \"*\"|\'*\')
+                                __arg__=$(echo $__arg__ |sed -e  "s|^[\",']||" -e  "s|[\",']$||")
+                                ;;
                             esac
                                        
 			    case $arg_counter in 
