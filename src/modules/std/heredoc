@@ -1,0 +1,55 @@
+#!/bin/sh
+# description:
+# macro that adds here doc
+# syntax:
+#\\heredoc_begin [file] [cmd] [args]
+
+#\\heredoc_end
+# ver: 0.1
+# example:
+# #\\macro std/heredoc
+##
+#
+
+heredoc_begin()
+{
+    if  ! var self/heredoc/begin ; then
+        var self/heredoc/begin=$line
+    else
+        error 'heredoc' 'opened new heredoc before old ended'
+    fi
+    # WARN: file get's destroied when a new instance is opened
+    if [ $1 = file ] ; then
+        var self/heredoc/file=t
+        shift
+    fi
+    if [ $# = 0 ] ; then
+        error 'heredoc' 'need command to call with heredoc'
+    fi
+    IFS=" "
+    var self/heredoc/cmd="$(echo $*|sed -e 's|\ $||')"
+    IFS=
+}
+
+ register_external --command heredoc_begin
+
+heredoc_end()
+{
+    local heredoc_end_line \
+          heredoc_begin_line \
+          cmd
+    
+    if heredoc_begin_line=$(var self/heredoc/begin) ; then
+        heredoc_end_line=$line
+    else
+        error 'heredoc' 'please open heredoc before you begin one'
+    fi
+    if [ -e self/heredoc/file ] ; then
+        cut_cur $(($heredoc_begin_line+1)) $(($heredoc_end_line-1)) t > self/heredoc/file
+        eval "$(var  self/heredoc/cmd) self/heredoc/file)"
+    else
+        cut_cur $(($heredoc_begin_line+1)) $(($heredoc_end_line-1)) t | eval "$(var self/heredoc/cmd)"
+    fi
+}
+
+register_external --command heredoc_end

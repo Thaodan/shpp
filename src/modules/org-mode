@@ -1,0 +1,10 @@
+#!/bin/sh
+macro '<std/here_doc>'
+stub() { echo stub };
+org_mode_process()
+# start emacsd instance or use existing
+# run emacs client with target files and process them to target dir
+{
+    stub
+}
+register_external --runner org_mode_process
