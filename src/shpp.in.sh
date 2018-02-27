@@ -101,7 +101,7 @@ var()
     case $1 in 
 	*=|*=*) 
 	    local __var_part1=$( echo "$1" | sed -e 's/=.*//' -e 's/^[+,-]//' )
-	    local __var_part2=$( echo "$1" | sed -e 's/.*.=//' )
+            local __var_part2=$( echo "$1" | cut -d '=' -f2- )
 	    local __var12=$tmp_dir/$__var_part1
 	    mkdir -p ${__var12%/*}
 	    case $1 in 
@@ -169,7 +169,7 @@ random()
     tr -dc ${1:-1-9} < /dev/urandom | head -c${2:-4}
 }
 
-cut()
+cutt()
 # usage: cut <range begin >  <range end> <file> [1]
 # description:  primitive to remove line from file
 #               if $4 is true we output deleted content
@@ -181,14 +181,14 @@ cut()
     sed -e "$1,$2 d" -i $3
 }
 
-cut_cur()
+cutt_cur()
 # usage: cut_cur <range begin> <range end> [t]
 # description: just like cut but for current file
 {
     # save removed lines (difference between range begin and range end + 1)
     count + $(( $2 - $1  + 1)) \
 	  self/command/removed_stack
-    cut $1 $2 $tmp_dir/self/pc_file.stage1 $3
+    cutt $1 $2 $tmp_dir/self/pc_file.stage1 $3
 }
 
 
@@ -230,7 +230,7 @@ find_commands() {
 	_command=$( echo "$_command" | sed -e 's/[ \t]*$//' -e 's/^[ \t]*//' -e  "s|^\ ||" -e 's|\ $||') 
 	if [ $erase_till_endif = true ] ; then
 	    if [ "$_command" = endif ] || [ "$_command" = else  ]  ; then
-		cut_cur "$if_line" "$line" 
+		cutt_cur "$if_line" "$line" 
 #\\!debug_if  cp "$1" "$tmp_dir/ifsteps/pc_file.stage.$_find_command_count"
 		erase_till_endif=false
 		[ $_command = else ] && found_if_or_else=true
