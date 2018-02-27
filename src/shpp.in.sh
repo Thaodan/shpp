@@ -623,8 +623,8 @@ define()
     # NOTE: settings arrays like this curenntly not supported:
     # #\\define FRUITS { BANANA APPEL TOMATO }
     case $1 in
-	*=*) var defines/${1}      ;;
-        *)   var defines/${1}=${2} ;;
+	*=*) var "defines/${1}"     ;;
+        *)   var "defines/${1}=${2}" ;;
     esac
 }
 
