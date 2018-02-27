@@ -153,10 +153,10 @@ count()
 {
     COUNTER=$3
     local counter_cur
-    read counter_cur <  $tmp_dir/$COUNTER || true # exit status isn't relevant
+    read counter_cur <  "$tmp_dir/$COUNTER" || true # exit status isn't relevant
     case $1 in 
-	-)  echo $(( $counter_cur - $2 )) > $tmp_dir/$COUNTER ;;
-	+)  echo $(( $counter_cur + $2 )) > $tmp_dir/$COUNTER ;;
+	-)  echo $(( $counter_cur - $2 )) > "$tmp_dir/$COUNTER" ;;
+	+)  echo $(( $counter_cur + $2 )) > "$tmp_dir/$COUNTER" ;;
     esac
 }
 alias count--='count - 1'
@@ -188,7 +188,7 @@ cutt_cur()
     # save removed lines (difference between range begin and range end + 1)
     count + $(( $2 - $1  + 1)) \
 	  self/command/removed_stack
-    cutt $1 $2 $tmp_dir/self/pc_file.stage1 $3
+    cutt $1 $2 "$tmp_dir"/self/pc_file.stage1 $3
 }
 
 
