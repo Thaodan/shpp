@@ -170,7 +170,7 @@ random()
 }
 
 cutt()
-# usage: cutt <range begin >  <range end> <file> [1]
+# usage: cut <range begin >  <range end> <file> [1]
 # description:  primitive to remove line from file
 #               if $4 is true we output deleted content
 # example: cut 1,9 tet
@@ -182,7 +182,7 @@ cutt()
 }
 
 cutt_cur()
-# usage: cutt_cur <range begin> <range end> [t]
+# usage: cut_cur <range begin> <range end> [t]
 # description: just like cut but for current file
 {
     # save removed lines (difference between range begin and range end + 1)
