@@ -216,7 +216,7 @@ find_commands() {
 '
     for find_commands_line in $( grep -hn \#\\\\\\\\$2 "$1"  | sed 's|:.*||' ); do 
 	counter=$(( $counter + 1))
-	var self/command/lines/$counter=$find_commands_line
+	var self/command/lines/$counter="$find_commands_line"
     done
     counter=0 # reset counter after parsing lines
     for _command in $( grep  \#\\\\\\\\$2 "$1" | sed -e 's/#\\\\//'  ) ; do
@@ -281,7 +281,7 @@ find_commands() {
                                 defined $var
                                 ;;
                                 \"*\"|\'*\')
-                                __arg__=$(echo $__arg__ |sed -e  "s|^[\",']||" -e  "s|[\",']$||")
+                                __arg__=$(echo "$__arg__" |sed -e  "s|^[\",']||" -e  "s|[\",']$||")
                                 ;;
                             esac
                                        
@@ -328,7 +328,7 @@ find_commands() {
 		'break')          verbose 'found break abort parsing'; break ;;
 		error|warning|msg)	$command  "$arg1" ;;
 		![a-z]*|rem) : ;; # ignore stubs for ignored functions
-		*)  if echo $registed_commands | grep -q $command ; then
+		*)  if echo "$registed_commands" | grep -q $command ; then
 		        $command "$arg1"  "$arg2" "$arg3" "$arg4" "$arg5" "$arg6" "$arg7" "$arg8"
 		    else
 		        warning "found '$command',bug or unkown command, raw string is '$command_raw'"
