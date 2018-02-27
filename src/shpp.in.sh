@@ -585,7 +585,7 @@ call a new instance ${parser+of} ${parser}to process file"
     [ $__not_found = true ] && error "'$__cleaned_include' not found"
     count++ self/include/counter
     current_include_no=$( var self/include/counter )
-    __outputfile__cleaned_include=$( echo $__cleaned_include | \
+    __outputfile__cleaned_include=$( echo "$__cleaned_include" | \
 	sed -e 's|\/|_|g' -e 's|\.|_|g')
     case ${__parser:-SELF} in  
 	shpp)  $shpp   --tmp $tmp_dir/slaves --stdout \
@@ -594,11 +594,11 @@ call a new instance ${parser+of} ${parser}to process file"
 	    ${current_include_no}${__outputfile__cleaned_include}  || \
 	     error "spawned copy of ourself: $appname returned $?, quiting" ;; 
 	take)
-	    mv $__cleaned_include $tmp_dir/$IID/include/files/${current_include_no}${__outputfile__cleaned_include}
+	    mv "$__cleaned_include" "$tmp_dir/$IID/include/files/${current_include_no}${__outputfile__cleaned_include}"
 	    ;;
 	noparse)
-	    ln -s  $__cleaned_include \
-	    $tmp_dir/$IID/include/files/${current_include_no}${__outputfile__cleaned_include} 
+	    ln -s  "$__cleaned_include" \
+	    "$tmp_dir/$IID/include/files/${current_include_no}${__outputfile__cleaned_include}"
 	    # no $parser is used
 	    ;;
 	SELF)
@@ -608,7 +608,7 @@ call a new instance ${parser+of} ${parser}to process file"
     # FIXME dirty workaround if we running after find_commands()
     # cause $line is set local in it
     if [ ! $line ] ; then
-	var self/include/lines/$current_include_no=$(wc -l < $tmp_dir/self/pc_file.stage1)
+	var self/include/lines/$current_include_no=$(wc -l < "$tmp_dir"/self/pc_file.stage1)
     else
 	var self/include/lines/$current_include_no="$line" 
     fi
