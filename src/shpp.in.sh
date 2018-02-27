@@ -29,14 +29,14 @@ registed_commands=stub
 INCLUDE_SPACES=$PWD
 MACRO_SPACES=.
 appname=${0##*/}
-tmp_dir=$(mktemp -u ${appname}.XXXXXXX)
+tmp_dir="$(mktemp -u "${appname}.XXXXXXX")"
 
 ################################################################
 
 if [ ${0%/*} = . ] ; then
-    shpp=$(which $0 2>/dev/null ) || shpp=${0%/*}/shpp
+    shpp="$(which $0 2>/dev/null )" || shpp="${0%/*}/shpp"
 else
-    shpp=${0%/*}/shpp
+    shpp="${0%/*}/shpp"
 fi
 
 #####################################################################
