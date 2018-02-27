@@ -29,14 +29,14 @@ registed_commands=stub
 INCLUDE_SPACES=$PWD
 MACRO_SPACES=.
 appname=${0##*/}
-tmp_dir=$(mktemp -u ${appname}.XXXXXXX)
+tmp_dir="$(mktemp -u "${appname}.XXXXXXX")"
 
 ################################################################
 
 if [ ${0%/*} = . ] ; then
-    shpp=$(which $0 2>/dev/null ) || shpp=${0%/*}/shpp
+    shpp="$(which $0 2>/dev/null )" || shpp="${0%/*}/shpp"
 else
-    shpp=${0%/*}/shpp
+    shpp="${0%/*}/shpp"
 fi
 
 #####################################################################
@@ -102,33 +102,33 @@ var()
 	*=|*=*) 
 	    local __var_part1=$( echo "$1" | sed -e 's/=.*//' -e 's/^[+,-]//' )
             local __var_part2=$( echo "$1" | cut -d '=' -f2- )
-	    local __var12=$tmp_dir/$__var_part1
+	    local __var12="$tmp_dir/$__var_part1"
 	    mkdir -p ${__var12%/*}
 	    case $1 in 
 		*+=*)
-		    if [ -d $tmp_dir/$__var_part1 ] ; then
-			printf  -- $__var_part2 > $tmp_dir/$__var_part1/\  $(( 
-				$( echo $tmp_dir/$__var_part2/* \
-				    | tail  | basename ) + 1 ))
+		    if [ -d "$tmp_dir/$__var_part1" ] ; then
+			printf  -- $__var_part2 > "$tmp_dir/$__var_part1/"\  $(( 
+				$( echo "$tmp_dir"/$__var_part2/* \
+				    | tail  | xargs basename ) + 1 ))
 		    else
-			printf -- "$__var_part2" >> $tmp_dir/$__var_part1  
+			printf -- "$__var_part2" >> "$tmp_dir/$__var_part1"  
 		    fi
 		    ;;
  		*-=*) false ;;
-                *)  printf  -- "$__var_part2" > $tmp_dir/$__var_part1 ;;
+                *)  printf  -- "$__var_part2" > "$tmp_dir/$__var_part1" ;;
 	    esac
 	    ;;	
 	*) 
-	    if [ -d $tmp_dir/$1 ] ; then
-		local __var_dir_content=$(echo $tmp_dir/$1/*)
+	    if [ -d "$tmp_dir/$1" ] ; then
+		local __var_dir_content=$(echo "$tmp_dir/$1/*")
 		shpp_var_oifs=$IFS
 		IFS=" "
 		for __var_dir in $__var_dir_content ; do
 		    echo ${__var_dir##*/}
 		done
 		IFS=$shpp_var_oifs
-	    elif [ -e $tmp_dir/$1 ] ; then 
-		cat $tmp_dir/$1
+	    elif [ -e "$tmp_dir/$1" ] ; then 
+		cat "$tmp_dir/$1"
 	    else
 		return 1
 	    fi
@@ -140,11 +140,11 @@ unvar()
 # usage: unvar <var>
 # desription: remove var
 {
-    rm -rf $tmp_dir/$1
+    rm -rf "$tmp_dir/$1"
 }
 
 link() {
-    ln -s $tmp_dir/$1 $tmp_dir/$2
+    ln -s "$tmp_dir/$1" "$tmp_dir/$2"
 }
 
 count()
@@ -153,10 +153,10 @@ count()
 {
     COUNTER=$3
     local counter_cur
-    read counter_cur <  $tmp_dir/$COUNTER || true # exit status isn't relevant
+    read counter_cur <  "$tmp_dir/$COUNTER" || true # exit status isn't relevant
     case $1 in 
-	-)  echo $(( $counter_cur - $2 )) > $tmp_dir/$COUNTER ;;
-	+)  echo $(( $counter_cur + $2 )) > $tmp_dir/$COUNTER ;;
+	-)  echo $(( $counter_cur - $2 )) > "$tmp_dir/$COUNTER" ;;
+	+)  echo $(( $counter_cur + $2 )) > "$tmp_dir/$COUNTER" ;;
     esac
 }
 alias count--='count - 1'
@@ -188,7 +188,7 @@ cutt_cur()
     # save removed lines (difference between range begin and range end + 1)
     count + $(( $2 - $1  + 1)) \
 	  self/command/removed_stack
-    cutt $1 $2 $tmp_dir/self/pc_file.stage1 $3
+    cutt $1 $2 "$tmp_dir"/self/pc_file.stage1 $3
 }
 
 
@@ -216,7 +216,7 @@ find_commands() {
 '
     for find_commands_line in $( grep -hn \#\\\\\\\\$2 "$1"  | sed 's|:.*||' ); do 
 	counter=$(( $counter + 1))
-	var self/command/lines/$counter=$find_commands_line
+	var self/command/lines/$counter="$find_commands_line"
     done
     counter=0 # reset counter after parsing lines
     for _command in $( grep  \#\\\\\\\\$2 "$1" | sed -e 's/#\\\\//'  ) ; do
@@ -281,7 +281,7 @@ find_commands() {
                                 defined $var
                                 ;;
                                 \"*\"|\'*\')
-                                __arg__=$(echo $__arg__ |sed -e  "s|^[\",']||" -e  "s|[\",']$||")
+                                __arg__=$(echo "$__arg__" |sed -e  "s|^[\",']||" -e  "s|[\",']$||")
                                 ;;
                             esac
                                        
@@ -328,7 +328,7 @@ find_commands() {
 		'break')          verbose 'found break abort parsing'; break ;;
 		error|warning|msg)	$command  "$arg1" ;;
 		![a-z]*|rem) : ;; # ignore stubs for ignored functions
-		*)  if echo $registed_commands | grep -q $command ; then
+		*)  if echo "$registed_commands" | grep -q $command ; then
 		        $command "$arg1"  "$arg2" "$arg3" "$arg4" "$arg5" "$arg6" "$arg7" "$arg8"
 		    else
 		        warning "found '$command',bug or unkown command, raw string is '$command_raw'"
@@ -492,9 +492,9 @@ __If() {
 # usage: defined var
 # description: test if var is defined return 1 if true return 1 if not 
 defined() {
-    if [ -e $tmp_dir/defines/$1 ] ;  then
-        if [ -s $tmp_dir/defines/$1 ] ; then
-	    cat $tmp_dir/defines/$1
+    if [ -e "$tmp_dir/defines/$1" ] ;  then
+        if [ -s "$tmp_dir/defines/$1" ] ; then
+	    cat "$tmp_dir/defines/$1"
         else
             echo 1
         fi
@@ -585,7 +585,7 @@ call a new instance ${parser+of} ${parser}to process file"
     [ $__not_found = true ] && error "'$__cleaned_include' not found"
     count++ self/include/counter
     current_include_no=$( var self/include/counter )
-    __outputfile__cleaned_include=$( echo $__cleaned_include | \
+    __outputfile__cleaned_include=$( echo "$__cleaned_include" | \
 	sed -e 's|\/|_|g' -e 's|\.|_|g')
     case ${__parser:-SELF} in  
 	shpp)  $shpp   --tmp $tmp_dir/slaves --stdout \
@@ -594,11 +594,11 @@ call a new instance ${parser+of} ${parser}to process file"
 	    ${current_include_no}${__outputfile__cleaned_include}  || \
 	     error "spawned copy of ourself: $appname returned $?, quiting" ;; 
 	take)
-	    mv $__cleaned_include $tmp_dir/$IID/include/files/${current_include_no}${__outputfile__cleaned_include}
+	    mv "$__cleaned_include" "$tmp_dir/$IID/include/files/${current_include_no}${__outputfile__cleaned_include}"
 	    ;;
 	noparse)
-	    ln -s  $__cleaned_include \
-	    $tmp_dir/$IID/include/files/${current_include_no}${__outputfile__cleaned_include} 
+	    ln -s  "$__cleaned_include" \
+	    "$tmp_dir/$IID/include/files/${current_include_no}${__outputfile__cleaned_include}"
 	    # no $parser is used
 	    ;;
 	SELF)
@@ -608,7 +608,7 @@ call a new instance ${parser+of} ${parser}to process file"
     # FIXME dirty workaround if we running after find_commands()
     # cause $line is set local in it
     if [ ! $line ] ; then
-	var self/include/lines/$current_include_no=$(wc -l < $tmp_dir/self/pc_file.stage1)
+	var self/include/lines/$current_include_no=$(wc -l < "$tmp_dir"/self/pc_file.stage1)
     else
 	var self/include/lines/$current_include_no="$line" 
     fi
@@ -623,8 +623,8 @@ define()
     # NOTE: settings arrays like this curenntly not supported:
     # #\\define FRUITS { BANANA APPEL TOMATO }
     case $1 in
-	*=*) var defines/${1}      ;;
-        *)   var defines/${1}=${2} ;;
+	*=*) var "defines/${1}"     ;;
+        *)   var "defines/${1}=${2}" ;;
     esac
 }
 
@@ -636,7 +636,7 @@ write_shortifdefs() { # write #\\! flags to $2
     local IFS='
 '
     for var1 in $( var defines )  ; do 
-	sed -i "s/"^#\\\\\\\\\!$var1"//" $1
+	sed -i  "s/^#\\\\\\\\\!$var1//" "$1"
     done
 }
 
@@ -680,7 +680,7 @@ include_includes() {
 	cp "$tmp_dir/self/include/cut_source" \
 	    "$tmp_dir/self/pc_file.stage2"
 	include_stack=$(( $include_stack +  $( wc -l  \
-						   <  $tmp_dir/self/include/files/$include || true)))
+						   <  "$tmp_dir/self/include/files/$include" || true)))
 	IFS='
 	'
     done
@@ -689,16 +689,16 @@ include_includes() {
 replace_vars() {
     verbose replace_vars "Opening '$2'"
     local replace_var replace_var_content old_ifs IFS shifted_one
-    [ ! -z $depth ] && shifted_one=${1#*/}/
+    [ ! -z "$depth" ] && shifted_one=${1#*/}/
     old_ifs=$IFS
     IFS='
 '
-    for replace_var in $( var $1 ) ; do
+    for replace_var in $( var "$1" ) ; do
         IFS=$old_ifs
 	# if we got a var that contains other vars run us again
-	if [ -d $tmp_dir/$1/$replace_var ] ; then
+	if [ -d "$tmp_dir/$1/$replace_var" ] ; then
 	    local depth=1
-	    replace_vars $1/$replace_var $2
+	    replace_vars "$1/$replace_var" "$2"
 	else
 	    replace_var_content=$(var $1/$replace_var)
 	    verbose "replacing @${shifted_one}${replace_var}@ with $replace_var_content"
@@ -711,7 +711,7 @@ replace_vars() {
 }
 
 clear_flags() { # cleas #\\ flags in 
-    sed -ie '/^#\\\\*/d' $1
+    sed -ie '/^#\\\\*/d' "$1"
 }
 
 
@@ -721,7 +721,7 @@ clear_flags() { # cleas #\\ flags in
 stub_main()    {
 #\\!debug_if	mkdir -p "$tmp_dir/ifsteps"
     # if we got no $tmp_dir/self we are at main instance, so init it
-    if [ ! -e $tmp_dir/self ] ; then
+    if [ ! -e "$tmp_dir"/self ] ; then
 	# init InstanceID to use if we can't use $tmp_dir/self
 	# if we are the first instance our id is 1
 	IID=1
@@ -735,7 +735,7 @@ stub_main()    {
 	IID=$(random)
         mkdir -p "$tmp_dir/$IID"
 	mv "$tmp_dir/self" "$tmp_dir/$IID/.lastself"
-	ln -s $IID $tmp_dir/self
+	ln -s $IID "$tmp_dir"/self
     fi
     verbose "Entering instance '$IID'"
     # make a copy for our self
@@ -743,7 +743,7 @@ stub_main()    {
     find_commands "$tmp_dir/self/pc_file.stage1"
     write_shortifdefs "$tmp_dir/self/pc_file.stage1"
     cp "$tmp_dir/self/pc_file.stage1" "$tmp_dir/self/pc_file.stage2"
-    test -e $tmp_dir/defines  && \
+    test -e "$tmp_dir/defines"  && \
 	replace_vars "defines"  "$tmp_dir/self/pc_file.stage2"
     # do runners only in main instance
     if [ $IID = 1 ] ; then
@@ -760,7 +760,7 @@ stub_main()    {
     if  [ ! $IID = 1 ] ; then 
 	echo "$tmp_dir/$IID" > $tmp_dir/self/clean_files 
 	rm $tmp_dir/self
-	mv -f  $tmp_dir/$IID/.lastself $tmp_dir/self
+	mv -f  "$tmp_dir"/$IID/.lastself "$tmp_dir"/self
 	cleanup
 	IID=$(readlink $tmp_dir/self) # re init id from last instance
     else
@@ -820,15 +820,15 @@ if [ ! $# = 0 ] ; then
 			-O|--option) # pass options to shpp or enable options
 			    case $2 in 
 				# self explained
-				*=*) eval $2;;
+				*=*) eval "$2";;
 				# if its no var 
 				# (options can be paased as var too) 
 				# threat it as option and enable it
-				*) eval $2=true;; 
+				*) eval "$2=true";; 
 			    esac
  			    shift 2 
 			    ;;
-	            	--tmp) tmp_dir=${2} ; shift 2;;
+	            	--tmp) tmp_dir="${2}" ; shift 2;;
 			--keep) keep=true; shift ;; # keep temp files
 			# all warnings are critical
 			--critical-warning) WARNING_IS_ERROR=true ; shift ;; 
@@ -882,7 +882,7 @@ if [ ! $# = 0 ] ; then
 		    done
 		    unset signal
 		    trap "IID=1 cleanup; exit 130" INT
-		    stub_main $1 $target_name
+		    stub_main "$1" $target_name
 		    shift
 		fi
 		;;
