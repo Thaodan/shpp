@@ -721,7 +721,7 @@ clear_flags() { # cleas #\\ flags in
 stub_main()    {
 #\\!debug_if	mkdir -p "$tmp_dir/ifsteps"
     # if we got no $tmp_dir/self we are at main instance, so init it
-    if [ ! -e $tmp_dir/self ] ; then
+    if [ ! -e "$tmp_dir"/self ] ; then
 	# init InstanceID to use if we can't use $tmp_dir/self
 	# if we are the first instance our id is 1
 	IID=1
@@ -735,7 +735,7 @@ stub_main()    {
 	IID=$(random)
         mkdir -p "$tmp_dir/$IID"
 	mv "$tmp_dir/self" "$tmp_dir/$IID/.lastself"
-	ln -s $IID $tmp_dir/self
+	ln -s $IID "$tmp_dir"/self
     fi
     verbose "Entering instance '$IID'"
     # make a copy for our self
@@ -743,7 +743,7 @@ stub_main()    {
     find_commands "$tmp_dir/self/pc_file.stage1"
     write_shortifdefs "$tmp_dir/self/pc_file.stage1"
     cp "$tmp_dir/self/pc_file.stage1" "$tmp_dir/self/pc_file.stage2"
-    test -e $tmp_dir/defines  && \
+    test -e "$tmp_dir/defines"  && \
 	replace_vars "defines"  "$tmp_dir/self/pc_file.stage2"
     # do runners only in main instance
     if [ $IID = 1 ] ; then
@@ -760,7 +760,7 @@ stub_main()    {
     if  [ ! $IID = 1 ] ; then 
 	echo "$tmp_dir/$IID" > $tmp_dir/self/clean_files 
 	rm $tmp_dir/self
-	mv -f  $tmp_dir/$IID/.lastself $tmp_dir/self
+	mv -f  "$tmp_dir"/$IID/.lastself "$tmp_dir"/self
 	cleanup
 	IID=$(readlink $tmp_dir/self) # re init id from last instance
     else
@@ -820,15 +820,15 @@ if [ ! $# = 0 ] ; then
 			-O|--option) # pass options to shpp or enable options
 			    case $2 in 
 				# self explained
-				*=*) eval $2;;
+				*=*) eval "$2";;
 				# if its no var 
 				# (options can be paased as var too) 
 				# threat it as option and enable it
-				*) eval $2=true;; 
+				*) eval "$2=true";; 
 			    esac
  			    shift 2 
 			    ;;
-	            	--tmp) tmp_dir=${2} ; shift 2;;
+	            	--tmp) tmp_dir="${2}" ; shift 2;;
 			--keep) keep=true; shift ;; # keep temp files
 			# all warnings are critical
 			--critical-warning) WARNING_IS_ERROR=true ; shift ;; 
@@ -882,7 +882,7 @@ if [ ! $# = 0 ] ; then
 		    done
 		    unset signal
 		    trap "IID=1 cleanup; exit 130" INT
-		    stub_main $1 $target_name
+		    stub_main "$1" $target_name
 		    shift
 		fi
 		;;
