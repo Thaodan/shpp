@@ -680,7 +680,7 @@ include_includes() {
 	cp "$tmp_dir/self/include/cut_source" \
 	    "$tmp_dir/self/pc_file.stage2"
 	include_stack=$(( $include_stack +  $( wc -l  \
-						   <  $tmp_dir/self/include/files/$include || true)))
+						   <  "$tmp_dir/self/include/files/$include" || true)))
 	IFS='
 	'
     done
