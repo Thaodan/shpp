@@ -711,7 +711,7 @@ replace_vars() {
 }
 
 clear_flags() { # cleas #\\ flags in 
-    sed -ie '/^#\\\\*/d' $1
+    sed -ie '/^#\\\\*/d' "$1"
 }
 
 
