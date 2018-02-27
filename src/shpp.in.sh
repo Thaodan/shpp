@@ -140,11 +140,11 @@ unvar()
 # usage: unvar <var>
 # desription: remove var
 {
-    rm -rf $tmp_dir/$1
+    rm -rf "$tmp_dir/$1"
 }
 
 link() {
-    ln -s $tmp_dir/$1 $tmp_dir/$2
+    ln -s "$tmp_dir/$1" "$tmp_dir/$2"
 }
 
 count()
