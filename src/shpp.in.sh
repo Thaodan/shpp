@@ -380,7 +380,7 @@ register_external() {
 # usage: macro file
 # description: load macro file must be either relativ to $PWD or to $MACRO_SPACES
 macro() {
-    local  __cleaned_macro __macro_space __not_found=false
+    local  __cleaned_macro __macro_space __not_found=true
     case $1 in
 	\<*\>) 
            __cleaned_macro=$(echo "$1" | \
@@ -392,8 +392,7 @@ macro() {
 	if [ -e "$__macro_space"/"$__cleaned_macro" ] ; then
 	    __cleaned_macro="$__macro_space"/"$__cleaned_macro"
 	    __not_found=false
-	else
-	    __not_found=true
+            break
 	fi
     done 
     [ $__not_found = true ] && error "'$__cleaned_macro' not found"
