@@ -1,3 +1,3 @@
 #\\include else_test.sh
 Erfolgreich
-#\\include include_test_fragment.sh
+#\\include include_test_fragment
