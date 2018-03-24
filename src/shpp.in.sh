@@ -623,16 +623,22 @@ call a new instance ${parser+of} ${parser}to process file"
 
 define()
 # usage: define var=content
-#    or: dine var content
-# description define var
+#    or: define var content
+# description: define variable(s)
+# note: define supports definig of multiple variables
+#       if var=content mode is used $1 is used in definition, than shift
+#       if var content mode is used $1 and $1 is used in definition, than shift
 {
-    # use internal var function with defines as root space
-    # NOTE: settings arrays like this curenntly not supported:
-    # #\\define FRUITS { BANANA APPEL TOMATO }
-    case $1 in
-	*=*) var "defines/${1}"     ;;
-        *)   var "defines/${1}=${2}" ;;
-    esac
+   while [ ! $# = 0 ] ; do
+       # use internal var function with defines as root space
+       # NOTE: settings arrays like this curenntly not supported:
+       # #\\define FRUITS { BANANA APPEL TOMATO }
+       case $1 in
+	   *=*) var "defines/${1}"     ;;
+           *)   var "defines/${1}=${2}" ; shift;;
+       esac
+       shift
+   done
 }
 
 ### commands end ### 
