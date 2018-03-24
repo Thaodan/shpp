@@ -30,6 +30,7 @@ INCLUDE_SPACES=$PWD
 MACRO_SPACES=.
 appname=${0##*/}
 tmp_dir="$(mktemp -u "${TMPDIR:-/tmp}/${appname}.XXXXXXX")"
+DEFINES=defines
 
 ################################################################
 
