@@ -143,7 +143,10 @@ unvar()
     rm -rf "$tmp_dir/$1"
 }
 
-link() {
+link()
+# usage: link <var> <target>
+# description: link var to target
+{
     ln -s "$tmp_dir/$1" "$tmp_dir/$2"
 }
 
