@@ -278,7 +278,9 @@ find_commands() {
 			if [ ! "$arg_string" ] ; then
                             case $__arg__ in
                                 @*@)
-                                defined $var
+                                # we got a variable, lets call defined on it
+                                __arg__=$(echo "$__arg__"| sed 's|@||g')
+                                __arg__=$(defined "$__arg__")
                                 ;;
                                 \"*\"|\'*\')
                                 __arg__=$(echo "$__arg__" |sed -e  "s|^[\",']||" -e  "s|[\",']$||")
