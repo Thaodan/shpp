@@ -257,7 +257,7 @@ find_commands() {
 			     # if true, open our arg_string
 			     in_arg_string=true
 			     arg_string=$(echo "$__arg__" | sed -e 's|^\"||' -e "s|^\'||")
-                        # if we got string last try to end it or add our __arg__ to arg_string
+                        # test if we got string end character or add our __arg__ to arg_string if not
 			elif [ $in_arg_string = true  ] ; then
 			    case $__arg__ in
 				# arg string ends, reset arg_string
@@ -271,6 +271,7 @@ find_commands() {
 				    arg_string=
 				    in_arg_string=false;
 				    ;;
+                                # $arg_string doesn't end add __arg__ to it
 				*) arg_string="${arg_string} ${__arg__}" ;;
 			    esac
 			fi
@@ -283,6 +284,7 @@ find_commands() {
                                 __arg__=$(defined "$__arg__")
                                 ;;
                                 \"*\"|\'*\')
+                                # strip " or ' from arg at the begin and end
                                 __arg__=$(echo "$__arg__" |sed -e  "s|^[\",']||" -e  "s|[\",']$||")
                                 ;;
                             esac
