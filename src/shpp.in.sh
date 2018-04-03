@@ -499,9 +499,9 @@ __If() {
 # usage: defined var
 # description: test if var is defined return 1 if true return 1 if not 
 defined() {
-    if [ -e "$tmp_dir/defines/$1" ] ;  then
-        if [ -s "$tmp_dir/defines/$1" ] ; then
-	    cat "$tmp_dir/defines/$1"
+    if [ -e "$tmp_dir/$DEFINES/$1" ] ;  then
+        if [ -s "$tmp_dir/$DEFINES/$1" ] ; then
+	    cat "$tmp_dir/$DEFINES/$1"
         else
             echo 1
         fi
