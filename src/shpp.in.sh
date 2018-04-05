@@ -546,7 +546,7 @@ include()
     
     local  __include_arg  __parser __parser_args __cleaned_include \
 	__outputfile__cleaned_include  __include_space \
-	current_include_no __not_found=false 
+	current_include_no __not_found=true  
 
 
     mkdir -p $tmp_dir/self/include/files
@@ -573,7 +573,11 @@ call a new instance ${parser+of} ${parser}to process file"
     esac
     # only seek in INCLUDE_SPACES if we got no /*
     case $__cleaned_include in 
-	/*) ;;
+	/*)
+            if [ -e "$__cleaned_include" ] ; then
+                __not_found=false
+            fi
+        ;;
 	*) 
 	    local IFS=:
 	    for __include_space in $INCLUDE_SPACES ; do
@@ -582,8 +586,6 @@ call a new instance ${parser+of} ${parser}to process file"
 		    __cleaned_include="$__include_space"/"$__cleaned_include"
 		    __not_found=false
 		    break
-		else
-		    __not_found=true
 		fi
 	    done 
 	    ;;
