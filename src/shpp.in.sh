@@ -655,26 +655,25 @@ include_includes() {
     
     # make backups before do include
     cp "$tmp_dir/self/pc_file.stage2" "$tmp_dir/self/pre_include" 
-    for include in $tmp_dir/self/include/files/* ; do
+    for include in "$tmp_dir"/self/include/files/* ; do
 	include_no=$(( $include_no + 1 ))
 	include_line=$( var self/include/lines/$include_no)
 	# discard stack of one
 	if [ ! $include_stack = 1 ] ; then
            include_line=$(( $include_stack + $include_line))
 	fi
-	include=$( echo ${include##*/} | sed -e 's|\/|_|g' -e 's|\.|_|g')
 	sed "$include_line,$ d" $1 >  \
 	    "$tmp_dir/self/include/cut_source"
 	sed "1,$include_line d" $1 > \
 	    "$tmp_dir/self/include/cut_source_end"
-	cat "$tmp_dir/self/include/files/$include" >> \
+	cat "$include" >> \
 		"$tmp_dir/self/include/cut_source"
 	cat "$tmp_dir/self/include/cut_source_end" >> \
 		"$tmp_dir/self/include/cut_source"
 	cp "$tmp_dir/self/include/cut_source" \
 	    "$tmp_dir/self/pc_file.stage2"
 	include_stack=$(( $include_stack +  $( wc -l  \
-						   <  "$tmp_dir/self/include/files/$include" || true)))
+						   <  "$include" || true)))
 	IFS='
 	'
     done
