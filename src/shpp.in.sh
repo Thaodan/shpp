@@ -662,19 +662,6 @@ include_includes() {
 	if [ ! $include_stack = 1 ] ; then
            include_line=$(( $include_stack + $include_line))
 	fi
-	case $include in
-	    \<*\>) 
-                __realy_cleaned_include=$(echo "$current_include" | \
-		    sed -e 's/^<//' -e 's/>$//')
-                local IFS=:
-		for __include_space in $INCLUDE_SPACES ; do
-		    if [ -e "$__include_space"/"$__realy_cleaned_include" ] 
-		    then
-			include="$__include_space"/"$__realy_cleaned_include"
-		    fi
-		done 
-	   ;;
-	esac
 	include=$( echo ${include##*/} | sed -e 's|\/|_|g' -e 's|\.|_|g')
 	sed "$include_line,$ d" $1 >  \
 	    "$tmp_dir/self/include/cut_source"
