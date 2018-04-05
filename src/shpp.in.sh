@@ -655,7 +655,7 @@ include_includes() {
     
     # make backups before do include
     cp "$tmp_dir/self/pc_file.stage2" "$tmp_dir/self/pre_include" 
-    for include in "$tmp_dir"/self/include/files/* ; do
+    for include in "tmp_dir"/self/include/files/* ; do
 	include_no=$(( $include_no + 1 ))
 	include_line=$( var self/include/lines/$include_no)
 	# discard stack of one
