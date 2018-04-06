@@ -140,7 +140,7 @@ unvar()
 # usage: unvar <var>
 # desription: remove var
 {
-    rm -rf "$tmp_dir/$1"
+    rm -rf "${tmp_dir:?}/$1"
 }
 
 link() {
@@ -721,6 +721,7 @@ stub_main()    {
 	mkdir -p "$tmp_dir/1"
 	ln -s 1 "$tmp_dir/self"
 	# add our whole $tmp_dir to our clean_files list
+
 	echo "$tmp_dir" > $tmp_dir/self/clean_files 
     # else gen rnd var and move old self to new instance and create new self
     else
