@@ -722,7 +722,7 @@ stub_main()    {
 	ln -s 1 "$tmp_dir/self"
 	# add our whole $tmp_dir to our clean_files list
 
-	echo "$tmp_dir" > $tmp_dir/self/clean_files 
+	echo "$tmp_dir" > "$tmp_dir"/self/clean_files 
     # else gen rnd var and move old self to new instance and create new self
     else
 	# same here: init InstanceID
@@ -752,8 +752,8 @@ stub_main()    {
     clear_flags "$tmp_dir/self/pc_file.stage2"
     cp "$tmp_dir/self/pc_file.stage2" "$2"
     if  [ ! $IID = 1 ] ; then 
-	echo "$tmp_dir/$IID" > $tmp_dir/self/clean_files 
-	rm $tmp_dir/self
+	echo "$tmp_dir/$IID" > "$tmp_dir"/self/clean_files 
+	rm "$tmp_dir"/self
 	mv -f  "$tmp_dir"/$IID/.lastself "$tmp_dir"/self
 	cleanup
 	IID=$(readlink $tmp_dir/self) # re init id from last instance
