@@ -713,7 +713,49 @@ clear_flags() { # cleas #\\ flags in
     sed -ie '/^#\\\\*/d' "$1"
 }
 
+instance_create()
+# usage: instance_create 
+# description:  create_instance
+#               if $IID is not set, set IID from
+#               calling random
+# example: instance_create
+{
+    if [ ! $IID ] ; then
+        IID=$(random)
+    fi
+    mkdir -p "$tmp_dir"/$IID
+    echo "$tmp_dir/$IID" > "$tmp_dir"/$IID/clean_files 
+}
 
+instance_enter()
+# usage: instance_enter
+# description:  enter_instance
+# example: instance_enter
+{
+    if [  -e "$tmp_dir"/self ] ; then
+        # save last instance self
+        mv -f "$tmp_dir/self" "$tmp_dir/$IID/.lastself"
+    fi
+    verbose "Entering instance '$IID'"
+    ln -s $IID "$tmp_dir/self"    
+}
+
+instance_leave()
+# usage: instance_leave
+# description:  leave old instance and return to last instance
+# example: instance_leave
+{
+    rm "$tmp_dir"/self
+    verbose "Leaving instance '$IID'"
+    if [  -L "$tmp_dir"/$IID/.lastself ] ; then
+        mv -f  "$tmp_dir"/$IID/.lastself "$tmp_dir"/self
+        cleanup
+        IID=$(readlink $tmp_dir/self)
+        verbose "Returning to instance '$IID'"
+    else
+        cleanup
+    fi
+}
 
 ### main function ###
 
@@ -723,21 +765,18 @@ stub_main()    {
     if [ ! -e "$tmp_dir"/self ] ; then
 	# init InstanceID to use if we can't use $tmp_dir/self
 	# if we are the first instance our id is 1
-	IID=1
-	mkdir -p "$tmp_dir/1"
-	ln -s 1 "$tmp_dir/self"
-	# add our whole $tmp_dir to our clean_files list
-
-	echo "$tmp_dir" > "$tmp_dir"/self/clean_files 
+	IID=1	
+	#echo "$tmp_dir" > "$tmp_dir"/self/clean_files 
     # else gen rnd var and move old self to new instance and create new self
     else
-	# same here: init InstanceID
-	IID=$(random)
-        mkdir -p "$tmp_dir/$IID"
-	mv "$tmp_dir/self" "$tmp_dir/$IID/.lastself"
-	ln -s $IID "$tmp_dir"/self
+        IID=$(random)
     fi
-    verbose "Entering instance '$IID'"
+    instance_create
+    instance_enter
+    if [ $IID = 1 ] ; then
+        # add our whole $tmp_dir to our clean_files list
+        echo "$tmp_dir" > "$tmp_dir"/self/clean_files
+    fi
     # make a copy for our self
     cp "$1" "$tmp_dir/self/pc_file.stage1"
     find_commands "$tmp_dir/self/pc_file.stage1"
@@ -757,15 +796,7 @@ stub_main()    {
     [ -e  "$tmp_dir/self/include/files"  ] && include_includes "$tmp_dir/self/pc_file.stage2"
     clear_flags "$tmp_dir/self/pc_file.stage2"
     cp "$tmp_dir/self/pc_file.stage2" "$2"
-    if  [ ! $IID = 1 ] ; then 
-	echo "$tmp_dir/$IID" > "$tmp_dir"/self/clean_files 
-	rm "$tmp_dir"/self
-	mv -f  "$tmp_dir"/$IID/.lastself "$tmp_dir"/self
-	cleanup
-	IID=$(readlink $tmp_dir/self) # re init id from last instance
-    else
-	cleanup
-    fi
+    instance_leave
 }
 
 print_help() {
