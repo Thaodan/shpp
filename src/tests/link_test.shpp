@@ -1,0 +1,5 @@
+register_external --command link_test
+link_test()
+{
+   link "$@"
+}
