@@ -9,4 +9,4 @@ $(TESTFILES): $(TARGET)
 $(TARGET): 
 	$(MAKE) -C .. 
 
-.PHONY: clean $(TESTFILES) 
+.PHONY: clean $(TESTFILES) $(TARGET)
