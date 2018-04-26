@@ -328,7 +328,7 @@ find_commands()
 		define) 	define   $arg1   $arg2                                      ;;
 		include) 	include  $arg1   $arg2  $arg3                               ;;
 		macro)          macro    $arg1   $arg2  $arg3                               ;;
-		ifdef)          ifdef    "$arg1"                                            ;;
+		ifdef)          ifdef    $arg1   $arg2  $arg3 $arg4 $arg5 $arg6 $arg7 $arg8 ;;
 		ifndef)         ifndef   "$arg1"                                            ;;
 		'if')           __If       $arg1   $arg2  $arg3 $arg4 $arg5 $arg6 $arg7 $arg8 ;;
 		'else')	        __Else                                                        ;;
@@ -459,12 +459,17 @@ __If() {
 		!) __logic_number=0 ;shift ;;
 		defined)
                     local result
-                    result=$(defined $2)
+                    
+                    shift                    
+                    while [ "$1" = "||" ] || [ "$1" = "&&" ] || [ ! $# = 0 ]; do
+                        result=$result$(defined "$1")
+                        shift
+                    done                   
                     case $result in
                         ''|*[!0-9]*) result=${#result} ;;
                     esac
 		    IFS=$old_ifs;  __condition="$result >= 1  $__condition"; 
-		    IFS=" ";shift 2
+		    IFS=" ";
 		    ;;
 		\|\|) __break_false=true; shift ;break;;
 		\&\&) __break_true=true; shift ;break;;
@@ -503,16 +508,19 @@ __If() {
 # usage: defined var
 # description: test if var is defined return 1 if true return 1 if not 
 defined() {
-    if [ -e "$tmp_dir/defines/$1" ] ;  then
-        if [ -s "$tmp_dir/defines/$1" ] ; then
-	    cat "$tmp_dir/defines/$1"
+    while [ ! $# = 0 ] ; do
+        if [ -e "$tmp_dir/defines/$1" ] ;  then
+            if [ -s "$tmp_dir/defines/$1" ] ; then
+	        cat "$tmp_dir/defines/$1"
+            else
+                echo 1
+            fi
         else
-            echo 1
+	    verbose "L$line_ued: $1 was not defined" 
+	    echo 0
         fi
-    else
-	verbose "L$line_ued: $1 was not defined" 
-	echo 0
-    fi
+        shift
+    done
 }
 
 #### if conditions ### end
