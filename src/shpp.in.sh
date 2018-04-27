@@ -449,7 +449,8 @@ __If() {
 		defined)
                     local result
                     
-                    shift                    
+                    shift
+                    #FIXME
                     while [ "$1" = "||" ] || [ "$1" = "&&" ] || [ ! $# = 0 ]; do
                         result=$result$(defined "$1")
                         shift
@@ -497,18 +498,25 @@ __If() {
 # usage: defined var
 # description: test if var is defined return 1 if true return 1 if not 
 defined() {
+    local old_iid=$IID IID=0
+    
     while [ ! $# = 0 ] ; do
-        if [ -e "$tmp_dir/defines/$1" ] ;  then
-            if [ -s "$tmp_dir/defines/$1" ] ; then
-	        cat "$tmp_dir/defines/$1"
-            else
-                echo 1
+        case $1 in
+            priv|private) IID=$old_iid;shift;;
+            *)
+                if [ -e "$tmp_dir/$IID/defines/$1" ] ;  then
+                    if [ -s "$tmp_dir/$IID/defines/$1" ] ; then
+	                cat "$tmp_dir/$IID/defines/$1"
+                    else
+                        echo 1
             fi
-        else
-	    verbose "L$line_ued: $1 was not defined" 
-	    echo 0
-        fi
-        shift
+                else
+	            verbose "L$line_ued: $1 was not defined" 
+	            echo 0
+                fi
+                shift
+                ;;
+        esac
     done
 }
 
@@ -646,13 +654,16 @@ define()
 #       if var=content mode is used $1 is used in definition, than shift
 #       if var content mode is used $1 and $1 is used in definition, than shift
 {
+   local old_iid=$IID IID=0
+    
    while [ ! $# = 0 ] ; do
        # use internal var function with defines as root space
        # NOTE: settings arrays like this curenntly not supported:
        # #\\define FRUITS { BANANA APPEL TOMATO }
        case $1 in
-	   *=*) var "defines/${1}"     ;;
-           *)   var "defines/${1}=${2}" ; shift;;
+           priv|private) IID=$old_iid;;
+	   *=*) var "$IID/defines/${1}"     ;;
+           *)   var "$IID/defines/${1}=${2}" ; shift;;
        esac
        shift
    done
@@ -665,7 +676,7 @@ define()
 write_shortifdefs() { # write #\\! flags to $2
     local IFS='
 '
-    for var1 in $( var defines )  ; do 
+    for var1 in $( var 0/defines )  ; do 
 	sed -i  "s/^#\\\\\\\\\!$var1//" "$1"
     done
 }
@@ -799,8 +810,8 @@ stub_main()    {
     find_commands "$tmp_dir/self/pc_file.stage1"
     write_shortifdefs "$tmp_dir/self/pc_file.stage1"
     cp "$tmp_dir/self/pc_file.stage1" "$tmp_dir/self/pc_file.stage2"
-    test -e "$tmp_dir/defines"  && \
-	replace_vars "defines"  "$tmp_dir/self/pc_file.stage2"
+    test -e "$tmp_dir/0/defines"  && \
+	replace_vars "0/defines"  "$tmp_dir/self/pc_file.stage2"
     # do runners only in main instance
     if [ $IID = 1 ] ; then
 	IFS=" "
