@@ -304,15 +304,15 @@ find_commands()
 				    case "$command" in 
 					!*|rem) break ;;
 				    esac
-				    ;;
-				1) arg1=$__arg__ ;;
-				2) arg2=$__arg__;;
-				3) arg3=$__arg__;;
-				4) arg4=$__arg__;;
-				5) arg5=$__arg__;;
-				6) arg6=$__arg__;;
-				7) arg7=$__arg__;;
-				8) arg8=$__arg__;;
+				     ;;
+				1) arg1="$__arg__" ;;
+				2) arg2="$__arg__";;
+				3) arg3="$__arg__";;
+				4) arg4="$__arg__";;
+				5) arg5="$__arg__";;
+				6) arg6="$__arg__";;
+				7) arg7="$__arg__";;
+				8) arg8="$__arg__";;
 				9) break ;;
 			    esac	
 			    arg_counter=$(( $arg_counter + 1))
@@ -323,14 +323,13 @@ find_commands()
   		    ;;
 		# else $_command is already clear
 		*) command=$_command ;;	       		 
-	    esac					      			
+	    esac                                   
+	    set -- $arg1  $arg2 $arg3 $arg4 $arg5 $arg6 $arg7 $arg8
 	    case "$command" in
-		define) 	define   $arg1   $arg2                                      ;;
-		include) 	include  $arg1   $arg2  $arg3                               ;;
-		macro)          macro    $arg1   $arg2  $arg3                               ;;
-		ifdef)          ifdef    $arg1   $arg2  $arg3 $arg4 $arg5 $arg6 $arg7 $arg8 ;;
-		ifndef)         ifndef   "$arg1"                                            ;;
-		'if')           __If       $arg1   $arg2  $arg3 $arg4 $arg5 $arg6 $arg7 $arg8 ;;
+		define|macro|include|ifdef|ifndef|error|warning|msg)
+ 	            $command  "$@"
+                    ;;                                            
+		'if')           __If       "$@" ;;
 		'else')	        __Else                                                        ;;
 		'endif')	
 		    # just a stub call for syntax error 
@@ -338,10 +337,9 @@ find_commands()
 		    endif 
 		    ;; 
 		'break')          verbose 'found break abort parsing'; break ;;
-		error|warning|msg)	$command  "$arg1" ;;
 		![a-z]*|rem) : ;; # ignore stubs for ignored functions
 		*)  if echo "$registed_commands" | grep -q $command ; then
-		        $command "$arg1"  "$arg2" "$arg3" "$arg4" "$arg5" "$arg6" "$arg7" "$arg8"
+		        $command "$@"
 		    else
 		        warning "found '$command',bug or unkown command, raw string is '$command_raw'"
 		    fi
