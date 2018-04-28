@@ -199,15 +199,6 @@ cutt_cur()
 
 ############################################################
 
-###  alias commands ### 
-# this are commands that are only provided as alias, as workaround these alias are before commands 
-# (alias must be known before use, instead before call unlike functions)
-
-#\\ifdef 
-alias ifdef='__If defined'
-#\\ifndef
-alias ifndef='__If ! defined' 
-
 find_commands()
 # usage: find_commands <file>
 # description: parse <file> and execute parsed commands on <file>
@@ -522,6 +513,21 @@ defined() {
 }
 
 #### if conditions ### end
+
+## if aliases ###
+ifndef()
+# usage: ifndef var
+# description: alias to if ! defined var
+{
+    __If ! defined "$@" 
+}
+
+ifdef()
+# usage: ifdef var
+# description: alias to if defined var
+{
+    __If defined "$@"
+}
 
 # description: see if
 endif() { 
