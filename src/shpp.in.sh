@@ -206,8 +206,9 @@ find_commands()
     local _command   command command_no  command_raw IFS \
 	counter=0 arg_counter=0 arg_string __arg__ arg1 \
 	arg2 arg3 arg4 arg5 arg6 arg7 arg8 in_arg_string=false
-    erase_till_endif=false
-    endif_notfound=false 
+    local erase_till_endif=false
+    local endif_notfound=false
+    local unsuccesfull
     var self/command/removed_stack=0
     local if_line
     local old_ifs=$IFS
