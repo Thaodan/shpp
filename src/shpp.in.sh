@@ -120,13 +120,11 @@ var()
 	    ;;	
 	*) 
 	    if [ -d "$tmp_dir/$1" ] ; then
-		local __var_dir_content=$(echo "$tmp_dir/$1/*")
-		shpp_var_oifs=$IFS
-		IFS=" "
-		for __var_dir in $__var_dir_content ; do
-		    echo ${__var_dir##*/}
-		done
-		IFS=$shpp_var_oifs
+                local dir_content
+                for dir_content in "$tmp_dir/$1/"*
+                do
+                    echo "${dir_content##*/}"
+                done
 	    elif [ -e "$tmp_dir/$1" ] ; then 
 		cat "$tmp_dir/$1"
 	    else
