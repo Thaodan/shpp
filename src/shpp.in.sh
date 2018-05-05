@@ -440,15 +440,14 @@ __If() {
 	__condition
     unsuccesfull=false
   # parse modifers
-    old_ifs=$IFS
-    IFS=" "
+    local IFS=" "
     while [ ! $__condition_done = true ] ; do
 	while [ ! $# = 0 ]; do
 	    case $1 in 
 		!) __logic_number=0 ;shift ;;
 		defined)
                     local result
-                    
+                    unset IFS
                     shift                    
                     while [ "$1" = "||" ] || [ "$1" = "&&" ] || [ ! $# = 0 ]; do
                         result=$result$(defined "$1")
@@ -457,7 +456,7 @@ __If() {
                     case $result in
                         ''|*[!0-9]*) result=${#result} ;;
                     esac
-		    IFS=$old_ifs;  __condition="$result >= 1  $__condition"; 
+		    __condition="$result >= 1  $__condition"; 
 		    IFS=" ";
 		    ;;
 		\|\|) __break_false=true; shift ;break;;
