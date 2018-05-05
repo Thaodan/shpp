@@ -209,8 +209,7 @@ find_commands()
     local unsuccesfull
     var self/command/removed_stack=0
     local if_line
-    local old_ifs=$IFS
-    IFS='
+    local IFS='
 '
     for find_commands_line in $( grep -hn \#\\\\\\\\$2 "$1"  | sed 's|:.*||' ); do 
 	counter=$(( $counter + 1))
@@ -218,7 +217,7 @@ find_commands()
     done
     counter=0 # reset counter after parsing lines
     for _command in $( grep  \#\\\\\\\\$2 "$1" | sed -e 's/#\\\\//'  ) ; do
-	IFS=$old_ifs
+        unset IFS
 	counter=$(( $counter + 1))
 	# current line with removed deleted lines
 	local line_ued=$( var self/command/lines/$counter )
@@ -308,13 +307,15 @@ find_commands()
 			    arg_counter=$(( $arg_counter + 1))
 			fi
 		    done
-		    IFS=$old_ifs
+		    unset IFS
 		    arg_counter=0
   		    ;;
 		# else $_command is already clear
 		*) command=$_command ;;	       		 
-	    esac                                   
+	    esac
+            IFS=
 	    set -- $arg1  $arg2 $arg3 $arg4 $arg5 $arg6 $arg7 $arg8
+            unset IFS
 	    case "$command" in
 		define|macro|include|ifdef|ifndef|error|warning|msg)
  	            $command  "$@"
@@ -347,7 +348,6 @@ find_commands()
        IFS='
 	'
     done
-    IFS=$old_ifs
 }
 
 ### commands ### 
