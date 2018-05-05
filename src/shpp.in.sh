@@ -597,13 +597,13 @@ call a new instance ${parser+of} ${parser}to process file"
 	*) 
 	    local IFS=:
 	    for __include_space in $INCLUDE_SPACES ; do
-		IFS=$old_ifs
 		if [ -e "$__include_space"/"$__cleaned_include" ] ; then
 		    __cleaned_include="$__include_space"/"$__cleaned_include"
 		    __not_found=false
 		    break
 		fi
-	    done 
+	    done
+            unset IFS
 	    ;;
     esac
     [ $__not_found = true ] && error "'$__cleaned_include' not found"
