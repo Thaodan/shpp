@@ -662,8 +662,6 @@ define()
 ### runners ###
 
 write_shortifdefs() { # write #\\! flags to $2
-    local IFS='
-'
     for var1 in $( var defines )  ; do 
 	sed -i  "s/^#\\\\\\\\\!$var1//" "$1"
     done
