@@ -394,7 +394,8 @@ macro() {
 	    __not_found=false
             break
 	fi
-    done 
+    done
+    unset IFS
     [ $__not_found = true ] && error "'$__cleaned_macro' not found"
     verbose "found macro: '$__cleaned_macro', doing syntax check"
     if sh -n $__cleaned_macro ; then
