@@ -694,8 +694,6 @@ include_includes() {
 	    "$tmp_dir/self/pc_file.stage2"
 	include_stack=$(( $include_stack +  $( wc -l  \
 						   <  "$include" || true)))
-	IFS='
-	'
     done
 }
 
