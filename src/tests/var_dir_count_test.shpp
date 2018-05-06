@@ -1,0 +1,19 @@
+var_dir_count_test()
+{
+    define items/item0 item0
+    define items/item1 item1
+    define items/item2 item2   
+    for item in $(var defines/items) ; do
+        count=$(($count+1))
+        echo $item
+    done
+    msg "Items count: $count"
+    if [ ! $count -eq 3 ] ; then
+        error "Test failed"
+    else
+        msg "Test Erfolgreich"
+    fi  
+}
+
+
+register_external --command var_dir_count_test
