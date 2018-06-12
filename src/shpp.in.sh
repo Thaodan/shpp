@@ -691,8 +691,9 @@ include_includes() {
 	cat "$tmp_dir/self/include/cut_source_end" >> \
 		"$tmp_dir/self/include/cut_source"
 	cp "$tmp_dir/self/include/cut_source" \
-	    "$tmp_dir/self/pc_file.stage2"
-	include_stack=$(( $include_stack +  $( wc -l  \
+	   "$tmp_dir/self/pc_file.stage2"
+        # add included document-1 to stack
+	include_stack=$(( $include_stack - 1 +  $( wc -l  \
 						   <  "$include" || true)))
     done
 }
