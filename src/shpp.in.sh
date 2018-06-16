@@ -520,7 +520,7 @@ defined() {
                 echo 1
             fi
         else
-	    verbose "L$line_ued: $1 was not defined" 
+	    verbose "$1 was not defined" 
 	    echo 0
         fi
         shift
