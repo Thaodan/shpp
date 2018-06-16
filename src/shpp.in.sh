@@ -267,15 +267,18 @@ find_commands()
 				 *)false ;; 
 			     esac
 			then
+                             verbose "\$arg_string begin:" 1              
 			     # if true, open our arg_string
 			     in_arg_string=true
 			     arg_string=$(echo "$__arg__" | sed -e 's|^\"||' -e "s|^\'||")
+                             verbose "$arg_string" 2 
                         # test if we got string end character or add our __arg__ to arg_string if not
 			elif [ $in_arg_string = true  ] ; then
 			    case $__arg__ in
 				# arg string ends, reset arg_string
 				*\"|*\')
-				    # only run sed if we have characters before quote end
+                                    verbose "appending $__arg__ to arg_string:$arg_string"
+                                    # only run sed if we have characters before quote end
 				    if ! [ $__arg__ = \' ] || [ $__arg__ = \" ] ; then
 					__arg__="${arg_string} $(echo "$__arg__" | sed -e 's|\"$||' -e "s|\'$||")"
 				    else
@@ -283,16 +286,21 @@ find_commands()
 				    fi
 				    arg_string=
 				    in_arg_string=false;
+                                    verbose "\$arg_string end"
 				    ;;
                                 # $arg_string doesn't end add __arg__ to it
-				*) arg_string="${arg_string} ${__arg__}" ;;
+				*)
+                                    verbose "appending $__arg__ to arg_string:$arg_string"
+                                    verbose "\$arg_string step end"
+                                    arg_string="${arg_string} ${__arg__}"
+                                    ;;
 			    esac
 			fi
 			# after we parsed arg string set arg<n>
 			if [ ! "$arg_string" ] ; then
                             case $__arg__ in
                                 @*@)
-                                # we got a variable, lets call defined on it
+                                verbose "we got a variable, lets call defined on it"
                                 __arg__=$(echo "$__arg__"| sed 's|@||g')
                                 __arg__=$(defined "$__arg__")
                                 ;;
