@@ -502,7 +502,7 @@ __If() {
     done
     # check result
     if [ $unsuccesfull = true ] ; then
-	verbose "L$line_ued: Condition was not true, remove content till next endif/else, erase_till_endif ist set to true"
+	verbose "Condition was not true, remove content till next endif/else, erase_till_endif ist set to true"
 	if_line=$line # save $line for find_commands 
 	erase_till_endif=true # say find_commands it has to erase fill from $if_line till next found endif
     fi
