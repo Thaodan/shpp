@@ -249,7 +249,7 @@ find_commands()
 		false
 	    fi
 	else
-	    verbose "L$line_ued: Found '$_command' calling corresponding command"
+	    verbose "Found '$_command' calling corresponding command"
 	    case $_command in 
 		#if $_command has space clear  it,  give 
 		# the commands still the ability to   know who they are
@@ -343,7 +343,7 @@ find_commands()
 		    # cause endif was used before if/ifdef/else
 		    endif 
 		    ;; 
-		'break')          verbose 'found break abort parsing'; break ;;
+		'break')          verbose 'Found break abort parsing'; break ;;
 		![a-z]*|rem) : ;; # ignore stubs for ignored functions
 		*)  if echo "$registed_commands" | grep -q $command ; then
 		        $command "$@"
