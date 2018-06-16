@@ -73,9 +73,23 @@ __error() {
     return 1
 } 
 
-verbose() {
+verbose()
+# usage: verbose <msg> [mode]
+# desc: print msg if verbose if defined
+# modes:
+# 0      do none of that (default)
+# 1      don't print new line       
+# 2      don't print line number    
+# 3      do both
+{
     if [ $verbose_output ] ; then
-	echo "${YELLOW}==>${ALL_OFF}${BOLD}${ALL_OFF} $@" >&2
+        if [ ! "${2:-0}" -eq  2 ] ; then
+            printf %s "${YELLOW}==>${ALL_OFF}${BOLD} L${line_ued:-0}: " >&2
+        fi
+        printf %s "${ALL_OFF}$1" >&2
+        if [ ! "${2:-0}" -eq 1  ] && [ ! "${2:-0}" -eq 3 ] ; then
+            printf '\n' >&2
+        fi
     fi
 }
 
