@@ -413,10 +413,12 @@ macro() {
     done
     unset IFS
     [ $__not_found = true ] && error "'$__cleaned_macro' not found"
-    verbose "found macro: '$__cleaned_macro', doing syntax check"
+    verbose "found macro: '$__cleaned_macro', doing syntax check" 1
     if sh -n $__cleaned_macro ; then
+        verbose ", ok" 2
 	. $__cleaned_macro
     else
+        verbose ", error, check sh -n output"
 	error "'$__cleaned_macro' don't passed syntax check, quiting"
     fi  
 }
