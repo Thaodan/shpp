@@ -558,7 +558,7 @@ __Else()
 # description see if
 {
     if [ "$unsuccesfull" = false ] ; then
-	verbose "L$line_ued:Last if was succesfull,\
+	verbose "Last if was succesfull,\
 removing content from this else till next endif" 
 	if_line=$line # save $current_line for find_commands 
 	erase_till_endif=true # say find_commands it has to erase fill from 
