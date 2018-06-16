@@ -524,9 +524,11 @@ __If() {
 defined() {
     while [ ! $# = 0 ] ; do
         if [ -e "$tmp_dir/defines/$1" ] ;  then
+            verbose "$1 was defined"
             if [ -s "$tmp_dir/defines/$1" ] ; then
 	        cat "$tmp_dir/defines/$1"
             else
+                verbose "$1 is empty, returning 1"
                 echo 1
             fi
         else
