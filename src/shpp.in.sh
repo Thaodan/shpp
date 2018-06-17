@@ -703,9 +703,11 @@ include_includes() {
     
     # make backups before do include
     cp "$tmp_dir/self/pc_file.stage2" "$tmp_dir/self/pre_include" 
+    verbose "include_includes: Opening $tmp_dir/self/pc_file.stage2"
     for include in "$tmp_dir"/self/include/files/* ; do
 	include_no=$(( $include_no + 1 ))
 	include_line=$( var self/include/lines/$include_no)
+        line_ued=$include_line  verbose "include $include"
 	# discard stack of one
 	if [ ! $include_stack = 1 ] ; then
            include_line=$(( $include_stack + $include_line))
@@ -722,7 +724,8 @@ include_includes() {
 	   "$tmp_dir/self/pc_file.stage2"
         # add included document-1 to stack
 	include_stack=$(( $include_stack - 1 +  $( wc -l  \
-						   <  "$include" || true)))
+						     <  "$include" || true)))
+        verbose "\$include_stack: $include_stack"
     done
 }
 
