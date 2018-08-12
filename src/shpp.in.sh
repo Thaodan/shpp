@@ -468,6 +468,7 @@ __If() {
   # parse modifers
     local IFS=" "
     while [ ! $__condition_done = true ] ; do
+        verbose "current step is $1"
 	while [ ! $# = 0 ]; do
 	    case $1 in 
 		!) __logic_number=0 ;shift ;;
@@ -491,31 +492,40 @@ __If() {
 	    esac
 	done
 	if [ $( echo "$__condition" | bc ) = $__logic_number ] ; then
-	  # if condition was true and we found && (and) go and parse the rest of condition
-	    if [ $__break_true ] ; then 
+	    # if condition was true and we found && (and) go and parse the rest of condition
+	    if [ $__break_true ] ; then
+                verbose "found and, doing another step first"
 		unset __condition
 		continue
-	    fi
+	    else
+                verbose "$__condition, is true.."
+            fi
 	else
 	    # same for || (or)
 	    if [ $__break_false ] ; then
+                verbose ", found or, doing another step first"
 		unset __condition
 		continue 
 	    else
 		# no chance left that condition can be true, 
 		# everything is lost we're unsuccesfull
-		unsuccesfull=true 
+		unsuccesfull=true
+                verbose "$__condition, is false.."
 	    fi
 	fi
 	__condition_done=true
 	found_if_or_else=true
     done
     # check result
+    verbose "Condition was" 1
     if [ $unsuccesfull = true ] ; then
-	verbose "Condition was not true, remove content till next endif/else, erase_till_endif ist set to true"
+	verbose " not true, remove content till next endif/else, erase_till_endif ist set to true, done" 2
 	if_line=$line # save $line for find_commands 
 	erase_till_endif=true # say find_commands it has to erase fill from $if_line till next found endif
+    else
+        verbose " true, done" 2
     fi
+        
 }
 
 #### if conditions ###
