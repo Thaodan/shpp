@@ -245,11 +245,11 @@ find_commands()
                 for __arg__ in $_command ; do
                     # test if we got/get now arg_string and test our new arg is a string
                     if [ $in_arg_string = false  ] && case $__arg__ in
-                            # ugly but the only way to test for string start eg ' or " 
-                            \'*\'|\"*\") false;; 
-                            \'*|\"*) true;;
-                                *)false ;; 
-                            esac
+                           \'*\'|\"*\") false;; 
+                           \'*|\"*) true;;
+                           *)false ;; 
+                       esac
+                       # ugly but the only way to test for string start eg ' or " 
                     then
                         # if true, open our arg_string
                         in_arg_string=true
