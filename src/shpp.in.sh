@@ -213,13 +213,98 @@ cutt_cur()
 
 ############################################################
 
+
+parse_expr()
+# usage: parse <expr> <obj>
+# description: parse expression
+# returns: sucess state #FIXME
+{
+    local __arg__ arg_counter=0 in_arg_string=false arg_string obj IFS \
+          expr
+
+    expr="$1"
+    shift
+
+    if [ "$1" ] ; then
+        obj="$1"
+        shift
+    else
+        #FIXME
+        obj=self/.anon/$(random)
+        echo "$obj"
+    fi
+
+
+    var "$obj"/raw="$expr"
+
+    case $_command in 
+        #if $_command has space clear  it,  give 
+        # the commands still the ability to   know who they are
+        # and parse it's arguments
+        *\ * ) 	        
+            IFS=" "
+            for __arg__ in $expr; do
+                # test if we got/get now arg_string and test our new arg is a string
+                if [ $in_arg_string = false  ] && case $__arg__ in
+                       \'*\'|\"*\") false;; 
+                       \'*|\"*) true;;
+                       *)false ;; 
+                   esac
+                   # ugly but the only way to test for string start eg ' or " 
+                then
+                    # if true, open our arg_string
+                    in_arg_string=true
+                    arg_string=$(echo "$__arg__" | sed -e 's|^\"||' -e "s|^\'||")
+                    # test if we got string end character or add our __arg__ to arg_string if not
+                elif [ $in_arg_string = true  ] ; then
+                    case $__arg__ in
+                        # arg string ends, reset arg_string
+                        *\"|*\')
+                            # only run sed if we have characters before quote end
+                            if ! [ $__arg__ = \' ] || [ $__arg__ = \" ] ; then
+                                __arg__="${arg_string} $(echo "$__arg__" | sed -e 's|\"$||' -e "s|\'$||")"
+                            else
+                                __arg__="$arg_string"
+                            fi
+                            arg_string=
+                            in_arg_string=false;
+                            ;;
+                        # $arg_string doesn't end add __arg__ to it
+		        *) arg_string="${arg_string} ${__arg__}" ;;
+                    esac
+                fi
+                # after we parsed arg string set arg<n>
+                if [ ! "$arg_string" ] ; then
+                    case $__arg__ in
+                        \"*\"|\'*\')
+                            # strip " or ' from arg at the begin and end
+                            __arg__=$(echo "$__arg__" |sed -e  "s|^[\",']||" -e  "s|[\",']$||")
+                            ;;
+                    esac
+                    # shellcheck disable=SC2086
+                    var "$obj"/args/$arg_counter="$__arg__"
+                    # shellcheck disable=SC2086
+                    if [ $arg_counter -eq 9 ] ; then
+                        break
+                    fi	
+                    arg_counter=$(( arg_counter + 1))
+                fi
+            done
+            arg_counter=0
+  	    ;;
+	# else $_command is already clear
+        *) var "$obj"/args/0="$_command" ;;	       		 
+    esac                                   
+    IFS='
+'
+}
+
 find_commands()
 # usage: find_commands <file>
 # description: parse <file> and execute parsed commands on <file>
 {
     local _command  IFS \
-	counter=0 arg_counter=0 arg_string __arg__ \
-        in_arg_string=false
+	counter=0 
     var self/command/removed_stack=0
     local IFS='
 '
@@ -234,66 +319,10 @@ find_commands()
 
 	# remove tabs and spaces after and before string
 	_command=$( echo "$_command" | sed -e 's/[ \t]*$//' -e 's/^[ \t]*//' -e  "s|^\ ||" -e 's|\ $||') 
-        var self/command/lines/$counter/raw="$_command"
+
         verbose "L$line_ued: Found '$_command' calling corresponding command"
-        case $_command in 
-            #if $_command has space clear  it,  give 
-            # the commands still the ability to   know who they are
-            # and parse it's arguments
-            *\ * ) 	        
-                IFS=" "
-                for __arg__ in $_command ; do
-                    # test if we got/get now arg_string and test our new arg is a string
-                    if [ $in_arg_string = false  ] && case $__arg__ in
-                           \'*\'|\"*\") false;; 
-                           \'*|\"*) true;;
-                           *)false ;; 
-                       esac
-                       # ugly but the only way to test for string start eg ' or " 
-                    then
-                        # if true, open our arg_string
-                        in_arg_string=true
-                        arg_string=$(echo "$__arg__" | sed -e 's|^\"||' -e "s|^\'||")
-                        # test if we got string end character or add our __arg__ to arg_string if not
-                    elif [ $in_arg_string = true  ] ; then
-                        case $__arg__ in
-                            # arg string ends, reset arg_string
-                            *\"|*\')
-                                # only run sed if we have characters before quote end
-                                if ! [ $__arg__ = \' ] || [ $__arg__ = \" ] ; then
-                                    __arg__="${arg_string} $(echo "$__arg__" | sed -e 's|\"$||' -e "s|\'$||")"
-                                else
-                                    __arg__="$arg_string"
-                                fi
-                                arg_string=
-                                in_arg_string=false;
-                                ;;
-                                # $arg_string doesn't end add __arg__ to it
-				*) arg_string="${arg_string} ${__arg__}" ;;
-                        esac
-                    fi
-                    # after we parsed arg string set arg<n>
-                    if [ ! "$arg_string" ] ; then
-                        case $__arg__ in
-                            \"*\"|\'*\')
-                            # strip " or ' from arg at the begin and end
-                            __arg__=$(echo "$__arg__" |sed -e  "s|^[\",']||" -e  "s|[\",']$||")
-                            ;;
-                        esac
-                        var self/command/lines/$counter/args/$arg_counter="$__arg__"      
-                        if [ $arg_counter -eq 9 ] ; then
-                                break
-                        fi	
-                        arg_counter=$(( $arg_counter + 1))
-                 fi
-	         done
-		 arg_counter=0
-  		 ;;
-		# else $_command is already clear
-            *) var self/command/lines/$counter/args/0="$_command" ;;	       		 
-        esac                                   
-        IFS='
-	'
+
+        parse_expr  "$_command" self/command/lines/$counter
     done
 }
 
