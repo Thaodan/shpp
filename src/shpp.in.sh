@@ -299,6 +299,66 @@ parse_expr()
 '
 }
 
+exec_expr()
+{
+    local argv argv_counter=0 arg command
+    local arg0 arg1 arg2 arg3 arg4 arg5 arg6 arg7 arg8
+
+    local obj="$1"
+    shift
+    
+    for argv_counter in $(var "$obj"/args) ; do
+        arg="$(var "$obj/args/$argv_counter")"
+        
+        case $arg in
+            @*@)
+            # we got a variable, lets call defined on it
+            arg=$(echo "$arg"| sed 's|@||g')
+            arg="$(defined "$arg")"
+            ;;
+        esac
+        case $argv_counter in
+            0)
+                command=$arg
+                arg0="$arg"
+                ;;
+            1) arg1="$arg" ;;
+            2) arg2="$arg" ;;
+            3) arg3="$arg" ;;
+            4) arg4="$arg" ;;
+            5) arg5="$arg"  ;;
+            6) arg6="$arg"  ;;
+            7) arg7="$arg"  ;;
+            8) arg8="$arg"  ;;
+            9) break
+               ;;
+        esac
+        argv=$(($argv+1))
+    done
+    argv_counter=0
+    set -- $arg1  $arg2 $arg3 $arg4 $arg5 $arg6 $arg7 $arg8
+    case "$command" in
+	define|macro|include|ifdef|ifndef|error|warning|msg)
+ 	    $command  "$@"
+            ;;                                            
+	'if')           __If       "$@" ;;
+	'else')	        __Else                                                        ;;
+	'endif')	
+	    # just a stub call for syntax error 
+	    # cause endif was used before if/ifdef/else
+	    endif 
+	    ;; 
+	'break')          verbose 'found break abort parsing'; return 1;;
+	![a-z]*|rem) : ;; # ignore stubs for ignored functions
+	*)  if echo "$registed_commands" | grep -q $command ; then
+		$command "$@"
+	    else
+		warning "found '$command',bug or unkown command, raw string is '$(var "$obj"/raw)'"
+	    fi
+	    ;;
+    esac
+}
+
 find_commands()
 # usage: find_commands <file>
 # description: parse <file> and execute parsed commands on <file>
@@ -331,9 +391,6 @@ exec_commands()
 # description: run found commands
 {
     local counter
-    
-    local argv argv_counter=0 arg command
-    local arg0 arg1 arg2 arg3 arg4 arg5 arg6 arg7 arg8
 
     local line line_ued
     
@@ -343,7 +400,7 @@ exec_commands()
     
     for counter in $(var self/command/lines) ; do
         if [ $erase_till_endif = true ] ; then
-            command=$( var self/command/lines/$counter/args/$argv_counter)
+            command=$( var self/command/lines/$counter/args/0)
 	    if [ "$command" = endif ] || [ "$command" = else  ]  ; then
 		cutt_cur "$if_line" "$line" 
                 #\\!debug_if  cp "$1" "$tmp_dir/ifsteps/pc_file.stage.$_find_command_count"
@@ -359,6 +416,7 @@ exec_commands()
             line_ued=$( var self/command/lines/$counter/num )
 	    # current current lines eg. without deleted lines
 	    line=$(($line_ued-$( var self/command/removed_stack)))
+<<<<<<< HEAD
             argv=0
             for argv_counter in $(var self/command/lines/$counter/args) ; do
                 arg="$(var self/command/lines/$counter/args/$argv_counter)"
@@ -420,6 +478,10 @@ exec_commands()
 	    arg6=
 	    arg7=
             arg8=
+=======
+
+            exec_expr self/command/lines/$counter
+>>>>>>> exec_commands(),exec_expr(): move most  executing to exec_expr()
         fi
     done
 }
