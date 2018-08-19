@@ -364,8 +364,8 @@ find_commands()
 # description: parse <file> and execute parsed commands on <file>
 {
     local _command  IFS \
-	counter=0 
-    var self/command/removed_stack=0
+	  counter=0
+
     local IFS='
 '
     for find_commands_line in $( grep -hn \#\\\\\\\\$2 "$1"  | sed 's|:.*||' ); do 
@@ -397,6 +397,8 @@ exec_commands()
     local erase_till_endif=false
     local found_if_or_else=false
     local unsuccesfull
+
+    var self/command/removed_stack=0
     
     for counter in $(var self/command/lines) ; do
         if [ $erase_till_endif = true ] ; then
