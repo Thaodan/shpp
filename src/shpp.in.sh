@@ -75,9 +75,23 @@ __error() {
     return 1
 } 
 
-verbose() {
+verbose()
+# usage: verbose <msg> [mode]
+# desc: print msg if verbose if defined
+# modes:
+# 0      do none of that (default)
+# 1      don't print new line       
+# 2      don't print line number    
+# 3      do both
+{
     if [ $verbose_output ] ; then
-	echo "${YELLOW}==>${ALL_OFF}${BOLD}${ALL_OFF} $@" >&2
+        if [ ! "${2:-0}" -eq  2 ] ; then
+            printf %s "${YELLOW}==>${ALL_OFF}${BOLD} L${line_ued:-0}: " >&2
+        fi
+        printf %s "${ALL_OFF}$1" >&2
+        if [ ! "${2:-0}" -eq 1  ] && [ ! "${2:-0}" -eq 3 ] ; then
+            printf '\n' >&2
+        fi
     fi
 }
 
@@ -237,7 +251,7 @@ find_commands()
 		false
 	    fi
 	else
-	    verbose "L$line_ued: Found '$_command' calling corresponding command"
+	    verbose "Found '$_command' calling corresponding command"
 	    case $_command in 
 		#if $_command has space clear  it,  give 
 		# the commands still the ability to   know who they are
@@ -255,15 +269,18 @@ find_commands()
 				 *)false ;; 
 			     esac
 			then
+                             verbose "\$arg_string begin:" 1              
 			     # if true, open our arg_string
 			     in_arg_string=true
 			     arg_string=$(echo "$__arg__" | sed -e 's|^\"||' -e "s|^\'||")
+                             verbose "$arg_string" 2 
                         # test if we got string end character or add our __arg__ to arg_string if not
 			elif [ $in_arg_string = true  ] ; then
 			    case $__arg__ in
 				# arg string ends, reset arg_string
 				*\"|*\')
-				    # only run sed if we have characters before quote end
+                                    verbose "appending $__arg__ to arg_string:$arg_string"
+                                    # only run sed if we have characters before quote end
 				    if ! [ $__arg__ = \' ] || [ $__arg__ = \" ] ; then
 					__arg__="${arg_string} $(echo "$__arg__" | sed -e 's|\"$||' -e "s|\'$||")"
 				    else
@@ -271,16 +288,21 @@ find_commands()
 				    fi
 				    arg_string=
 				    in_arg_string=false;
+                                    verbose "\$arg_string end"
 				    ;;
                                 # $arg_string doesn't end add __arg__ to it
-				*) arg_string="${arg_string} ${__arg__}" ;;
+				*)
+                                    verbose "appending $__arg__ to arg_string:$arg_string"
+                                    verbose "\$arg_string step end"
+                                    arg_string="${arg_string} ${__arg__}"
+                                    ;;
 			    esac
 			fi
 			# after we parsed arg string set arg<n>
 			if [ ! "$arg_string" ] ; then
                             case $__arg__ in
                                 @*@)
-                                # we got a variable, lets call defined on it
+                                verbose "we got a variable, lets call defined on it"
                                 __arg__=$(echo "$__arg__"| sed 's|@||g')
                                 __arg__=$(defined "$__arg__")
                                 ;;
@@ -331,7 +353,7 @@ find_commands()
 		    # cause endif was used before if/ifdef/else
 		    endif 
 		    ;; 
-		'break')          verbose 'found break abort parsing'; break ;;
+		'break')          verbose 'Found break abort parsing'; break ;;
 		![a-z]*|rem) : ;; # ignore stubs for ignored functions
 		*)  if echo "$registed_commands" | grep -q $command ; then
 		        $command "$@"
@@ -401,10 +423,13 @@ macro() {
     done
     unset IFS
     [ $__not_found = true ] && error "'$__cleaned_macro' not found"
-    verbose "found macro: '$__cleaned_macro', doing syntax check"
+    verbose "found macro: '$__cleaned_macro', doing syntax check" 1
     if sh -n $__cleaned_macro ; then
+        verbose ", ok" 2
 	. $__cleaned_macro
+        verbose "loading macro done"
     else
+        verbose ", error, check sh -n output"
 	error "'$__cleaned_macro' don't passed syntax check, quiting"
     fi  
 }
@@ -446,6 +471,7 @@ __If() {
   # parse modifers
     local IFS=" "
     while [ ! $__condition_done = true ] ; do
+        verbose "current step is $1"
 	while [ ! $# = 0 ]; do
 	    case $1 in 
 		!) __logic_number=0 ;shift ;;
@@ -469,31 +495,40 @@ __If() {
 	    esac
 	done
 	if [ $( echo "$__condition" | bc ) = $__logic_number ] ; then
-	  # if condition was true and we found && (and) go and parse the rest of condition
-	    if [ $__break_true ] ; then 
+	    # if condition was true and we found && (and) go and parse the rest of condition
+	    if [ $__break_true ] ; then
+                verbose "found and, doing another step first"
 		unset __condition
 		continue
-	    fi
+	    else
+                verbose "$__condition, is true.."
+            fi
 	else
 	    # same for || (or)
 	    if [ $__break_false ] ; then
+                verbose ", found or, doing another step first"
 		unset __condition
 		continue 
 	    else
 		# no chance left that condition can be true, 
 		# everything is lost we're unsuccesfull
-		unsuccesfull=true 
+		unsuccesfull=true
+                verbose "$__condition, is false.."
 	    fi
 	fi
 	__condition_done=true
 	found_if_or_else=true
     done
     # check result
+    verbose "Condition was" 1
     if [ $unsuccesfull = true ] ; then
-	verbose "L$line_ued: Condition was not true, remove content till next endif/else, erase_till_endif ist set to true"
+	verbose " not true, remove content till next endif/else, erase_till_endif ist set to true, done" 2
 	if_line=$line # save $line for find_commands 
 	erase_till_endif=true # say find_commands it has to erase fill from $if_line till next found endif
+    else
+        verbose " true, done" 2
     fi
+        
 }
 
 #### if conditions ###
@@ -502,13 +537,15 @@ __If() {
 defined() {
     while [ ! $# = 0 ] ; do
         if [ -e "$tmp_dir/defines/$1" ] ;  then
+            verbose "$1 was defined"
             if [ -s "$tmp_dir/defines/$1" ] ; then
 	        cat "$tmp_dir/defines/$1"
             else
+                verbose "$1 is empty, returning 1"
                 echo 1
             fi
         else
-	    verbose "L$line_ued: $1 was not defined" 
+	    verbose "$1 was not defined" 
 	    echo 0
         fi
         shift
@@ -546,7 +583,7 @@ __Else()
 # description see if
 {
     if [ "$unsuccesfull" = false ] ; then
-	verbose "L$line_ued:Last if was succesfull,\
+	verbose "Last if was succesfull,\
 removing content from this else till next endif" 
 	if_line=$line # save $current_line for find_commands 
 	erase_till_endif=true # say find_commands it has to erase fill from 
@@ -584,8 +621,8 @@ include()
 	    *) __cleaned_include=$1; shift;;
 	esac
     done
-    verbose "L$line_ued: Opened '$__cleaned_include' to parse,\
-call a new instance ${parser+of} ${parser}to process file"
+    verbose "Opened '$__cleaned_include' to parse, \
+call a new instance${__parser+ of }${__parser} to process file"
     case $__cleaned_include in
 	\<*\>) 
            __cleaned_include=$(echo "$__cleaned_include" | \
@@ -649,6 +686,7 @@ define()
 #       if var=content mode is used $1 is used in definition, than shift
 #       if var content mode is used $1 and $1 is used in definition, than shift
 {
+   verbose "defining $1${2+=$2}"
    while [ ! $# = 0 ] ; do
        # use internal var function with defines as root space
        # NOTE: settings arrays like this curenntly not supported:
@@ -679,9 +717,11 @@ include_includes() {
     
     # make backups before do include
     cp "$tmp_dir/self/pc_file.stage2" "$tmp_dir/self/pre_include" 
+    verbose "include_includes: Opening $tmp_dir/self/pc_file.stage2"
     for include in "$tmp_dir"/self/include/files/* ; do
 	include_no=$(( $include_no + 1 ))
 	include_line=$( var self/include/lines/$include_no)
+        line_ued=$include_line  verbose "include $include"
 	# discard stack of one
 	if [ ! $include_stack = 1 ] ; then
            include_line=$(( $include_stack + $include_line))
@@ -698,12 +738,13 @@ include_includes() {
 	   "$tmp_dir/self/pc_file.stage2"
         # add included document-1 to stack
 	include_stack=$(( $include_stack - 1 +  $( wc -l  \
-						   <  "$include" || true)))
+						     <  "$include" || true)))
+        verbose "\$include_stack: $include_stack"
     done
 }
 
 replace_vars() {
-    verbose replace_vars "Opening '$2'"
+    verbose "replace_vars: Opening '$2'"
     local replace_var replace_var_content old_ifs IFS shifted_one
     [ ! -z "$depth" ] && shifted_one=${1#*/}/
     for replace_var in $( var "$1" ) ; do
