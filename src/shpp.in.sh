@@ -302,7 +302,8 @@ parse_expr()
 exec_expr()
 {
     local argv argv_counter=0 arg command
-    local arg0 arg1 arg2 arg3 arg4 arg5 arg6 arg7 arg8
+    local  arg0 arg1 arg2 arg3 arg4 arg5 arg6 arg7 arg8
+
 
     local obj="$1"
     shift
@@ -323,20 +324,20 @@ exec_expr()
                 arg0="$arg"
                 ;;
             1) arg1="$arg" ;;
-            2) arg2="$arg" ;;
-            3) arg3="$arg" ;;
-            4) arg4="$arg" ;;
-            5) arg5="$arg"  ;;
-            6) arg6="$arg"  ;;
-            7) arg7="$arg"  ;;
-            8) arg8="$arg"  ;;
+            2)  arg2="$arg" ;;
+            3)  arg3="$arg" ;;
+            4)  arg4="$arg" ;;
+            5)  arg5="$arg"  ;;
+            6)  arg6="$arg"  ;;
+            7)  arg7="$arg"  ;;
+            8)  arg8="$arg"  ;;
             9) break
                ;;
         esac
         argv=$(($argv+1))
     done
     argv_counter=0
-    set -- $arg1  $arg2 $arg3 $arg4 $arg5 $arg6 $arg7 $arg8
+    set -- ${arg1+"$arg1"}  ${arg2+"$arg2"} ${arg3+"$arg3"} ${arg4+"$arg4"} ${arg5+"$arg5"} ${arg6+"$arg6"} ${arg7+"$arg7"} ${arg8+"$arg8"}
     case "$command" in
 	define|macro|include|ifdef|ifndef|error|warning|msg)
  	    $command  "$@"
