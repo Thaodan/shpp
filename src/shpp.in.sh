@@ -398,7 +398,12 @@ exec_commands()
     var self/command/removed_stack=0
     
     for counter in $(var self/command/lines) ; do
-       
+
+        # current line with removed deleted lines
+        line_ued=$( var self/command/lines/$counter/num )
+	# current current lines eg. without deleted lines
+	line=$(($line_ued-$( var self/command/removed_stack)))
+        
         if [ $erase_till_endif = true ] ; then
             command=$( var self/command/lines/$counter/args/0)
 	    if [ "$command" = endif ] || [ "$command" = else  ]  ; then
@@ -412,10 +417,6 @@ exec_commands()
 		false
 	    fi
         else
-            # current line with removed deleted lines
-            line_ued=$( var self/command/lines/$counter/num )
-	    # current current lines eg. without deleted lines
-	    line=$(($line_ued-$( var self/command/removed_stack)))
 
             exec_expr self/command/lines/$counter
        fi
