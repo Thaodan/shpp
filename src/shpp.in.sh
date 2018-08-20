@@ -684,6 +684,7 @@ define()
 #       if var=content mode is used $1 is used in definition, than shift
 #       if var content mode is used $1 and $1 is used in definition, than shift
 {
+   verbose "defining $1${2+=$2}"
    while [ ! $# = 0 ] ; do
        # use internal var function with defines as root space
        # NOTE: settings arrays like this curenntly not supported:
