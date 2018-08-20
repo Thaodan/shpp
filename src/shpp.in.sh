@@ -380,7 +380,7 @@ find_commands()
 	# remove tabs and spaces after and before string
 	_command=$( echo "$_command" | sed -e 's/[ \t]*$//' -e 's/^[ \t]*//' -e  "s|^\ ||" -e 's|\ $||') 
 
-        verbose "L$line_ued: Found '$_command' calling corresponding command"
+        verbose "Found '$_command' calling corresponding command"
 
         parse_expr  "$_command" self/command/lines/$counter
     done
