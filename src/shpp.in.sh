@@ -136,11 +136,7 @@ var()
 	    ;;	
 	*) 
 	    if [ -d "$tmp_dir/$1" ] ; then
-                local dir_content
-                for dir_content in "$tmp_dir/$1/"*
-                do
-                    echo "${dir_content##*/}"
-                done
+                ls -1v "$tmp_dir/$1"
 	    elif [ -e "$tmp_dir/$1" ] ; then 
 		cat "$tmp_dir/$1"
 	    else
@@ -402,6 +398,7 @@ exec_commands()
     var self/command/removed_stack=0
     
     for counter in $(var self/command/lines) ; do
+       
         if [ $erase_till_endif = true ] ; then
             command=$( var self/command/lines/$counter/args/0)
 	    if [ "$command" = endif ] || [ "$command" = else  ]  ; then
