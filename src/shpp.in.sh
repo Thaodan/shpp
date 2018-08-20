@@ -418,73 +418,9 @@ exec_commands()
             line_ued=$( var self/command/lines/$counter/num )
 	    # current current lines eg. without deleted lines
 	    line=$(($line_ued-$( var self/command/removed_stack)))
-<<<<<<< HEAD
-            argv=0
-            for argv_counter in $(var self/command/lines/$counter/args) ; do
-                arg="$(var self/command/lines/$counter/args/$argv_counter)"
-
-                case $arg in
-                         @*@)
-                         # we got a variable, lets call defined on it
-                         arg=$(echo "$arg"| sed 's|@||g')
-                         arg="$(defined "$arg")"
-                         ;;
-                esac
-                case $argv_counter in
-                    0)
-                        command=$arg
-                        arg0="$arg"
-                        ;;
-                    1) arg1="$arg" ;;
-                    2) arg2="$arg" ;;
-                    3) arg3="$arg" ;;
-                    4) arg4="$arg" ;;
-                    5) arg5="$arg"  ;;
-                    6) arg6="$arg"  ;;
-                    7) arg7="$arg"  ;;
-                    8) arg8="$arg"  ;;
-                    9) break
-                       ;;
-                esac
-                argv=$(($argv+1))
-            done
-            argv_counter=0
-            IFS=
-	    set -- $arg1  $arg2 $arg3 $arg4 $arg5 $arg6 $arg7 $arg8
-            unset IFS
-	    case "$command" in
-		define|macro|include|ifdef|ifndef|error|warning|msg)
- 	            $command  "$@"
-                    ;;                                            
-		'if')           __If       "$@" ;;
-		'else')	        __Else                                                        ;;
-		'endif')	
-		    # just a stub call for syntax error 
-		    # cause endif was used before if/ifdef/else
-		    endif 
-		    ;; 
-		'break')          verbose 'Found break abort parsing'; break ;;
-		![a-z]*|rem) : ;; # ignore stubs for ignored functions
-		*)  if echo "$registed_commands" | grep -q $command ; then
-		        $command "$@"
-		    else
-		        warning "found '$command',bug or unkown command, raw string is '$(var self/command/lines/$counter/raw)'"
-		    fi
-		    ;;
-            esac
-            arg1=
-	    arg2=
-	    arg3=
-	    arg4=
-	    arg5=
-	    arg6=
-	    arg7=
-            arg8=
-=======
 
             exec_expr self/command/lines/$counter
->>>>>>> exec_commands(),exec_expr(): move most  executing to exec_expr()
-        fi
+       fi
     done
 }
  
