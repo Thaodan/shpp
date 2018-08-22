@@ -978,7 +978,7 @@ if [ ! $# = 0 ] ; then
 		    # use only colored out if enabled and 
 		    # if output goes to the terminal
 		    if  [ $USE_COLOR ] && [ ! $USE_COLOR = n ] || \
-			( [ $FORCE_COLOR ] && [ ! $FORCE_COLOR = n ]  ) ; then 
+			 [ $FORCE_COLOR ] && [ ! $FORCE_COLOR = n ]  ; then 
 			
  			if tput setaf 0 > /dev/null 2>&1 ; then
 			    ALL_OFF="$(tput sgr0)"
