@@ -800,9 +800,9 @@ replace_vars() {
 	    local depth=1
 	    replace_vars "$1/$replace_var" "$2"
 	else
-	    replace_var_content=$(var $1/$replace_var)
+	    replace_var_content=$(var "$1/$replace_var")
 	    verbose "replacing @${shifted_one}${replace_var}@ with $replace_var_content"
-	    sed -ie "s|@${shifted_one}${replace_var}@|$replace_var_content|g" $2|| \
+	    sed -ie "s|@${shifted_one}${replace_var}@|$replace_var_content|g" "$2"|| \
 		error "replace_var: sed quit with $?"
 	fi
     done 
