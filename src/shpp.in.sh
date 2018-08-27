@@ -792,7 +792,7 @@ include_includes() {
 
 replace_vars() {
     verbose "replace_vars: Opening '$2'"
-    local replace_var replace_var_content old_ifs IFS shifted_one
+    local replace_var replace_var_content IFS shifted_one
     [ ! -z "$depth" ] && shifted_one=${1#*/}/
     for replace_var in $( var "$1" ) ; do
 	# if we got a var that contains other vars run us again
