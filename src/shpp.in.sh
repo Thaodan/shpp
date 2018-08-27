@@ -648,7 +648,7 @@ include()
 # take: just take file and don't copy it before parsing
 {
     
-    local  __include_arg  __parser __parser_args __cleaned_include \
+    local  __parser __parser_args __cleaned_include \
 	__outputfile__cleaned_include  __include_space \
 	current_include_no __not_found=true  
 
