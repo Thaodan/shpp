@@ -757,10 +757,7 @@ write_shortifdefs() { # write #\\! flags to $2
 }
 
 include_includes() { 
-    local include_lines \
-	include_line   __tmp_include \
-	__realy_cleaned_include __include_space \
-	include_no=0  include_stack=0
+    local include_line include_no=0 include_stack=0 include
     
     # make backups before do include
     cp "$tmp_dir/self/pc_file.stage2" "$tmp_dir/self/pre_include" 
