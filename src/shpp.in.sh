@@ -203,7 +203,7 @@ cutt_cur()
     # save removed lines (difference between range begin and range end + 1)
     count + $(( $2 - $1  + 1)) \
 	  self/command/removed_stack
-    cutt $1 $2 "$tmp_dir"/self/pc_file.stage1 $3
+    cutt $1 $2 "$tmp_dir"/self/file $3
 }
 
 
@@ -722,7 +722,7 @@ call a new instance${__parser+ of }${__parser} to process file"
     # FIXME dirty workaround if we running after find_commands()
     # cause $line is set local in it
     if [ ! $line ] ; then
-	var self/include/lines/$current_include_no=$(wc -l < "$tmp_dir"/self/pc_file.stage1)
+	var self/include/lines/$current_include_no=$(wc -l < "$tmp_dir"/self/file)
     else
 	var self/include/lines/$current_include_no="$line" 
     fi
@@ -763,8 +763,8 @@ include_includes() {
     local include_line include_no=0 include_stack=0 include
     
     # make backups before do include
-    cp "$tmp_dir/self/pc_file.stage2" "$tmp_dir/self/pre_include" 
-    verbose "include_includes: Opening $tmp_dir/self/pc_file.stage2"
+    cp "$tmp_dir/self/file" "$tmp_dir/self/pre_include" 
+    verbose "include_includes: Opening $tmp_dir/self/file"
     for include in "$tmp_dir"/self/include/files/* ; do
 	include_no=$(( $include_no + 1 ))
 	include_line=$( var self/include/lines/$include_no)
@@ -782,7 +782,7 @@ include_includes() {
 	cat "$tmp_dir/self/include/cut_source_end" >> \
 		"$tmp_dir/self/include/cut_source"
 	cp "$tmp_dir/self/include/cut_source" \
-	   "$tmp_dir/self/pc_file.stage2"
+	   "$tmp_dir/self/file"
         # add included document-1 to stack
 	include_stack=$(( $include_stack - 1 +  $( wc -l  \
 						     <  "$include" || true)))
@@ -875,13 +875,12 @@ stub_main()    {
         echo "$tmp_dir" > "$tmp_dir"/self/clean_files
     fi
     # make a copy for our self
-    cp "$1" "$tmp_dir/self/pc_file.stage1"
-    find_commands "$tmp_dir/self/pc_file.stage1"
+    cp "$1" "$tmp_dir/self/file"
+    find_commands "$tmp_dir/self/file"
     exec_commands 
-    write_shortifdefs "$tmp_dir/self/pc_file.stage1"
-    cp "$tmp_dir/self/pc_file.stage1" "$tmp_dir/self/pc_file.stage2"
+    write_shortifdefs "$tmp_dir/self/file"
     test -e "$tmp_dir/defines"  && \
-	replace_vars "defines"  "$tmp_dir/self/pc_file.stage2"
+	replace_vars "defines"  "$tmp_dir/self/file"
     # do runners only in main instance
     if [ $IID = 1 ] ; then
 	IFS=" "
@@ -891,9 +890,9 @@ stub_main()    {
 	unset IFS
     fi
     # finaly include our $includes if $includes is not empty
-    [ -e  "$tmp_dir/self/include/files"  ] && include_includes "$tmp_dir/self/pc_file.stage2"
-    clear_flags "$tmp_dir/self/pc_file.stage2"
-    cp "$tmp_dir/self/pc_file.stage2" "$2"
+    [ -e  "$tmp_dir/self/include/files"  ] && include_includes "$tmp_dir/self/file"
+    clear_flags "$tmp_dir/self/file"
+    cp "$tmp_dir/self/file" "$2"
     instance_leave
 }
 
