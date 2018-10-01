@@ -813,15 +813,13 @@ clear_flags() { # cleas #\\ flags in
 }
 
 instance_create()
-# usage: instance_create 
+# usage: instance_create [<IID>]
 # description:  create_instance
-#               if $IID is not set, set IID from
+#               if $1 is not set, set IID from
 #               calling random
 # example: instance_create
 {
-    if [ ! $IID ] ; then
-        IID=$(random)
-    fi
+    IID=$IID${IID+/}${1:-$(random)}
     mkdir -p "$tmp_dir"/$IID
     echo "$tmp_dir/$IID" > "$tmp_dir"/$IID/clean_files 
 }
@@ -864,13 +862,13 @@ stub_main()    {
     if [ ! -e "$tmp_dir"/self ] ; then
 	# init InstanceID to use if we can't use $tmp_dir/self
 	# if we are the first instance our id is 1
-	IID=1	
+	instance_create 1	
 	#echo "$tmp_dir" > "$tmp_dir"/self/clean_files 
-    # else gen rnd var and move old self to new instance and create new self
+        # else gen rnd var and move old self to new instance and create new self
     else
-        IID=$(random)
+        instance_create
     fi
-    instance_create
+
     instance_enter
     if [ $IID = 1 ] ; then
         # add our whole $tmp_dir to our clean_files list
