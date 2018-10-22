@@ -213,6 +213,27 @@ paste()
     sed -e "${3}r $2" -i $1
 }
 
+push()
+# usage: push <target> <input> <line>
+# description: push file into file and update stack
+{
+    local COUNTER \
+          target_input_obj\
+          target_input_len
+
+
+    touch "$tmp_dir"/"$1"/counter 
+    count + 1 "$1"/counter 
+    target_input_obj="$1"/intro/$(var "$1/counter")
+    
+    target_input_len=$(wc -l < "$2")
+    var "$target_input_obj"/len=$target_input_len
+    var "$target_input_obj"/line="$3"
+    count + $(($target_input_len)) "$1"/stack
+    paste "$tmp_dir"/"$1"/file "$2" "$3"
+}
+
+
 ############################################################
 
 
