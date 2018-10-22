@@ -206,6 +206,12 @@ cutt_cur()
     cutt $1 $2 "$tmp_dir"/self/file $3
 }
 
+paste()
+# usage: paste <target> <input> <line>
+# description: paste input into target at line
+{
+    sed -e "${3}r $2" -i $1
+}
 
 ############################################################
 
