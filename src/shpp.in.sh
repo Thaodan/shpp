@@ -233,6 +233,15 @@ push()
     paste "$tmp_dir"/"$1"/file "$2" "$3"
 }
 
+pull_cur()
+{
+    pull self/command "$@"
+}
+
+push_cur()
+{
+    push self/command "$@"
+}
 
 ############################################################
 
