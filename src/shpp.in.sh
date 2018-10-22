@@ -196,21 +196,21 @@ cutt()
     sed -e "$1,$2 d" -i $3
 }
 
-cutt_cur()
-# usage: cut_cur <range begin> <range end> [t]
-# description: just like cut but for current file
-{
-    # save removed lines (difference between range begin and range end + 1)
-    count + $(( $2 - $1  + 1)) \
-	  self/command/removed_stack
-    cutt $1 $2 "$tmp_dir"/self/file $3
-}
-
 paste()
 # usage: paste <target> <input> <line>
 # description: paste input into target at line
 {
     sed -e "${3}r $2" -i $1
+}
+
+pull()
+# usage: paste <target> <range begin> <range end> [t]
+# description: pull <range begin> to <range end> from <target> and update stack
+{
+    # save removed lines (difference between range begin and range end + 1)
+    count + $(( $2 - $3 - 1 )) \
+	  "$1"/stack
+    cutt $2 $3 "$tmp_dir"/"$1"/file $4
 }
 
 push()
