@@ -296,6 +296,9 @@ parse_expr()
 }
 
 exec_expr()
+# usage: exec_expr <obj>
+# description: execute expression in <obj>
+# returns: nothing
 {
     local argv argv_counter=0 arg command
     local  arg0 arg1 arg2 arg3 arg4 arg5 arg6 arg7 arg8
