@@ -787,37 +787,6 @@ write_shortifdefs() { # write #\\! flags to $2
     done
 }
 
-include_includes() { 
-    local include_line include_no=0 include_stack=0 include
-    
-    # make backups before do include
-    cp "$tmp_dir/self/command/file" "$tmp_dir/self/pre_include" 
-    verbose "include_includes: Opening $tmp_dir/self/file"
-    for include in "$tmp_dir"/self/include/files/* ; do
-	include_no=$(( $include_no + 1 ))
-	include_line=$( var self/include/lines/$include_no)
-        line_ued=$include_line  verbose "include $include"
-	# discard stack of one
-	if [ ! $include_stack = 1 ] ; then
-           include_line=$(( $include_stack + $include_line))
-	fi
-	sed "$include_line,$ d" $1 >  \
-	    "$tmp_dir/self/include/cut_source"
-	sed "1,$include_line d" $1 > \
-	    "$tmp_dir/self/include/cut_source_end"
-	cat "$include" >> \
-		"$tmp_dir/self/include/cut_source"
-	cat "$tmp_dir/self/include/cut_source_end" >> \
-		"$tmp_dir/self/include/cut_source"
-	cp "$tmp_dir/self/include/cut_source" \
-	   "$tmp_dir/self/file"
-        # add included document-1 to stack
-	include_stack=$(( $include_stack - 1 +  $( wc -l  \
-						     <  "$include" || true)))
-        verbose "\$include_stack: $include_stack"
-    done
-}
-
 replace_vars() {
     verbose "replace_vars: Opening '$2'"
     local replace_var replace_var_content IFS shifted_one
