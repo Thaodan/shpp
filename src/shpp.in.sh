@@ -689,11 +689,10 @@ include()
     
     local  __parser __parser_args __cleaned_include \
 	__outputfile__cleaned_include  __include_space \
-	current_include_no __not_found=true  
+	__not_found=true  
 
 
-    mkdir -p $tmp_dir/self/include/files
-    touch $tmp_dir/self/include/counter
+    mkdir -p "$tmp_dir"/self/include/files
     while [ ! $# = 0 ] ; do
 	case $1 in  
 	    noparse)  __parser=noparse; shift;;
@@ -734,34 +733,27 @@ call a new instance${__parser+ of }${__parser} to process file"
 	    ;;
     esac
     [ $__not_found = true ] && error "'$__cleaned_include' not found"
-    count++ self/include/counter
-    current_include_no=$( var self/include/counter )
     __outputfile__cleaned_include=$( echo "$__cleaned_include" | \
-	sed -e 's|\/|_|g' -e 's|\.|_|g')
+	sed -e 's|\/|_|g' -e 's|\.|_|g')$(random)
     case ${__parser:-SELF} in  
 	shpp)  $shpp   --tmp $tmp_dir/slaves --stdout \
 	    "$__cleaned_include"> \
-            "$tmp_dir/$IID/include/files/${current_include_no}${__outputfile__cleaned_include}"  || \
+            "$tmp_dir/$IID/include/files/${__outputfile__cleaned_include}"  || \
 	     error "spawned copy of ourself: $appname returned $?, quiting" ;; 
 	take)
-	    mv "$__cleaned_include" "$tmp_dir/$IID/include/files/${current_include_no}${__outputfile__cleaned_include}"
+	    mv "$__cleaned_include" "$tmp_dir/$IID/include/files/${__outputfile__cleaned_include}"
 	    ;;
 	noparse)
 	    ln -s  "$__cleaned_include" \
-	    "$tmp_dir/$IID/include/files/${current_include_no}${__outputfile__cleaned_include}"
+	    "$tmp_dir/$IID/include/files/${__outputfile__cleaned_include}"
 	    # no $parser is used
 	    ;;
 	SELF)
-	    stub_main $__cleaned_include $tmp_dir/$IID/include/files/${current_include_no}${__outputfile__cleaned_include} ;;
+	    stub_main $__cleaned_include "$tmp_dir"/$IID/include/files/${__outputfile__cleaned_include} ;;
 	*) $__parser $__parser_args ;; # use $parser with $parser_args 
     esac
-    # FIXME dirty workaround if we running after find_commands()
-    # cause $line is set local in it
-    if [ ! $line ] ; then
-	var self/include/lines/$current_include_no=$(wc -l < "$tmp_dir"/self/command/file)
-    else
-	var self/include/lines/$current_include_no="$line" 
-    fi
+
+    push_cur "$tmp_dir/$IID/include/files/$__outputfile__cleaned_include" "$line"
 }
 
 define()
@@ -926,8 +918,6 @@ stub_main()    {
 	done
 	unset IFS
     fi
-    # finaly include our $includes if $includes is not empty
-    [ -e  "$tmp_dir/self/include/files"  ] && include_includes "$tmp_dir/self/command/file"
     clear_flags "$tmp_dir/self/command/file"
     cp "$tmp_dir/self/command/file" "$2"
     instance_leave
