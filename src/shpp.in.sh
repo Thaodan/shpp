@@ -454,6 +454,8 @@ exec_commands()
     local found_if_or_else=false
     local unsuccesfull
 
+    debug mode=exec
+
     var self/command/stack=0
     
     for counter in $(var self/command/lines) ; do
@@ -480,6 +482,8 @@ exec_commands()
             exec_expr self/command/lines/$counter
        fi
     done
+
+    debug mode=end
 }
  
 ### commands ### 
