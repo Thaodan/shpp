@@ -938,7 +938,12 @@ $appname usage:
                    -M<path>             same just for macros
   --tmp=<tmp_dir>			set temp directory
   --keep 				don't delete tmp files after running
-  --debug                               enable debug info
+  --debug[=<mode>]                        enable debug info according to <mode>
+
+debug modes:
+  parse - only show debug info from parsing
+  exec  - only show debug info from the execution of commands
+  all   - show all debug info (default)
 HELP
 }
 
