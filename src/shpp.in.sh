@@ -418,6 +418,8 @@ find_commands()
     local _command  IFS \
 	  counter=0
 
+    debug mode=parse
+
     local IFS='
 '
     for find_commands_line in $( grep -hn \#\\\\\\\\$2 "$1"  | sed 's|:.*||' ); do 
@@ -436,6 +438,8 @@ find_commands()
 
         parse_expr  "$_command" self/command/lines/$counter
     done
+
+    debug mode=end
 }
 
 exec_commands()
@@ -942,7 +946,7 @@ if [ ! $# = 0 ] ; then
 	    -V|--version)	echo $SHPP_VER:$SHPP_REV  ; shift ;;
 	    --*|*)
 		optspec=o:O:Cc:D:I:M:v # b:dp #-: # short options
-		optspec_long=output:,option:,config:,color,,legacy,stdout,critical-warning,tmp:,stderr:,keep,debug,verbose,errexit,\*=\* #,binpath:,desktop,prefix # long options
+		optspec_long=output:,option:,config:,color,,legacy,stdout,critical-warning,tmp:,stderr:,keep,debug::,verbose,errexit,\*=\* #,binpath:,desktop,prefix # long options
 		PROCESSED_OPTSPEC=$( getopt -qo $optspec --long $optspec_long \
 		    -n $appname -- "$@" ) || __error error "Wrong option or no parameter for option given!" ||  exit 1 
 		eval set -- "$PROCESSED_OPTSPEC"; 
