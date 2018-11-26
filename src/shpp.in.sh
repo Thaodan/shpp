@@ -958,9 +958,18 @@ if [ ! $# = 0 ] ; then
 		    case $1 in 
 			# config stuff
 			--debug)
-			    set -o verbose
-			    set -o xtrace
-			    shift
+                            case $2 in
+                                exec|parse)
+                                    debug_mode=$2
+                                    shift 2
+                                    ;;
+                                all|*)
+                                    debug_mode=all
+			            set -o verbose
+			            set -o xtrace
+                                    shift
+                                    ;;
+                            esac
 			    ;;
 			--verbose|-v) verbose_output=true ; shift  ;;
 			--errexit) set -o errexit ; shift ;;
