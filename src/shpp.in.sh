@@ -95,6 +95,22 @@ verbose()
     fi
 }
 
+debug()
+{
+    if [ ! "$debug_mode" = all ] ; then
+        case $1 in
+            "mode=$debug_mode")
+                set -o xtrace
+                set -o verbose
+                ;;
+            "mode=end")
+               set +o xtrace
+               set +o verbose
+                ;;
+        esac
+    fi
+}
+
 die() {
     verbose 'got signal to die, dieing'
     IID=1 cleanup
