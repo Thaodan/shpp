@@ -95,6 +95,22 @@ verbose()
     fi
 }
 
+debug()
+{
+    if [ ! "$debug_mode" = all ] ; then
+        case $1 in
+            "mode=$debug_mode")
+                set -o xtrace
+                set -o verbose
+                ;;
+            "mode=end")
+               set +o xtrace
+               set +o verbose
+                ;;
+        esac
+    fi
+}
+
 die() {
     verbose 'got signal to die, dieing'
     IID=1 cleanup
@@ -402,6 +418,8 @@ find_commands()
     local _command  IFS \
 	  counter=0
 
+    debug mode=parse
+
     local IFS='
 '
     for find_commands_line in $( grep -hn \#\\\\\\\\$2 "$1"  | sed 's|:.*||' ); do 
@@ -420,6 +438,8 @@ find_commands()
 
         parse_expr  "$_command" self/command/lines/$counter
     done
+
+    debug mode=end
 }
 
 exec_commands()
@@ -433,6 +453,8 @@ exec_commands()
     local erase_till_endif=false
     local found_if_or_else=false
     local unsuccesfull
+
+    debug mode=exec
 
     var self/command/stack=0
     
@@ -460,6 +482,8 @@ exec_commands()
             exec_expr self/command/lines/$counter
        fi
     done
+
+    debug mode=end
 }
  
 ### commands ### 
@@ -914,6 +938,12 @@ $appname usage:
                    -M<path>             same just for macros
   --tmp=<tmp_dir>			set temp directory
   --keep 				don't delete tmp files after running
+  --debug[=<mode>]                        enable debug info according to <mode>
+
+debug modes:
+  parse - only show debug info from parsing
+  exec  - only show debug info from the execution of commands
+  all   - show all debug info (default)
 HELP
 }
 
@@ -925,7 +955,7 @@ if [ ! $# = 0 ] ; then
 	    -V|--version)	echo $SHPP_VER:$SHPP_REV  ; shift ;;
 	    --*|*)
 		optspec=o:O:Cc:D:I:M:v # b:dp #-: # short options
-		optspec_long=output:,option:,config:,color,,legacy,stdout,critical-warning,tmp:,stderr:,keep,debug,verbose,errexit,\*=\* #,binpath:,desktop,prefix # long options
+		optspec_long=output:,option:,config:,color,,legacy,stdout,critical-warning,tmp:,stderr:,keep,debug::,verbose,errexit,\*=\* #,binpath:,desktop,prefix # long options
 		PROCESSED_OPTSPEC=$( getopt -qo $optspec --long $optspec_long \
 		    -n $appname -- "$@" ) || __error error "Wrong option or no parameter for option given!" ||  exit 1 
 		eval set -- "$PROCESSED_OPTSPEC"; 
@@ -933,9 +963,18 @@ if [ ! $# = 0 ] ; then
 		    case $1 in 
 			# config stuff
 			--debug)
-			    set -o verbose
-			    set -o xtrace
-			    shift
+                            case $2 in
+                                exec|parse)
+                                    debug_mode=$2
+                                    shift 2
+                                    ;;
+                                all|*)
+                                    debug_mode=all
+			            set -o verbose
+			            set -o xtrace
+                                    shift
+                                    ;;
+                            esac
 			    ;;
 			--verbose|-v) verbose_output=true ; shift  ;;
 			--errexit) set -o errexit ; shift ;;
