@@ -389,6 +389,7 @@ exec_expr()
     done
     argv_counter=0
     set -- ${arg1+"$arg1"}  ${arg2+"$arg2"} ${arg3+"$arg3"} ${arg4+"$arg4"} ${arg5+"$arg5"} ${arg6+"$arg6"} ${arg7+"$arg7"} ${arg8+"$arg8"}
+    verbose "Found '$command' calling corresponding command"
     case "$command" in
 	define|macro|include|ifdef|ifndef|error|warning|msg)
  	    $command  "$@"
@@ -434,7 +435,6 @@ find_commands()
 	# remove tabs and spaces after and before string
 	_command=$( echo "$_command" | sed -e 's/[ \t]*$//' -e 's/^[ \t]*//' -e  "s|^\ ||" -e 's|\ $||') 
 
-        verbose "Found '$_command' calling corresponding command"
 
         parse_expr  "$_command" self/command/lines/$counter
     done
