@@ -347,6 +347,32 @@ parse_expr()
 '
 }
 
+check_expr()
+# usage: check_expr <obj>
+# description: check expression <obj>
+# returns: check stat
+{
+    local obj="$1"
+    shift
+
+    local COUNTER
+    local command=$(var "$obj"/args/0)
+    local wanteds=self/command/check/wanteds
+    local wanteds_counter_raw=self/command/wanteds/counter
+    count++ $wanteds_counter_raw
+    local wanted_counter=$(var $wanteds_counter_raw)
+    
+    case $command in
+        "if"|ifdef|ifndef)
+              var $wanteds/$wanted_counter=endif
+              ;;
+        endif)
+            var $wanteds/$wanted_counter=if
+            ;;
+    esac
+    
+}
+
 exec_expr()
 # usage: exec_expr <obj>
 # description: execute expression in <obj>
@@ -437,6 +463,8 @@ find_commands()
         verbose "Found '$_command' calling corresponding command"
 
         parse_expr  "$_command" self/command/lines/$counter
+
+        check_expr  self/command/lines/$counter
     done
 
     debug mode=end
