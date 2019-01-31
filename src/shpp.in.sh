@@ -972,7 +972,7 @@ if [ ! $# = 0 ] ; then
                                     debug_mode=all
 			            set -o verbose
 			            set -o xtrace
-                                    shift
+                                    shift 2
                                     ;;
                             esac
 			    ;;
