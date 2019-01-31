@@ -995,7 +995,7 @@ if [ ! $# = 0 ] ; then
 			--keep) keep=true; shift ;; # keep temp files
 			# all warnings are critical
 			--critical-warning) WARNING_IS_ERROR=true ; shift ;; 
-			-D) define $2; shift 2 ;;
+			-D) define "$2"; shift 2 ;;
 			-I) INCLUDE_SPACES=$2:$INCLUDE_SPACES; shift 2;;
 			-M) MACRO_SPACES=$2:$MACRO_SPACES; shift 2;;
 			-o|--output) target_name="$2"; shift 2 ;;
