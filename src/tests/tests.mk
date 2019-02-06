@@ -14,5 +14,7 @@ $(TESTFILES): $(TARGET) $(RESULT)
 
 $(TARGET): 
 	$(MAKE) -C .. 
+clean:
+	rm -rf $(RESULT)
 
 .PHONY: clean $(TESTFILES) $(TARGET)
