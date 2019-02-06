@@ -18,6 +18,6 @@ install: $(ORG_FILES:.org=.1)
 	$(INSTALL) -m644 $(^) $(mandir)/man1
 
 clean:
-	rm shpp.1
+	rm -f shpp.1
 
 .PHONY: clean install
