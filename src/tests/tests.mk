@@ -10,7 +10,7 @@ $(RESULT):
 	mkdir $(RESULT)
 $(TESTFILES): $(TARGET) $(RESULT)
 	$(TARGET_SHELL) $(TARGET) $(TARGET_ARGS) $(@)  > \
-	$(RESULT)/$(@)
+	$(RESULT)/$(@) 2>&1
 
 $(TARGET): 
 	$(MAKE) -C .. 
