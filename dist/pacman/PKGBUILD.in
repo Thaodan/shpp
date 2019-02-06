@@ -1,11 +1,13 @@
 pkgname=shpp
-pkgver=2.1
+pkgver=1.9.1.1
 pkgrel=1
 pkgdesc="preprocessor written for posix shell"
 arch=('any')
 license=('GPL2')
 depends=('sh' 'coreutils' 'sed' 'bc')
+makedepends=('emacs')
 source=("${pkgname}-${pkgver}.tar.gz")
+md5sums=('b4f504bfbe826f031b8788e7964046c7')
 conflicts=('sh-make-tools')
 
 build() 
