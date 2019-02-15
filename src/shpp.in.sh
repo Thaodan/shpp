@@ -237,6 +237,19 @@ push()
     paste "$tmp_dir"/"$1"/file "$2" "$3"
 }
 
+map()
+# usage: map <map> <content>
+# description: map <contents> to <map> (numeric)
+{
+    local COUNTER \
+          map_item_num
+    mkdir -p "$tmp_dir"/"$1"
+    touch "$tmp_dir"/"$1"/counter
+    count + 1 "$1"/counter
+    map_item_num=$(var "$1"/counter)
+    var "$1"/$map_item_num="$2"
+}
+
 pull_cur()
 {
     pull self/command "$@"
