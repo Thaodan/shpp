@@ -250,6 +250,21 @@ map()
     var "$1"/$map_item_num="$2"
 }
 
+unmap()
+# usage: unmap <map> <n=1 times>
+# description: unmap last item from list, n=1 times
+{
+    local COUNTER \
+          map_item_num
+    map_item_num=$(var "$1"/counter)
+    count - 1 "$1"/counter
+    var "$1"/$map_item_num
+    unvar "$1"/$map_item_num
+    if [ ! "${2:-1}" -eq 1 ] ; then
+        unmap "$1" $(( $2 - 1 ))
+    fi
+}
+
 pull_cur()
 {
     pull self/command "$@"
