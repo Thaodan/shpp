@@ -895,11 +895,12 @@ instance_leave()
     verbose "Leaving instance '$IID'"
     if [  -L "$tmp_dir"/$IID/.lastself ] ; then
         mv -f  "$tmp_dir"/$IID/.lastself "$tmp_dir"/self
-        cleanup
+       # cleanup
         IID=$(readlink $tmp_dir/self)
         verbose "Returning to instance '$IID'"
     else
-        cleanup
+        #cleanup
+        :
     fi
 }
 
@@ -917,6 +918,7 @@ stub_main()    {
     else
         instance_create
     fi
+    map map $IID
 
     instance_enter
     if [ $IID = 1 ] ; then
@@ -927,6 +929,14 @@ stub_main()    {
     mkdir "$tmp_dir"/self/command
     cp "$1" "$tmp_dir/self/command/file"
     find_commands "$tmp_dir/self/command/file"
+    # parsing done
+    instance_leave
+}
+
+stub_exe()
+{
+    IID=$(unmap map)
+    instance_enter
     exec_commands 
     write_shortifdefs "$tmp_dir/self/command/file"
     test -e "$tmp_dir/defines"  && \
@@ -1074,6 +1084,7 @@ if [ ! $# = 0 ] ; then
 		    unset signal
 		    trap "IID=1 cleanup; exit 130" INT
 		    stub_main "$1" $target_name
+                    stub_exe  "$1" $target_name
 		    shift
 		fi
 		;;
