@@ -953,20 +953,22 @@ stub_exec()
 {
     IID=$(unmap instance_map)
     instance_enter
-    exec_commands 
-    write_shortifdefs "$tmp_dir/self/command/file"
-    test -e "$tmp_dir/defines"  && \
-	replace_vars "defines"  "$tmp_dir/self/command/file"
-    # do runners only in main instance
-    if [ $IID = 1 ] ; then
-	IFS=" "
-	for __runner in $registed_runners ; do
-	    $__runner
-	done
-	unset IFS
+    exec_commands
+    if [ ! -e "$IID"/shadow ] ; then
+        write_shortifdefs "$tmp_dir/self/command/file"
+        test -e "$tmp_dir/defines"  && \
+	    replace_vars "defines"  "$tmp_dir/self/command/file"
+        # do runners only in main instance
+        if [ $IID = 1 ] ; then
+	    IFS=" "
+	    for __runner in $registed_runners ; do
+	        $__runner
+	    done
+	    unset IFS
+        fi
+        clear_flags "$tmp_dir/self/command/file"
+        cp "$tmp_dir/self/command/file" "$1"
     fi
-    clear_flags "$tmp_dir/self/command/file"
-    cp "$tmp_dir/self/command/file" "$1"
     instance_leave
 }
 
