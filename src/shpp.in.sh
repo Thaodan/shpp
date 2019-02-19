@@ -461,6 +461,24 @@ find_commands()
 
 
         parse_expr  "$_command" self/command/lines/$counter
+
+        local command=$(var self/command/lines/$counter/args/0)
+        local block_enter_command
+        for block_enter_command in "if" "ifndef" "ifdef" ; do
+            if [ "$command" = "$block_enter_command" ] ; then
+                # open new instance
+                instance_create shadow
+                instance_enter
+                break
+            fi
+        done
+
+        for block_end_command in end endif ; do
+            if [ "$command" = "$block_end_command" ] ; then
+                instance_leave
+                break
+            fi
+        done
     done < "$tmp_dir"/self/command/raw
 
     debug mode=end
