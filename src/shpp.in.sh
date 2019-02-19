@@ -895,18 +895,20 @@ instance_leave()
 
 ### main function ###
 
-stub_main()    {
-#\\!debug_if	mkdir -p "$tmp_dir/ifsteps"
+stub_parse()
+# usage: stub_parse <file>
+# description: parse <file>
+{
     # if we got no $tmp_dir/self we are at main instance, so init it
     if [ ! -e "$tmp_dir"/self ] ; then
 	# init InstanceID to use if we can't use $tmp_dir/self
 	# if we are the first instance our id is 1
 	instance_create 1	
-	#echo "$tmp_dir" > "$tmp_dir"/self/clean_files 
         # else gen rnd var and move old self to new instance and create new self
     else
         instance_create
     fi
+    map instance_map $IID
 
     instance_enter
     if [ $IID = 1 ] ; then
@@ -917,6 +919,16 @@ stub_main()    {
     mkdir "$tmp_dir"/self/command
     cp "$1" "$tmp_dir/self/command/file"
     find_commands "$tmp_dir/self/command/file"
+    # parsing done
+    instance_leave
+}
+
+stub_exec()
+# usage: stub_exec <target>
+# description: execute commands into <target>x
+{
+    IID=$(unmap instance_map)
+    instance_enter
     exec_commands 
     write_shortifdefs "$tmp_dir/self/command/file"
     test -e "$tmp_dir/defines"  && \
@@ -930,8 +942,16 @@ stub_main()    {
 	unset IFS
     fi
     clear_flags "$tmp_dir/self/command/file"
-    cp "$tmp_dir/self/command/file" "$2"
+    cp "$tmp_dir/self/command/file" "$1"
     instance_leave
+}
+
+stub_main()
+# usage: stub_main <file> <target_file>
+# description: parse and exec file onto <target_file>
+{
+    stub_parse "$1"
+    stub_exec  "$2"
 }
 
 print_help() {
@@ -1063,7 +1083,7 @@ if [ ! $# = 0 ] ; then
 		    done
 		    unset signal
 		    trap "IID=1 cleanup; exit 130" INT
-		    stub_main "$1" $target_name
+                    stub_main "$1" "$target_name"
 		    shift
 		fi
 		;;
