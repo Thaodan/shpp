@@ -863,15 +863,31 @@ clear_flags()
 }
 
 instance_create()
-# usage: instance_create [<IID>]
+# usage: instance_create [<IID>] [shadow]
 # description:  create_instance
 #               if $1 is not set, set IID from
 #               calling random
+#               create shadow instance if shadow
 # example: instance_create
 {
-    IID=$IID${IID+/}${1:-$(random)}
+    local oIID=$IID
+    local shadow
+    if [ "$1" = shadow ] ; then
+        shadow=t
+        shift
+    fi
+    if [ ! $1 ] ; then
+        IID=${IID+${IID}/}$(random)
+    else
+        IID=${IID+/${IID}}${1}
+    fi
     mkdir -p "$tmp_dir"/$IID
-    echo "$tmp_dir/$IID" > "$tmp_dir"/$IID/clean_files 
+    echo "$tmp_dir/$IID" > "$tmp_dir"/$IID/clean_files
+    if [ "$shadow" ] ; then
+        ln -s "$tmp_dir"/$oIID/command "$tmp_dir"/$IID/command
+        touch "$tmp_dir"/$IID/shadow
+    fi
+
 }
 
 instance_enter()
