@@ -513,9 +513,6 @@ exec_commands()
 ### commands ### 
 # description:	this are commands that can be executed in $source_file (#\\*)
 # 		commands can be builtin or suplied by macro files
-# 		most commands exept if* do their write parts after find_commands()
-# 		external commands shoud do their write part with a runner
-#                that is executed after find_commands()
 #
 register_external()
 # usage:  register_external  <__mode> function [--block (if --command)]
