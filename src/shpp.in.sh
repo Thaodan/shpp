@@ -888,11 +888,8 @@ instance_leave()
     verbose "Leaving instance '$IID'"
     if [  -L "$tmp_dir"/$IID/.lastself ] ; then
         mv -f  "$tmp_dir"/$IID/.lastself "$tmp_dir"/self
-        cleanup
         IID=$(readlink $tmp_dir/self)
         verbose "Returning to instance '$IID'"
-    else
-        cleanup
     fi
 }
 
