@@ -517,7 +517,7 @@ exec_commands()
 # 		external commands shoud do their write part with a runner
 #                that is executed after find_commands()
 
-# usage:  register_external  <__mode> function
+# usage:  register_external  <__mode> function [--block (if --command)]
 # description: this functions  registers  externals to shpp either commands (#\\*) or runners
 #
 register_external() { 
@@ -534,6 +534,10 @@ register_external() {
                 mkdir -p "$tmp_dir"/externals/commands
                 if [ ! -e "$tmp_dir"/externals/commands/"$1" ] ; then
                     var externals/commands/"$1"/alias="$1"
+                    if [ "$2" = "--block" ] ; then
+                        var externals/commands/"$1"/block=t
+                        shift
+                    fi
                 else
                     error "Tried to register command that already exists"
                 fi
