@@ -425,7 +425,7 @@ exec_expr()
 	    ;; 
 	'break')          verbose 'found break abort parsing'; return 1;;
 	![a-z]*|rem) : ;; # ignore stubs for ignored functions
-	*)  if echo "$registed_commands" | grep -q $command ; then
+	*)  if [ -e "$tmp_dir"/externals/commands/"$command" ] ; then
 		$command "$@"
 	    else
 		warning "found '$command',bug or unkown command, raw string is '$(var "$obj"/raw)'"
@@ -530,7 +530,14 @@ register_external() {
     shift 
     while [ ! $# = 0 ] ; do
 	case $__mode in
-	    add_command) registed_commands=$registed_commands:$1 ;;
+	    add_command)
+                mkdir -p "$tmp_dir"/externals/commands
+                if [ ! -e "$tmp_dir"/externals/commands/"$1" ] ; then
+                    var externals/commands/"$1"/alias="$1"
+                else
+                    error "Tried to register command that already exists"
+                fi
+                ;;
 	    add_runner) registed_runners="$registed_runners $1";;
 	esac
 	shift
