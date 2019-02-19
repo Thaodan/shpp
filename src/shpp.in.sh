@@ -516,11 +516,11 @@ exec_commands()
 # 		most commands exept if* do their write parts after find_commands()
 # 		external commands shoud do their write part with a runner
 #                that is executed after find_commands()
-
+#
+register_external()
 # usage:  register_external  <__mode> function [--block (if --command)]
 # description: this functions  registers  externals to shpp either commands (#\\*) or runners
-#
-register_external() { 
+{
     local __mode
     case $1 in  # set component to register
 	-c|--command) __mode=add_command;;
