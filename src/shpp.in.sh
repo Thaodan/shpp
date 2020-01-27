@@ -368,6 +368,12 @@ exec_expr()
             arg=$(echo "$arg"| sed 's|@||g')
             arg="$(defined "$arg")"
             ;;
+            *@*@*)
+            local arg_begin="$(echo "$arg" | sed -e 's/\@.*//')"
+            local arg_end="$(echo "$arg"|sed -e 's/.*\@//')"
+            arg="$(echo "$arg" | sed -e 's|.*\@\(.*\)\@.*|\1|')"
+            arg="$arg_begin$(defined "$arg")$arg_end"
+            ;;
         esac
         case $argv_counter in
             0)
