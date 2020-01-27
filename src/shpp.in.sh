@@ -801,7 +801,7 @@ define()
        # #\\define FRUITS { BANANA APPEL TOMATO }
        case $1 in
 	   *=*) var "defines/${1}"     ;;
-           *)   var "defines/${1}=${2}" ; shift;;
+           *)   var "defines/${1}=${2}" ; ${2+ shift};;
        esac
        shift
    done
