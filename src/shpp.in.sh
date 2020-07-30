@@ -820,7 +820,7 @@ write_shortifdefs() { # write #\\! flags to $2
 replace_vars() {
     verbose "replace_vars: Opening '$2'"
     local replace_var replace_var_content IFS shifted_one
-    [ ! -z "$depth" ] && shifted_one=${1#*/}/
+    [ -n "$depth" ] && shifted_one=${1#*/}/
     for replace_var in $( var "$1" ) ; do
 	# if we got a var that contains other vars run us again
 	if [ -d "$tmp_dir/$1/$replace_var" ] ; then
