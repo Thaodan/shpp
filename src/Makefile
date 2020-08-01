@@ -1,9 +1,7 @@
 include ../rules.mk
 # app specific  stuff
 TARGET		= shpp
-SHPP_VER	= 1.9.1.1
-GIT_REV		= $(shell ../tools/git_revgen)
-
+SHPP_VER	=  $(shell ../tools/git_revgen)
 all: $(TARGET)
 
 $(TARGET): ${TARGET:=.in.sh}

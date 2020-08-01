@@ -20,9 +20,7 @@
 
 # config vars ### 
 ####################################
-# version, rev config
 SHPP_VER=@VER@
-SHPP_REV=@GITREV@
 #####################################
 # base config 
 
@@ -962,8 +960,8 @@ if [ ! $# = 0 ] ; then
     while [ ! $# = 0 ] ; do
 	case $1 in 
 	    --help|-H|-h)	print_help ; shift ;; 
-	    --revision) 	echo $SHPP_REV ; shift ;;
-	    -V|--version)	echo $SHPP_VER:$SHPP_REV  ; shift ;;
+	    --revision) 	echo $SHPP_VER ; shift ;;
+	    -V|--version)	echo $SHPP_VER  ; shift ;;
 	    --*|*)
 		optspec=o:O:Cc:D:I:M:v # b:dp #-: # short options
 		optspec_long=output:,option:,config:,color,,legacy,stdout,critical-warning,tmp:,stderr:,keep,debug::,verbose,errexit,\*=\* #,binpath:,desktop,prefix # long options
