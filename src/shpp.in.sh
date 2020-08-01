@@ -835,7 +835,10 @@ replace_vars() {
     done 
 }
 
-clear_flags() { # cleas #\\ flags in 
+clear_flags()
+# usage: clear_flags <file>
+# description: clears #\\ commands from <file>
+{
     sed -ie '/^#\\\\*/d' "$1"
 }
 
