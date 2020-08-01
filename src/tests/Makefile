@@ -26,3 +26,4 @@ clean:
 	make -f tests.mk RESULT=$(RESULT_STABLE) clean
 
 .PHONY: clean $(TESTFILES) $(TARGET) stdout
+.NOTPARALLEL: latest_tag current check tests tests_stable
