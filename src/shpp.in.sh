@@ -837,9 +837,11 @@ replace_vars() {
 
 clear_flags()
 # usage: clear_flags <file>
-# description: clears #\\ commands from <file>
+# description: clears #\\ commands and undefined variables
+#              from <file>
 {
     sed -ie '/^#\\\\*/d' "$1"
+    sed -e 's/@.*@//' -i "$1"
 }
 
 instance_create()
