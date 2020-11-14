@@ -133,19 +133,19 @@ var()
 	    local __var_part1=$( echo "$1" | sed -e 's/=.*//' -e 's/^[+,-]//' )
             local __var_part2=$( echo "$1" | cut -d '=' -f2- )
 	    local __var12="$tmp_dir/$__var_part1"
-	    mkdir -p ${__var12%/*}
+	    mkdir -p "${__var12%/*}"
 	    case $1 in 
 		*+=*)
 		    if [ -d "$tmp_dir/$__var_part1" ] ; then
-			printf  -- $__var_part2 > "$tmp_dir/$__var_part1/"\  $(( 
+			printf  '%s' $__var_part2 > "$tmp_dir/$__var_part1/"\  $((
 				$( echo "$tmp_dir"/$__var_part2/* \
 				    | tail  | xargs basename ) + 1 ))
 		    else
-			printf -- "$__var_part2" >> "$tmp_dir/$__var_part1"  
+			printf '%s' "$__var_part2" >> "$tmp_dir/$__var_part1"
 		    fi
 		    ;;
  		*-=*) false ;;
-                *)  printf  -- "$__var_part2" > "$tmp_dir/$__var_part1" ;;
+                *)  printf '%s' "$__var_part2" > "$tmp_dir/$__var_part1" ;;
 	    esac
 	    ;;	
 	*) 
