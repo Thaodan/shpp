@@ -432,7 +432,9 @@ find_commands()
 	var self/command/lines/$counter/num="$find_commands_line"
     done
     counter=0 # reset counter after parsing lines
-    for _command in $( grep  \#\\\\\\\\$2 "$1" | sed -e 's/#\\\\//'  ) ; do
+    touch "$tmp_dir"/self/command/raw
+    sed -n -e '/^#\\.*/{s|#\\\\||p}' "$1"  > "$tmp_dir"/self/command/raw
+    while read -r _command ; do
         unset IFS
 	counter=$(( $counter + 1))
 
@@ -441,7 +443,7 @@ find_commands()
 
 
         parse_expr  "$_command" self/command/lines/$counter
-    done
+    done < "$tmp_dir"/self/command/raw
 
     debug mode=end
 }
