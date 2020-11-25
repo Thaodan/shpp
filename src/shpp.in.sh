@@ -427,7 +427,7 @@ find_commands()
 
     local IFS='
 '
-    for find_commands_line in $( grep -hn \#\\\\\\\\$2 "$1"  | sed 's|:.*||' ); do 
+    for find_commands_line in $(sed -n '/^#\\.*/=' "$1"); do
 	counter=$(( $counter + 1))
 	var self/command/lines/$counter/num="$find_commands_line"
     done
