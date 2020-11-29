@@ -763,27 +763,19 @@ call a new instance${__parser+ of }${__parser} to process file"
 	    ;;
     esac
     [ $__not_found = true ] && error "'$__cleaned_include' not found"
-    __outputfile__cleaned_include=$( echo "$__cleaned_include" | \
-	sed -e 's|\/|_|g' -e 's|\.|_|g')$(random)
-    case ${__parser:-SELF} in  
-	shpp)  $shpp   --tmp $tmp_dir/slaves --stdout \
-	    "$__cleaned_include"> \
-            "$tmp_dir/$IID/include/files/${__outputfile__cleaned_include}"  || \
-	     error "spawned copy of ourself: $appname returned $?, quiting" ;; 
-	take)
-	    mv "$__cleaned_include" "$tmp_dir/$IID/include/files/${__outputfile__cleaned_include}"
-	    ;;
-	noparse)
-	    ln -s  "$__cleaned_include" \
-	    "$tmp_dir/$IID/include/files/${__outputfile__cleaned_include}"
+    case ${__parser:-SELF} in
+	noparse|take)
+            __outputfile__cleaned_include="${__cleaned_include}"
 	    # no $parser is used
 	    ;;
 	SELF)
-	    stub_main $__cleaned_include "$tmp_dir"/$IID/include/files/${__outputfile__cleaned_include} ;;
+            __outputfile__cleaned_include="$tmp_dir/$IID/include/files/$( echo "$__cleaned_include" | \
+	                                                                  sed -e 's|\/|_|g' -e 's|\.|_|g')$(random)"
+	    stub_main $__cleaned_include "${__outputfile__cleaned_include}" ;;
 	*) $__parser $__parser_args ;; # use $parser with $parser_args 
     esac
 
-    push_cur "$tmp_dir/$IID/include/files/$__outputfile__cleaned_include" "$line"
+    push_cur "$__outputfile__cleaned_include" "$line"
 }
 
 define()
