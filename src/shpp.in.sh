@@ -571,7 +571,7 @@ warning() {
 # usage: msg msg
 # description: display mesage
 msg() {
-    __msg "$L$line_ued" "$@"
+    __msg "L$line_ued" "$@"
 }
 
 # usage: if condiion
