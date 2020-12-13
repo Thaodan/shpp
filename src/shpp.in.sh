@@ -293,14 +293,14 @@ parse_expr()
                 # test if we got/get now arg_string and test our new arg is a string
                 if [ $in_arg_string = false  ] && case $__arg__ in
                        \'*\'|\"*\") false;; 
-                       \'*|\"*) true;;
+                       \'*|\"*|*=\'*|*=\"*) true;;
                        *)false ;; 
                    esac
                    # ugly but the only way to test for string start eg ' or " 
                 then
                     # if true, open our arg_string
                     in_arg_string=true
-                    arg_string=$(echo "$__arg__" | sed -e 's|^\"||' -e "s|^\'||")
+                    arg_string=$(echo "$__arg__" | sed -e 's|^\"||' -e "s|^\'||" -e "s|=\'|=|" -e 's|=\"|=|')
                     # test if we got string end character or add our __arg__ to arg_string if not
                 elif [ $in_arg_string = true  ] ; then
                     case $__arg__ in
