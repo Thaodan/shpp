@@ -572,34 +572,59 @@ __If() {
     # set default logig eg. positive
     local __logic_number=1 \
 	__condition_done=false \
-	__condition
+	__condition __compare=0
     unsuccesfull=false
   # parse modifers
     local IFS=" "
     while [ ! $__condition_done = true ] ; do
         verbose "current step is $1"
 	while [ ! $# = 0 ]; do
-	    case $1 in 
-		!) __logic_number=0 ;shift ;;
-		defined)
-                    local result
-                    unset IFS
-                    shift                    
-                    while [ "$1" = "||" ] || [ "$1" = "&&" ] || [ ! $# = 0 ]; do
-                        result=$result$(defined "$1")
+            if [ $__compare -eq 0 ] ; then
+	        case $1 in
+		    !) __logic_number=0 ;shift ;;
+		    defined)
+                        local result
+                        unset IFS
                         shift
-                    done                   
-                    case $result in
-                        ''|*[!0-9]*) result=${#result} ;;
-                    esac
-		    __condition="$result >= 1  $__condition"; 
-		    IFS=" ";
-		    ;;
-		\|\|) __break_false=true; shift ;break;;
-		\&\&) __break_true=true; shift ;break;;
-		*) __condition="$1 $__condition" ; shift;;
-	    esac
-	done
+                        while [ "$1" = "||" ] || [ "$1" = "&&" ] || [ ! $# = 0 ]; do
+                            result=$result$(defined "$1")
+                            shift
+                        done
+                        case $result in
+                            ''|*[!0-9]*) result=${#result} ;;
+                        esac
+		        __condition="$result >= 1  $__condition";
+		        IFS=" ";
+		        ;;
+		    \|\|) __break_false=true; shift ;break;;
+		    \&\&) __break_true=true; shift ;break;;
+                    *)
+                        case $1 in
+                            ==|!=|=)
+                            case $1 in
+                                !=) __condition="= $__condition"; __condition_not=!; ;;
+                                ==|=) __condition="= $__condition" ;;
+                            esac
+                            __compare=1
+                            ;;
+		            *) __condition="$1 $__condition" ;;
+	                esac
+                        shift
+                        ;;
+                esac
+            else
+                __condition="$1 $__condition"
+                [ $__condition_not ] && __condition="! $__condition"
+                if [ $__condition ] ; then
+                    __condition=1
+                else
+                    __condition="$?"
+                fi
+                shift
+                __compare=0
+                __condition_not=
+            fi
+        done
 	if [ $( echo "$__condition" | bc ) = $__logic_number ] ; then
 	    # if condition was true and we found && (and) go and parse the rest of condition
 	    if [ $__break_true ] ; then
