@@ -19,7 +19,20 @@ tests_stable: latest_tag
 tests: current
 	make -f tests.mk RESULT=$(RESULT_CURRENT)
 check: tests_stable tests
-	$(DIFF) $(RESULT_STABLE) $(RESULT_CURRENT)
+	@find $(RESULT_STABLE) $(RESULT_CURRENT) -type f -printf %f\\n \
+	| uniq | while read -r test;\
+	do \
+		if [ -e $(RESULT_STABLE)/$$test ] && \
+		[ -e $(RESULT_CURRENT)/$$test ]; \
+		then\
+			echo $(DIFF) $(RESULT_STABLE)/$$test \
+			$(RESULT_CURRENT)/$$test;\
+			$(DIFF) $(RESULT_STABLE)/$$test \
+			$(RESULT_CURRENT)/$$test;\
+		else\
+			printf '%s not found in tests_stable and tests, skipping\n' $$test >&2;\
+		fi;\
+	done
 
 clean:
 	make -f tests.mk RESULT=$(RESULT_CURRENT) clean
