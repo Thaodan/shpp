@@ -1008,12 +1008,12 @@ if [ ! $# = 0 ] ; then
 			--) shift; break ;;
 		    esac
 		done
-		if [  -t 1 ] || ( [ $FORCE_COLOR ] && \
-		    [ ! $FORCE_COLOR = n ] ) ; then
+		if [  -t 1 ] || ( [ "$FORCE_COLOR" ] && \
+		    [ ! "$FORCE_COLOR" = n ] ) ; then
 		    # use only colored out if enabled and 
 		    # if output goes to the terminal
-		    if  [ $USE_COLOR ] && [ ! $USE_COLOR = n ] || \
-			 [ $FORCE_COLOR ] && [ ! $FORCE_COLOR = n ]  ; then 
+		    if  [ "$USE_COLOR" ] && [ ! "$USE_COLOR" = n ] || \
+			 [ "$FORCE_COLOR" ] && [ ! "$FORCE_COLOR" = n ]  ; then
 			
  			if tput setaf 0 > /dev/null 2>&1 ; then
 			    ALL_OFF="$(tput sgr0)"
