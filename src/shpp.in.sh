@@ -31,16 +31,6 @@ MACRO_SPACES=.
 appname=${0##*/}
 tmp_dir="$(mktemp -u "${TMPDIR:-/tmp}/${appname}.XXXXXXX")"
 
-################################################################
-
-if [ ${0%/*} = . ] ; then
-    shpp="$(which $0 2>/dev/null )" || shpp="${0%/*}/shpp"
-else
-    shpp="${0%/*}/shpp"
-fi
-
-#####################################################################
-
 ### communication ###
 __plain() {
     local first="$1"
