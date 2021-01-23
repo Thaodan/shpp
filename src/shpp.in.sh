@@ -823,7 +823,7 @@ clear_flags()
 #              from <file>
 {
     sed -ie '/^#\\\\*/d' "$1"
-    sed -e 's/@.*@//' -i "$1"
+    sed -e 's/@[-_a-zA-Z0-9]*@//' -i "$1"
 }
 
 instance_create()
