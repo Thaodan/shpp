@@ -2,3 +2,9 @@
 \#*\#
 *~
 *.directory
+
+# Sources
+dist/pacman/PKGBUILD
+dist/pacman/*.tar.gz
+dist/source/*.tar.gz
+shpp_latest.tar.gz
