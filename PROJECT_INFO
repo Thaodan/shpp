@@ -1,7 +1,7 @@
 # for info see dist_system/doc/README
 
 PROJECT_NAME=shpp
-PROJECT_VER=1.9.1.1
+PROJECT_VER=$(tools/git_revgen)
 SOURCE_DIST=dist/source
 SOURCE_DIR=src
 DIST_DIR=dist
