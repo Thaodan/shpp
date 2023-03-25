@@ -992,7 +992,7 @@ if [ ! $# = 0 ] ; then
 			-I) INCLUDE_SPACES=$2:$INCLUDE_SPACES; shift 2;;
 			-M) MACRO_SPACES=$2:$MACRO_SPACES; shift 2;;
 			-o|--output) target_name="$2"; shift 2 ;;
-			--stdout) target_name="/dev/stdout" ; shift ;;
+			--stdout) target_name="/dev/fd/1" ; shift ;;
 			 # tells shpp to pass stder to $2
 			--stderr) exec 2> $2 ; shift  2;;
 			--) shift; break ;;
@@ -1024,7 +1024,7 @@ if [ ! $# = 0 ] ; then
 		    fi
 		fi
      		if [ -z "$target_name" ] ; then
-		    readonly target_name=/dev/stdout
+		    readonly target_name=/dev/fd/1
 		    __warning warning\
 			"using '/dev/stdout' as default output"
 		fi 
