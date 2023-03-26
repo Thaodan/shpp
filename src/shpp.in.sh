@@ -396,7 +396,7 @@ exec_expr()
 	    endif 
 	    ;; 
 	'break')          verbose 'found break abort parsing'; return 1;;
-	![a-z]*|rem) : ;; # ignore stubs for ignored functions
+    ![A-Z]*|![a-z]*|rem) : ;; # ignore stubs for ignored functions
 	*)  if echo "$registed_commands" | grep -q $command ; then
 		$command "$@"
 	    else
